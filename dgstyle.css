@@ -32,3 +32,26 @@ table{
 body{
 	-webkit-text-size-adjust:none;
 }
+
+div{
+	display:block;
+}
+
+h1 {
+	display:table-cell;
+	vertical-align:middle;
+}
+
+h1, h2 {
+	text-align:center;
+}
+
+h3, h4, h5, h6 {
+	text-align:left;
+}
+
+#header {
+	display:table;
+	width:100vw;
+	height:20vh;
+}
