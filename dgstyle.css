@@ -54,6 +54,11 @@ a {
 	text-decoration:none;
 }
 
+button {
+	padding: 5px;
+	background-color: #CCFFCC;
+}
+
 #header {
 	display:table;
 	width:100vw;
