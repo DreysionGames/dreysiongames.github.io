@@ -1,0 +1,26 @@
+[
+	{
+		"Description":"",
+		"LocationX":200,
+		"LocationY":200,
+		"Color":"#FF0000"
+	},
+	{
+		"Description":"",
+		"LocationX":400,
+		"LocationY":0,
+		"Color":"#00FF00"
+	},
+	{
+		"Description":"",
+		"LocationX":-500,
+		"LocationY":-100,
+		"Color":"#0000FF"
+	},
+	{
+		"Description":"",
+		"LocationX":600,
+		"LocationY":300,
+		"Color":"#000000"
+	}
+]
