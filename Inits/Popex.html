@@ -338,7 +338,7 @@ function update(){
 				turrets[turrets.length-1].radius = 20;
 			}
 		}
-		if(gameOver && coinCount >= 60){
+		if(gameOver && player.life > 0 && coinCount >= 60){
 			gameOver = false;
 			document.getElementById("splash").style.display = "none"
 		}
