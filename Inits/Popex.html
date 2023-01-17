@@ -312,7 +312,7 @@ function update(){
 			player.life -= 5;
 		}
 		if(!bump) bumpsafe = false;
-		if(collide(player, coin)){
+		if(player.life > 0 && collide(player, coin)){
 			generateCoin();
 			coinCount++;
 			pding.play();
@@ -338,6 +338,11 @@ function update(){
 				turrets[turrets.length-1].radius = 20;
 			}
 		}
+		if(gameOver && coinCount > 60){
+			gameOver = false;
+			document.getElementById("splash").style.display = "none"
+		}
+		
 		if(player.life <= 0){
 			if(!gameOver){
 				gameOver = true;
