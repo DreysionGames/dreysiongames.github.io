@@ -272,7 +272,8 @@ function update(){
 
 			if(cmargin){
 				rng = Math.random() * (50 - Math.abs(coinCount));
-				if(rng < turrets.length && turretCount != Math.floor(rng)){
+				if(Math.floor(rng) < turrets.length && turretCount != Math.floor(rng)){
+					console.log(Math.floor(rng));
 					bullets[bullets.length] = new Ball("bullet");
 					bullets[bullets.length-1].obj.style.left = getCoord(turrets[Math.floor(rng)].obj.style.left) + 15 + "px";
 					bullets[bullets.length-1].obj.style.top = getCoord(turrets[Math.floor(rng)].obj.style.top) + 15 + "px";
@@ -329,7 +330,7 @@ function update(){
 				win.play();
 			}
 		}
-		if(coinCount < 0 || coinCount > 50){
+		if(!gameOver && (coinCount < 0 || coinCount > 50)){
 			if(!cmargin){
 				cmargin = 1;
 				turrets[turrets.length] = new Ball("turret");
