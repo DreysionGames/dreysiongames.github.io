@@ -271,9 +271,8 @@ function update(){
 			bullets[bullets.length-1].pew.play();
 
 			if(cmargin){
-				rng = Math.random() * (50 - Math.abs(coinCount));
+				rng = Math.random() * Math.abs((50 - coinCount));
 				if(Math.floor(rng) < turrets.length && turretCount != Math.floor(rng)){
-					console.log(Math.floor(rng));
 					bullets[bullets.length] = new Ball("bullet");
 					bullets[bullets.length-1].obj.style.left = getCoord(turrets[Math.floor(rng)].obj.style.left) + 15 + "px";
 					bullets[bullets.length-1].obj.style.top = getCoord(turrets[Math.floor(rng)].obj.style.top) + 15 + "px";
@@ -339,7 +338,7 @@ function update(){
 				turrets[turrets.length-1].radius = 20;
 			}
 		}
-		if(gameOver && coinCount > 60){
+		if(gameOver && coinCount >= 60){
 			gameOver = false;
 			document.getElementById("splash").style.display = "none"
 		}
