@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Pung</title>
+		<style>
+#playground {
+	background-color: #424242;
+	top: 15%;
+	position:absolute;
+
+	overflow: hidden;
+}
+
+.paddle {
+	height: 40px;
+	width: 10px;
+	border: 1px solid #000000;
+	background-color: #FFFFFF;
+	position: absolute;
+}
+
+#ball {
+	height: 10px;
+	width: 10px;
+	border-radius: 6px;
+	border: 1px solid #000000;
+	background-color: #FFFFFF;
+	position: absolute;
+}
+
+#boundbox {
+	border: 2px solid #FFFFFF;
+	position: absolute;
+}
+		</style>
+		<script>
+var up = false;
+var down = false;
+var up2 = false;
+var down2 = false;
+
+var ai = false;
+
+var pause = false;
+
+function Vector2(x, y) {
+	this.x = x;
+	this.y = y;
+
+	this.add = function(VectorB) {
+		return new Vector2(this.x + VectorB.x, this.y + VectorB.y);
+	}
+	
+	this.subtract = function(VectorB) { 
+		return new Vector2(this.x - VectorB.x, this.y - VectorB.y);
+	}
+	this.crossProd = function(VectorB) {
+		return (this.x * VectorB.y) - (this.y * VectorB.x);
+	}
+}
+
+function Line(PointA, PointB) {
+	this.p = PointA;
+	this.r = PointB;
+
+	this.collide = function(LineB) {
+		d1 = this.p.subtract(LineB.p) * LineB.r.subtract(LineB.p);
+		d2 = this.r.subtract(LineB.p) * LineB.r.subtract(LineB.p);
+		d3 = LineB.p.subtract(this.p) * this.r.subtract(this.p);
+		d4 = LineB.r.subtract(this.p) * this.r.subtract(this.p);
+		return ((d1 < 0 && d2 > 0) || ((d1 > 0 && d2 < 0)) && (d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+	}
+	this.collide = function(PointA, PointB) {
+		d1 = this.p.subtract(PointA).crossProd(PointB.subtract(PointA));
+		d2 = this.r.subtract(PointA).crossProd(PointB.subtract(PointA));
+		d3 = PointA.subtract(this.p).crossProd(this.r.subtract(this.p));
+		d4 = PointB.subtract(this.p).crossProd(this.r.subtract(this.p));
+		return (((d1 < 0 && d2 > 0) || ((d1 > 0 && d2 < 0))) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)));
+	}
+}
+
+function Paddle(divid) {
+	this.div = document.getElementById(divid);
+	this.width = 10;
+	this.height = 40;
+	this.y = Center - (this.height / 2);
+	this.vel = 0;
+
+	this.div.style.top = this.y + "px";
+}
+
+function Ball(divid) {
+	this.div = document.getElementById(divid);
+	this.width = 10;
+	this.height = 10;
+
+	this.angle = (Math.random() * 2 * Math.PI) - Math.PI;
+	this.speed = Math.random() * 10 + 20;
+	
+	this.vel = new Vector2(this.speed * Math.cos(this.angle), this.speed * Math.sin(this.angle));
+	this.pos = new Vector2((W / 2) - (this.width / 2), Center - (this.height / 2));
+
+	this.div.style.left = this.pos.x + "px";
+	this.div.style.top = this.pos.y + "px";
+}
+
+function Box() {
+	this.div = document.getElementById("boundbox");
+	this.height = pg.size.y * 0.8;
+	this.width = pg.size.x * 0.9;
+	this.top = pg.size.y * 0.1;
+	this.left = pg.size.x * 0.05;
+
+	this.corners = [
+		new Vector2(this.left, this.top),
+		new Vector2(this.left + this.width, this.top),
+		new Vector2(this.left + this.width, this.top + this.height),
+		new Vector2(this.left, this.top + this.height)
+	];
+
+	this.div.style.left = this.left + "px";
+	this.div.style.top = this.top + "px";
+	this.div.style.width = this.width + "px";
+	this.div.style.height = this.height + "px";
+}
+
+function loadStuff() {
+	W = window.innerWidth;
+	H = window.innerHeight;
+
+	pg = document.getElementById("playground");
+	pg.style.height = H * 0.8 +"px";
+	pg.style.width = W * .99 + "px";
+	pg.size = new Vector2(pg.style.width.split("p")[0] / 1, pg.style.height.split("p")[0] / 1);
+
+	Center = pg.size.y / 2;
+
+	p1 = new Paddle("p1");
+	p1.div.style.left = W * 0.1 + "px";
+	p2 = new Paddle("p2");
+	p2.div.style.right = W * 0.1 + "px";
+	ball = new Ball("ball");
+
+	bb = new Box();
+
+	flow = setInterval(function(){update();},200);
+}
+
+function kDown(event) {
+	if(event.keyCode == 32) {
+		pause = !pause;
+	} 
+	if(ai) {
+		if(event.keyCode == 38 || event.keyCode == 87) up = true;
+		if(event.keyCode == 40 || event.keyCode == 83) down = true;
+	}else{
+		if(event.keyCode == 87) up = true;
+		if(event.keyCode == 83) down = true;
+		if(event.keyCode == 38) up2 = true;
+		if(event.keyCode == 40) down2 = true;
+ 	}
+}
+
+function kUp(event) {
+	if(ai) {
+		if(event.keyCode == 38 || event.keyCode == 87) up = false;
+		if(event.keyCode == 40 || event.keyCode == 83) down = false;
+	}else{
+		if(event.keyCode == 87) up = false;
+		if(event.keyCode == 83) down = false;
+		if(event.keyCode == 38) up2 = false;
+		if(event.keyCode == 40) down2 = false;
+ 	}
+}
+
+function update() {
+	if(!pause){
+		if(up) p1.vel -= (p1.vel > 0) ? 4.5 : 1.5;
+		if(down) p1.vel += (p1.vel < 0) ? 4.5 : 1.5;
+		if(!up && !down) {
+			if(Math.abs(p1.vel) > 0) { 
+				p1.vel = (p1.vel / Math.abs(p1.vel)) * (Math.abs(p1.vel) - 2);
+				if(Math.abs(p1.vel) < 2) p1.vel = 0; 
+			}
+		}
+		if(Math.abs(p1.vel) > 10) p1.vel = (p1.vel / Math.abs(p1.vel)) * 10;
+		if(up2) p2.vel -= (p2.vel > 0) ? 4.5 : 1.5;
+		if(down2) p2.vel += (p2.vel < 0) ? 4.5 : 1.5;
+		if(!up2 && !down2) {
+			if(Math.abs(p2.vel) > 0) {
+				p2.vel = (p2.vel / Math.abs(p2.vel)) * (Math.abs(p2.vel) - 2);
+				if(Math.abs(p2.vel) < 2) p2.vel = 0;
+			}
+		}
+		if(Math.abs(p2.vel) > 10) p2.vel = (p2.vel / Math.abs(p2.vel)) * 10;
+	
+		p1.y += p1.vel;
+		p1.div.style.top = p1.y + "px";
+		p2.y += p2.vel;
+		p2.div.style.top = p2.y + "px";
+		
+		checkCollisions();
+
+		ball.pos = ball.pos.add(ball.vel);
+		ball.div.style.left = ball.pos.x + ball.vel.x + "px";
+		ball.div.style.top = ball.pos.y + ball.vel.y + "px";
+	}
+}
+
+function checkCollisions() {
+	ballLine = new Line(ball.pos, ball.pos.add(ball.vel).add(ball.vel));
+	if(ballLine.collide(bb.corners[0], bb.corners[1])) {
+		//reflectPoint //returns percent of frame travelled
+		//multiply velocity based on wall
+		//add? vector of first velocity times reflectpoint with vector of second velocity times 1-reflectpoint
+	}
+	if(ballLine.collide(bb.corners[1], bb.corners[2])) ball.div.style.backgroundColor = "#00FF00"; //right*
+	if(ballLine.collide(bb.corners[2], bb.corners[3])) ball.div.style.backgroundColor = "#0000FF"; //bottom*
+	if(ballLine.collide(bb.corners[3], bb.corners[0])) ball.div.style.backgroundColor = "#FF00FF"; //left
+}
+		</script>
+	</head>
+	<body onload="loadStuff()" onkeydown="kDown(event)" onkeyup="kUp(event)">
+		<div id="playground">
+			<div id = "boundbox"> </div>
+			<div id = "p1" class = "paddle"></div>
+			<div id = "p2" class = "paddle"></div>
+			<div id = "ball"></div>
+		</div>
+	</body>
+</html>
