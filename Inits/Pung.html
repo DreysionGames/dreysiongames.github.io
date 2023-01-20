@@ -63,6 +63,11 @@ function Line(PointA, PointB) {
 	this.p = PointA;
 	this.r = PointB;
 
+	this.t;
+
+	this.seg = PointA.subtract(PointB);
+	this.mag = Math.sqrt(this.seg.x ** 2 + this.seg.y ** 2);
+
 	this.collide = function(LineB) {
 		d1 = this.p.subtract(LineB.p) * LineB.r.subtract(LineB.p);
 		d2 = this.r.subtract(LineB.p) * LineB.r.subtract(LineB.p);
@@ -77,6 +82,17 @@ function Line(PointA, PointB) {
 		d4 = PointB.subtract(this.p).crossProd(this.r.subtract(this.p));
 		return (((d1 < 0 && d2 > 0) || ((d1 > 0 && d2 < 0))) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)));
 	}
+	this.intersectPoint = function(LineB) {
+		t = ((this.p.x - LineB.p.x) * (this.p.y - this.r.y) - (this.p.y - LineB.p.y) * (this.p.x - this.r.x)) /
+			((this.p.x - this.r.x) * (LineB.p.y - LineB.r.y) - (this.p.y - this.r.y) * (LineB.p.x - LineB.r.x));
+		console.log(t);
+		return new Vector2((this.p.x + t * (this.r.x - this.p.x)), (this.p.y + t * (this.r.y - this.p.y)));
+	}
+	this.segmentPercent = function(IPoint) {
+		seg = PointA.subtract(IPoint);
+		mag = Math.sqrt(seg.x ** 2 + seg.y ** 2);
+		return mag / this.mag;
+	}
 }
 
 function Paddle(divid) {
@@ -86,7 +102,7 @@ function Paddle(divid) {
 	this.y = Center - (this.height / 2);
 	this.vel = 0;
 
-	this.div.style.top = this.y + "px";
+	this.div.style.top = this.y - this.height + "px";
 }
 
 function Ball(divid) {
@@ -95,13 +111,13 @@ function Ball(divid) {
 	this.height = 10;
 
 	this.angle = (Math.random() * 2 * Math.PI) - Math.PI;
-	this.speed = Math.random() * 10 + 20;
+	this.speed = 1; // Math.random() * 10 + 0;
 	
 	this.vel = new Vector2(this.speed * Math.cos(this.angle), this.speed * Math.sin(this.angle));
 	this.pos = new Vector2((W / 2) - (this.width / 2), Center - (this.height / 2));
 
-	this.div.style.left = this.pos.x + "px";
-	this.div.style.top = this.pos.y + "px";
+	this.div.style.left = this.pos.x - this.width + "px";
+	this.div.style.top = this.pos.y - this.height + "px";
 }
 
 function Box() {
@@ -143,7 +159,7 @@ function loadStuff() {
 
 	bb = new Box();
 
-	flow = setInterval(function(){update();},200);
+	flow = setInterval(function(){update();},20);
 }
 
 function kDown(event) {
@@ -195,28 +211,41 @@ function update() {
 		if(Math.abs(p2.vel) > 10) p2.vel = (p2.vel / Math.abs(p2.vel)) * 10;
 	
 		p1.y += p1.vel;
-		p1.div.style.top = p1.y + "px";
+		p1.div.style.top = p1.y - p1.height + "px";
 		p2.y += p2.vel;
-		p2.div.style.top = p2.y + "px";
+		p2.div.style.top = p2.y - p2.height + "px";
 		
 		checkCollisions();
 
 		ball.pos = ball.pos.add(ball.vel);
-		ball.div.style.left = ball.pos.x + ball.vel.x + "px";
-		ball.div.style.top = ball.pos.y + ball.vel.y + "px";
+		ball.div.style.left = ball.pos.x - ball.width + "px";
+		ball.div.style.top = ball.pos.y - ball.height + "px";
 	}
 }
 
 function checkCollisions() {
-	ballLine = new Line(ball.pos, ball.pos.add(ball.vel).add(ball.vel));
+	ballLine = new Line(ball.pos, ball.pos.add(ball.vel));
 	if(ballLine.collide(bb.corners[0], bb.corners[1])) {
+		ball.div.style.backgroundColor = "#FF0000";
+		console.log(ballLine.intersectPoint(new Line(bb.corners[0], bb.corners[1])));
+		console.log(ballLine.segmentPercent(ballLine.intersectPoint(new Line(bb.corners[0], bb.corners[1]))));
 		//reflectPoint //returns percent of frame travelled
 		//multiply velocity based on wall
 		//add? vector of first velocity times reflectpoint with vector of second velocity times 1-reflectpoint
+		pause = true;
 	}
-	if(ballLine.collide(bb.corners[1], bb.corners[2])) ball.div.style.backgroundColor = "#00FF00"; //right*
-	if(ballLine.collide(bb.corners[2], bb.corners[3])) ball.div.style.backgroundColor = "#0000FF"; //bottom*
-	if(ballLine.collide(bb.corners[3], bb.corners[0])) ball.div.style.backgroundColor = "#FF00FF"; //left
+	if(ballLine.collide(bb.corners[1], bb.corners[2])) {
+		ball.div.style.backgroundColor = "#00FF00"; //right
+		pause = true;
+	}
+	if(ballLine.collide(bb.corners[2], bb.corners[3])) {
+		ball.div.style.backgroundColor = "#0000FF"; //bottom
+		pause = true;
+	}
+	if(ballLine.collide(bb.corners[3], bb.corners[0])) {
+		ball.div.style.backgroundColor = "#FF00FF"; //left
+		pause = true;
+	}
 }
 		</script>
 	</head>
