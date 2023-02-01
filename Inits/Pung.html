@@ -3,258 +3,346 @@
 	<head>
 		<title>Pung</title>
 		<style>
-#playground {
-	background-color: #424242;
-	top: 15%;
-	position:absolute;
+div {
+	position: absolute;
+	border: 1px solid #000000;
+	background-color: #FFFFFF;
+}
 
+#playground {
+	background-color: #454545;
 	overflow: hidden;
 }
 
-.paddle {
-	height: 40px;
-	width: 10px;
-	border: 1px solid #000000;
-	background-color: #FFFFFF;
-	position: absolute;
-}
-
 #ball {
-	height: 10px;
-	width: 10px;
 	border-radius: 6px;
-	border: 1px solid #000000;
-	background-color: #FFFFFF;
-	position: absolute;
 }
 
-#boundbox {
-	border: 2px solid #FFFFFF;
-	position: absolute;
+#bounds {
+	background-color: transparent;
+	border: 3px solid #FFFFFF;
 }
 		</style>
 		<script>
-var up = false;
-var down = false;
-var up2 = false;
-var down2 = false;
+///////////////////////////////////////////////////////////////////////////
+//                                 Setup                                 //
+///////////////////////////////////////////////////////////////////////////
+var playing
 
-var ai = false;
-
-var pause = false;
-
-function Vector2(x, y) {
-	this.x = x;
-	this.y = y;
-
-	this.add = function(VectorB) {
-		return new Vector2(this.x + VectorB.x, this.y + VectorB.y);
-	}
-	
-	this.subtract = function(VectorB) { 
-		return new Vector2(this.x - VectorB.x, this.y - VectorB.y);
-	}
-	this.crossProd = function(VectorB) {
-		return (this.x * VectorB.y) - (this.y * VectorB.x);
-	}
-}
-
-function Line(PointA, PointB) {
-	this.p = PointA;
-	this.r = PointB;
-
-	this.t;
-
-	this.seg = PointA.subtract(PointB);
-	this.mag = Math.sqrt(this.seg.x ** 2 + this.seg.y ** 2);
-
-	this.collide = function(LineB) {
-		d1 = this.p.subtract(LineB.p) * LineB.r.subtract(LineB.p);
-		d2 = this.r.subtract(LineB.p) * LineB.r.subtract(LineB.p);
-		d3 = LineB.p.subtract(this.p) * this.r.subtract(this.p);
-		d4 = LineB.r.subtract(this.p) * this.r.subtract(this.p);
-		return ((d1 < 0 && d2 > 0) || ((d1 > 0 && d2 < 0)) && (d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
-	}
-	this.collide = function(PointA, PointB) {
-		d1 = this.p.subtract(PointA).crossProd(PointB.subtract(PointA));
-		d2 = this.r.subtract(PointA).crossProd(PointB.subtract(PointA));
-		d3 = PointA.subtract(this.p).crossProd(this.r.subtract(this.p));
-		d4 = PointB.subtract(this.p).crossProd(this.r.subtract(this.p));
-		return (((d1 < 0 && d2 > 0) || ((d1 > 0 && d2 < 0))) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)));
-	}
-	this.intersectPoint = function(LineB) {
-		t = ((this.p.x - LineB.p.x) * (this.p.y - this.r.y) - (this.p.y - LineB.p.y) * (this.p.x - this.r.x)) /
-			((this.p.x - this.r.x) * (LineB.p.y - LineB.r.y) - (this.p.y - this.r.y) * (LineB.p.x - LineB.r.x));
-		console.log(t);
-		return new Vector2((this.p.x + t * (this.r.x - this.p.x)), (this.p.y + t * (this.r.y - this.p.y)));
-	}
-	this.segmentPercent = function(IPoint) {
-		seg = PointA.subtract(IPoint);
-		mag = Math.sqrt(seg.x ** 2 + seg.y ** 2);
-		return mag / this.mag;
-	}
-}
-
-function Paddle(divid) {
-	this.div = document.getElementById(divid);
-	this.width = 10;
-	this.height = 40;
-	this.y = Center - (this.height / 2);
-	this.vel = 0;
-
-	this.div.style.top = this.y - this.height + "px";
-}
-
-function Ball(divid) {
-	this.div = document.getElementById(divid);
-	this.width = 10;
-	this.height = 10;
-
-	this.angle = (Math.random() * 2 * Math.PI) - Math.PI;
-	this.speed = 1; // Math.random() * 10 + 0;
-	
-	this.vel = new Vector2(this.speed * Math.cos(this.angle), this.speed * Math.sin(this.angle));
-	this.pos = new Vector2((W / 2) - (this.width / 2), Center - (this.height / 2));
-
-	this.div.style.left = this.pos.x - this.width + "px";
-	this.div.style.top = this.pos.y - this.height + "px";
-}
-
-function Box() {
-	this.div = document.getElementById("boundbox");
-	this.height = pg.size.y * 0.8;
-	this.width = pg.size.x * 0.9;
-	this.top = pg.size.y * 0.1;
-	this.left = pg.size.x * 0.05;
-
-	this.corners = [
-		new Vector2(this.left, this.top),
-		new Vector2(this.left + this.width, this.top),
-		new Vector2(this.left + this.width, this.top + this.height),
-		new Vector2(this.left, this.top + this.height)
-	];
-
-	this.div.style.left = this.left + "px";
-	this.div.style.top = this.top + "px";
-	this.div.style.width = this.width + "px";
-	this.div.style.height = this.height + "px";
-}
-
-function loadStuff() {
+function loadStuff(){
 	W = window.innerWidth;
 	H = window.innerHeight;
+	Vector0 = new Vector2(0,0);
 
-	pg = document.getElementById("playground");
-	pg.style.height = H * 0.8 +"px";
-	pg.style.width = W * .99 + "px";
-	pg.size = new Vector2(pg.style.width.split("p")[0] / 1, pg.style.height.split("p")[0] / 1);
+		//Game controls//
+	up1 = false;
+	up2 = false;
+	down1 = false;
+	down2 = false;
+	pause = false;
 
-	Center = pg.size.y / 2;
+		//Game variables//
+	ballSpeed = 5;
+	ballAngle = (Math.random() * 2 * Math.PI) - Math.PI;
+	paddleSpeed = 10;
+	paddleSize = 60;
+	paddleExtents = 15;
 
-	p1 = new Paddle("p1");
-	p1.div.style.left = W * 0.1 + "px";
-	p2 = new Paddle("p2");
-	p2.div.style.right = W * 0.1 + "px";
-	ball = new Ball("ball");
+		//Game init//
+	ai = false;
+	update = setInterval(function(){updateGame();}, 70);
+	playing = true;
 
-	bb = new Box();
-
-	flow = setInterval(function(){update();},20);
+		//HTML//
+	pg = new Box("playground", W * 0.025, H * 0.175, W * 0.95, H * 0.8);
+	pg.div.style.left = pg.pos.x + "px";
+	pg.div.style.top = pg.pos.y + "px";
+	p1 = new Box("player1", W * 0.1, pg.height / 2, 10, paddleSize);
+	p2 = new Box("player2", pg.width - (W * 0.1), pg.height / 2, 10, paddleSize);
+	ball = new Box("ball", pg.width / 2, pg.height / 2, 10, 10);
+	ball.velocity.x = ballSpeed * Math.cos(ballAngle);
+	ball.velocity.y = ballSpeed * Math.sin(ballAngle);
+	bound = new Box("bounds", pg.width / 2, pg.height / 2, pg.width * 0.9, pg.height * 0.9);
 }
 
-function kDown(event) {
-	if(event.keyCode == 32) {
-		pause = !pause;
-	} 
-	if(ai) {
-		if(event.keyCode == 38 || event.keyCode == 87) up = true;
-		if(event.keyCode == 40 || event.keyCode == 83) down = true;
-	}else{
-		if(event.keyCode == 87) up = true;
-		if(event.keyCode == 83) down = true;
-		if(event.keyCode == 38) up2 = true;
-		if(event.keyCode == 40) down2 = true;
- 	}
+
+///////////////////////////////////////////////////////////////////////////
+//                                Objects                                //
+///////////////////////////////////////////////////////////////////////////
+
+function Box(id, left, top, width, height) { 
+	this.div = document.getElementById(id);
+	this.pos = new Vector2(left, top);
+	this.width = width;
+	this.height = height;
+
+	this.div.style.left = left - (width / 2) + "px";
+	this.div.style.top = top - (height / 2) + "px";
+	this.div.style.width = width + "px";
+	this.div.style.height = height + "px";
+
+	this.velocity = new Vector2(0,0);
 }
 
-function kUp(event) {
-	if(ai) {
-		if(event.keyCode == 38 || event.keyCode == 87) up = false;
-		if(event.keyCode == 40 || event.keyCode == 83) down = false;
-	}else{
-		if(event.keyCode == 87) up = false;
-		if(event.keyCode == 83) down = false;
-		if(event.keyCode == 38) up2 = false;
-		if(event.keyCode == 40) down2 = false;
- 	}
-}
+function Vector2(x, y){
+	this.x = x;
+	this.y = y;
+	this.angle = function(){
+		return Math.atan2(this.y, this.x);
+	}
+	this.magnitude = function(){
+		return Math.sqrt((this.x * this.x) + (this.y * this.y));
+	}
+	this.normalized = function(){
+		return new Vector2(this.x / this.magnitude(), this.y / this.magnitude());
+	}
 
-function update() {
-	if(!pause){
-		if(up) p1.vel -= (p1.vel > 0) ? 4.5 : 1.5;
-		if(down) p1.vel += (p1.vel < 0) ? 4.5 : 1.5;
-		if(!up && !down) {
-			if(Math.abs(p1.vel) > 0) { 
-				p1.vel = (p1.vel / Math.abs(p1.vel)) * (Math.abs(p1.vel) - 2);
-				if(Math.abs(p1.vel) < 2) p1.vel = 0; 
-			}
+
+	this.equals = function(VectorB){
+		return ((this.x == VectorB.x) && (this.y == VectorB.y));
+	}
+	this.subtract = function(VectorB){
+		return new Vector2(this.x - VectorB.x, this.y - VectorB.y);
+	}
+	this.add = function(VectorB){
+		return new Vector2(this.x + VectorB.x, this.y + VectorB.y);
+	}
+	this.extend = function(magnitude, VectorB){
+		return this.add(VectorB.normalized().multiply(magnitude));
+	}
+
+	this.toZero = function(decel){
+		x = Math.abs(this.x) - decel;
+		if(x < 0) x = 0;
+		x = x * sign(this.x);
+		y = Math.abs(this.y) - decel;
+		if(y < 0) y = 0;
+		y = y * sign(this.y);
+
+		return new Vector2(x, y);
+	}
+	this.accel = function(VectorB, decel){
+		if(VectorB.equals(Vector0)) {
+			return this.toZero(decel);
 		}
-		if(Math.abs(p1.vel) > 10) p1.vel = (p1.vel / Math.abs(p1.vel)) * 10;
-		if(up2) p2.vel -= (p2.vel > 0) ? 4.5 : 1.5;
-		if(down2) p2.vel += (p2.vel < 0) ? 4.5 : 1.5;
-		if(!up2 && !down2) {
-			if(Math.abs(p2.vel) > 0) {
-				p2.vel = (p2.vel / Math.abs(p2.vel)) * (Math.abs(p2.vel) - 2);
-				if(Math.abs(p2.vel) < 2) p2.vel = 0;
-			}
-		}
-		if(Math.abs(p2.vel) > 10) p2.vel = (p2.vel / Math.abs(p2.vel)) * 10;
-	
-		p1.y += p1.vel;
-		p1.div.style.top = p1.y - p1.height + "px";
-		p2.y += p2.vel;
-		p2.div.style.top = p2.y - p2.height + "px";
+		return this.add(VectorB);
+	}
+
+	this.multiply = function(value){
+		return new Vector2(this.x * value, this.y * value);
+	}
+	this.cross = function(VectorB){
+		return (this.x * VectorB.y) - (this.y * VectorB.x);
+	}
+	this.dot = function(VectorB){
+		return this.x * VectorB.x + this.y * VectorB.y;
+	}
+
+	this.rotate = function(modAngle){
+		newAngle = this.angle() + modAngle;
+		return new Vector2(this.magnitude() * Math.cos(newAngle), this.magnitude() * Math.sin(newAngle));
+	}
+	this.reflect = function(normal){
+		flip = this.multiply(-1);
+		angleToNormal = Math.acos(flip.dot(normal) / (this.magnitude() * normal.magnitude()));
+		return normal.rotate(angleToNormal).multiply(this.magnitude());
+	}
+}
+
+function Line(PointA, PointB){
+	this.p = PointA;
+	this.r = PointB;
+	this.length = Math.sqrt((PointB.x - PointA.x) * (PointB.x - PointA.x) + (PointB.y - PointA.y) * (PointB.y - PointA.y));
+	this.center = new Vector2((this.p.x + this.r.x) / 2, (this.p.y + this.r.y) / 2);
+	this.normal1 = new Vector2(-(PointB.y - PointA.y),PointB.x - PointA.x).normalized();
+	this.normal2 = new Vector2(PointB.y - PointA.y, -(PointB.x - PointA.x)).normalized();
+
+	this.collide = function(LineB) {
+		d1 = this.p.subtract(LineB.p).cross(LineB.r.subtract(LineB.p));
+		d2 = this.r.subtract(LineB.p).cross(LineB.r.subtract(LineB.p));
+		d3 = LineB.p.subtract(this.p).cross(this.r.subtract(this.p));
+		d4 = LineB.r.subtract(this.p).cross(this.r.subtract(this.p));
+
+		t = ((this.p.x - LineB.p.x) * (this.p.y - this.r.y) - (this.p.y - LineB.p.y) * (this.p.x - this.r.x)) /
+			((this.p.x - this.r.x) * (LineB.p.y - LineB.r.y) - (this.p.y - this.r.y) * (LineB.p.x - LineB.r.x));
 		
-		checkCollisions();
 
-		ball.pos = ball.pos.add(ball.vel);
-		ball.div.style.left = ball.pos.x - ball.width + "px";
-		ball.div.style.top = ball.pos.y - ball.height + "px";
+		collision = (((d1 < 0 && d2 > 0) || ((d1 > 0 && d2 < 0))) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)));
+		if(collision){
+			collisionPoint = new Vector2((this.p.x + t * (this.r.x - this.p.x)), (this.p.y + t * (this.r.y - this.p.y)));
+			collisionNormal = LineB.normal1;
+			collisionFromCenter = (collisionPoint.y - this.center.y) / (this.center.y - this.p.y);
+		}
+		
+		return collision;
 	}
 }
 
-function checkCollisions() {
-	ballLine = new Line(ball.pos, ball.pos.add(ball.vel));
-	if(ballLine.collide(bb.corners[0], bb.corners[1])) {
-		ball.div.style.backgroundColor = "#FF0000";
-		console.log(ballLine.intersectPoint(new Line(bb.corners[0], bb.corners[1])));
-		console.log(ballLine.segmentPercent(ballLine.intersectPoint(new Line(bb.corners[0], bb.corners[1]))));
-		//reflectPoint //returns percent of frame travelled
-		//multiply velocity based on wall
-		//add? vector of first velocity times reflectpoint with vector of second velocity times 1-reflectpoint
-		pause = true;
+
+///////////////////////////////////////////////////////////////////////////
+//                                 Events                                //
+///////////////////////////////////////////////////////////////////////////
+
+function keyDown(event) {
+
+		//W//
+	if(event.keyCode == 87){
+		up1 = true;
 	}
-	if(ballLine.collide(bb.corners[1], bb.corners[2])) {
-		ball.div.style.backgroundColor = "#00FF00"; //right
-		pause = true;
+
+		//S//
+	if(event.keyCode == 83){
+		down1 = true;
 	}
-	if(ballLine.collide(bb.corners[2], bb.corners[3])) {
-		ball.div.style.backgroundColor = "#0000FF"; //bottom
-		pause = true;
+
+		//up//
+	if(event.keyCode == 38){
+		up2 = true;
 	}
-	if(ballLine.collide(bb.corners[3], bb.corners[0])) {
-		ball.div.style.backgroundColor = "#FF00FF"; //left
-		pause = true;
+
+		//down//
+	if(event.keyCode == 40){
+		down2 = true;
 	}
+
+		//space//
+	if(event.keyCode == 32){
+		pause = !pause;
+	}
+}
+
+function keyUp(event) {
+
+		//W//
+	if(event.keyCode == 87){
+		up1 = false;
+	}
+
+		//S//
+	if(event.keyCode == 83){
+		down1 = false;
+	}
+
+		//up//
+	if(event.keyCode == 38){
+		up2 = false;
+	}
+
+		//down//
+	if(event.keyCode == 40){
+		down2 = false;
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+//                               Intervals                               //
+///////////////////////////////////////////////////////////////////////////
+
+function updateGame() {
+	if(!pause){
+			//Update Player1//
+		Accel = new Vector2(0,0);
+		if(up1 || (ai && up2)){
+			Accel.y = -2;
+		}
+		if(down1 || (ai && down2)){
+			Accel.y = 2;
+		}
+		p1.velocity.y = clamp(p1.velocity.accel(Accel, 1).y, -paddleSpeed, paddleSpeed);
+		p1.pos = p1.pos.add(p1.velocity);
+		p1.pos.y = clamp(p1.pos.y, bound.pos.y - bound.height / 2 + p1.height / 2, bound.pos.y + bound.height / 2 - p1.height / 2);
+		p1.div.style.top = p1.pos.y - (p1.height / 2) + "px"
+	
+			//Update Player2//
+		Accel = new Vector2(0,0);
+		if(!ai && up2){
+			Accel.y = -2;
+		}
+		if(!ai && down2){
+			Accel.y = 2;
+		}
+		p2.velocity.y = clamp(p2.velocity.accel(Accel, 1).y, -paddleSpeed, paddleSpeed);
+		p2.pos = p2.pos.add(p2.velocity);
+		p2.pos.y = clamp(p2.pos.y, bound.pos.y - bound.height / 2 + p2.height / 2, bound.pos.y + bound.height / 2 - p2.height / 2);
+		p2.div.style.top = p2.pos.y - (p2.height / 2) + "px";
+
+///////////////////////////////////////////////////////////////////////////
+//                               Collisions                              //
+///////////////////////////////////////////////////////////////////////////
+		projectedEnd = ball.pos.add(ball.velocity).extend(ball.width / 2, ball.velocity);
+		projectedPath = new Line(ball.pos.extend(ball.width / 2, ball.velocity), projectedEnd);
+		topBound = new Line(new Vector2(bound.pos.x - bound.width / 2, bound.pos.y - bound.height / 2), new Vector2(bound.pos.x + bound.width / 2, bound.pos.y - bound.height / 2));
+		rightBound = new Line(new Vector2(bound.pos.x + bound.width / 2, bound.pos.y - bound.height / 2), new Vector2(bound.pos.x + bound.width / 2, bound.pos.y + bound.height / 2));
+		bottomBound = new Line(new Vector2(bound.pos.x + bound.width / 2, bound.pos.y + bound.height / 2), new Vector2(bound.pos.x - bound.width / 2, bound.pos.y + bound.height / 2));
+		leftBound = new Line(new Vector2(bound.pos.x - bound.width / 2, bound.pos.y + bound.height / 2), new Vector2(bound.pos.x - bound.width / 2,bound.pos.y - bound.height / 2));
+		player1 = new Line(new Vector2(p1.pos.x + p1.width / 2, p1.pos.y + p1.height / 2), new Vector2(p1.pos.x + p1.width / 2, p1.pos.y - p1.height / 2));
+		player1a = new Line(new Vector2(p1.pos.x + p1.width / 2, p1.pos.y - p1.height / 2), new Vector2(p1.pos.x, p1.pos.y - p1.height / 2 - paddleExtents));
+		player1b = new Line(new Vector2(p1.pos.x, p1.pos.y + p1.height / 2 + paddleExtents), new Vector2(p1.pos.x + p1.width / 2, p1.pos.y + p1.height / 2));
+		player2 = new Line(new Vector2(p2.pos.x - p2.width / 2, p2.pos.y - p2.height / 2), new Vector2(p2.pos.x - p2.width / 2, p2.pos.y + p2.height / 2));
+		player2a = new Line(new Vector2(p2.pos.x, p2.pos.y - p2.height / 2 - paddleExtents), new Vector2(p2.pos.x - p2.width / 2, p2.pos.y - p2.height / 2));
+		player2b = new Line(new Vector2(p2.pos.x - p2.width / 2, p2.pos.y + p2.height / 2), new Vector2(p2.pos.x, p2.pos.y + p2.height / 2 + paddleExtents));
+
+		collisionPoint = null;
+		if(projectedPath.collide(topBound)){
+			ball.velocity.y = Math.abs(ball.velocity.y);
+		}
+		if(projectedPath.collide(rightBound)){
+			pause = true;
+			console.log("Player 1 wins!");
+		}
+		if(projectedPath.collide(bottomBound)){
+			ball.velocity.y = Math.abs(ball.velocity.y) * -1;
+		}
+		if(projectedPath.collide(leftBound)){
+			pause = true;
+			console.log("Player 2 wins!");
+		}
+		if(projectedPath.collide(player1)){
+			ball.velocity.x = Math.abs(ball.velocity.x);
+			ball.velocity = ball.velocity.rotate(-collisionFromCenter * Math.PI / 4);
+		}
+		if(projectedPath.collide(player2)){
+			ball.velocity.x = Math.abs(ball.velocity.x) * -1;
+			ball.velocity = ball.velocity.rotate(collisionFromCenter * Math.PI / 4);
+		}
+		if(projectedPath.collide(player1a) || projectedPath.collide(player1b) ||
+				projectedPath.collide(player2a) || projectedPath.collide(player2b)){
+			ball.velocity = ball.velocity.reflect(collisionNormal);
+		}
+
+			//Update Ball//
+		ball.pos = ball.pos.add(ball.velocity);
+		if(collisionPoint){
+			ball.pos = collisionPoint.extend(ball.width / 2, collisionNormal);
+		}
+		
+		ball.div.style.left = ball.pos.x - ball.width / 2 + "px";
+		ball.div.style.top = ball.pos.y - ball.height / 2 + "px";
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+//                                Utility                                //
+///////////////////////////////////////////////////////////////////////////
+
+function clamp(value, min, max) {
+	return Math.min(Math.max(value, min), max);
+}
+
+function sign(value) {
+	if(!value) return 0;
+	return value / Math.abs(value)
 }
 		</script>
 	</head>
-	<body onload="loadStuff()" onkeydown="kDown(event)" onkeyup="kUp(event)">
+	<body onload="loadStuff()" onkeydown="keyDown(event)" onkeyup="keyUp(event)">
 		<div id="playground">
-			<div id = "boundbox"> </div>
-			<div id = "p1" class = "paddle"></div>
-			<div id = "p2" class = "paddle"></div>
-			<div id = "ball"></div>
+			<div id="player1"></div>
+			<div id="player2"></div>
+			<div id="ball"></div>
+			<div id="bounds"></div>
 		</div>
 	</body>
 </html>
