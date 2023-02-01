@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html>
+<!--
+Code by Dreysion
+Done on basic Notepad to prove I can
+First time implementing my own Vector math, not built into a game engine
+I'm a bit proud
+-->
 	<head>
 		<title>Pung</title>
 		<style>
@@ -24,6 +30,9 @@ div {
 }
 		</style>
 		<script>
+//-----------------------------------------------------------------------//
+
+
 ///////////////////////////////////////////////////////////////////////////
 //                                 Setup                                 //
 ///////////////////////////////////////////////////////////////////////////
@@ -85,6 +94,7 @@ function Box(id, left, top, width, height) {
 }
 
 function Vector2(x, y){
+		//Basic properties//
 	this.x = x;
 	this.y = y;
 	this.angle = function(){
@@ -97,7 +107,7 @@ function Vector2(x, y){
 		return new Vector2(this.x / this.magnitude(), this.y / this.magnitude());
 	}
 
-
+		//Less complicated Vector math//
 	this.equals = function(VectorB){
 		return ((this.x == VectorB.x) && (this.y == VectorB.y));
 	}
@@ -111,6 +121,17 @@ function Vector2(x, y){
 		return this.add(VectorB.normalized().multiply(magnitude));
 	}
 
+	this.multiply = function(value){
+		return new Vector2(this.x * value, this.y * value);
+	}
+	this.cross = function(VectorB){
+		return (this.x * VectorB.y) - (this.y * VectorB.x);
+	}
+	this.dot = function(VectorB){
+		return this.x * VectorB.x + this.y * VectorB.y;
+	}
+
+		//More complicated math//
 	this.toZero = function(decel){
 		x = Math.abs(this.x) - decel;
 		if(x < 0) x = 0;
@@ -126,16 +147,6 @@ function Vector2(x, y){
 			return this.toZero(decel);
 		}
 		return this.add(VectorB);
-	}
-
-	this.multiply = function(value){
-		return new Vector2(this.x * value, this.y * value);
-	}
-	this.cross = function(VectorB){
-		return (this.x * VectorB.y) - (this.y * VectorB.x);
-	}
-	this.dot = function(VectorB){
-		return this.x * VectorB.x + this.y * VectorB.y;
 	}
 
 	this.rotate = function(modAngle){
@@ -158,6 +169,7 @@ function Line(PointA, PointB){
 	this.normal2 = new Vector2(PointB.y - PointA.y, -(PointB.x - PointA.x)).normalized();
 
 	this.collide = function(LineB) {
+			//This is the part I copy/pasted//
 		d1 = this.p.subtract(LineB.p).cross(LineB.r.subtract(LineB.p));
 		d2 = this.r.subtract(LineB.p).cross(LineB.r.subtract(LineB.p));
 		d3 = LineB.p.subtract(this.p).cross(this.r.subtract(this.p));
@@ -166,8 +178,8 @@ function Line(PointA, PointB){
 		t = ((this.p.x - LineB.p.x) * (this.p.y - this.r.y) - (this.p.y - LineB.p.y) * (this.p.x - this.r.x)) /
 			((this.p.x - this.r.x) * (LineB.p.y - LineB.r.y) - (this.p.y - this.r.y) * (LineB.p.x - LineB.r.x));
 		
-
 		collision = (((d1 < 0 && d2 > 0) || ((d1 > 0 && d2 < 0))) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)));
+
 		if(collision){
 			collisionPoint = new Vector2((this.p.x + t * (this.r.x - this.p.x)), (this.p.y + t * (this.r.y - this.p.y)));
 			collisionNormal = LineB.normal1;
@@ -180,7 +192,7 @@ function Line(PointA, PointB){
 
 
 ///////////////////////////////////////////////////////////////////////////
-//                                 Events                                //
+//                                 Input                                 //
 ///////////////////////////////////////////////////////////////////////////
 
 function keyDown(event) {
@@ -322,6 +334,16 @@ function updateGame() {
 	}
 }
 
+/*
+//I recognize my collision handling isn't clean. I understand it better
+//now that I've worked with it, future projects should be nicer to look at.
+//
+//Also, there are bugs. For example, you can hit the ball with the edge of
+//the paddle to bounce it to the main body of the same paddle and get two
+//hits in one. Kinda weird angles, but not game breaking, so I'll leave it.
+//
+//It's a feature!
+*/
 
 ///////////////////////////////////////////////////////////////////////////
 //                                Utility                                //
@@ -331,10 +353,12 @@ function clamp(value, min, max) {
 	return Math.min(Math.max(value, min), max);
 }
 
+	//Returns -1 or 1 if the value isn't 0//
 function sign(value) {
 	if(!value) return 0;
 	return value / Math.abs(value)
 }
+//-----------------------------------------------------------------------//
 		</script>
 	</head>
 	<body onload="loadStuff()" onkeydown="keyDown(event)" onkeyup="keyUp(event)">
