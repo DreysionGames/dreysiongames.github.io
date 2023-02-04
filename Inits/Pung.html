@@ -50,6 +50,12 @@ function loadStuff(){
 	down2 = false;
 	pause = false;
 
+		//AI// //name, accuracy, confidence, preemption, recheck, fidget//
+	aiList = [
+		new AI("Martha", 0.3, 0.3, 0.9, 0.7, 0.6)
+	];
+	cRange = false;
+
 		//Game variables//
 	ballSpeed = 5;
 	ballAngle = (Math.random() * 2 * Math.PI) - Math.PI;
@@ -58,7 +64,8 @@ function loadStuff(){
 	paddleExtents = 15;
 
 		//Game init//
-	ai = false;
+	ai = aiList[0];
+	win = false;
 	update = setInterval(function(){updateGame();}, 30);
 	playing = true;
 
@@ -72,6 +79,21 @@ function loadStuff(){
 	ball.velocity.x = ballSpeed * Math.cos(ballAngle);
 	ball.velocity.y = ballSpeed * Math.sin(ballAngle);
 	bound = new Box("bounds", pg.width / 2, pg.height / 2, pg.width * 0.9, pg.height * 0.9);
+}
+
+function restart() {
+	win = false;
+	p1.pos.y = pg.height / 2;
+	p2.pos.y = pg.height / 2;
+	ball.pos = new Vector2(pg.width / 2, pg.height / 2);
+	ballAngle = (Math.random() * 2 * Math.PI) - Math.PI;
+	ball.velocity = new Vector2(ballSpeed * Math.cos(ballAngle), ballSpeed * Math.sin(ballAngle))
+}
+
+function winner(which) {
+	pause = true;
+	win = which;
+	console.log(which + " wins!");
 }
 
 
@@ -91,6 +113,24 @@ function Box(id, left, top, width, height) {
 	this.div.style.height = height + "px";
 
 	this.velocity = new Vector2(0,0);
+}
+
+function Range(a, b){
+	this.a = a;
+	this.b = b;
+	this.min = Math.min(a,b);
+	this.max = Math.max(a,b);
+	this.length = this.max - this.min;
+
+	this.random = function(){
+		return Math.random() * this.min + this.length;
+	}
+	this.inRange = function(pos, length){
+		return (pos - length / 2 < this.max) && (pos + length / 2 > this.min);
+	}
+	//this.log = function(){
+	//	console.log("("+this.min + ", " + this.max + ")");
+	//}
 }
 
 function Vector2(x, y){
@@ -158,6 +198,10 @@ function Vector2(x, y){
 		angleToNormal = Math.acos(flip.dot(normal) / (this.magnitude() * normal.magnitude()));
 		return normal.rotate(angleToNormal).multiply(this.magnitude());
 	}
+
+	//this.log = function(){
+	//	console.log("(" + this.x + ", " + this.y + ")");
+	//}
 }
 
 function Line(PointA, PointB){
@@ -184,9 +228,79 @@ function Line(PointA, PointB){
 			collisionPoint = new Vector2((this.p.x + t * (this.r.x - this.p.x)), (this.p.y + t * (this.r.y - this.p.y)));
 			collisionNormal = LineB.normal1;
 			collisionFromCenter = (collisionPoint.y - this.center.y) / (this.center.y - this.p.y);
+			collisionT = t;
+
+			//colllisionLog = console.log("Collision at point " + collisionPoint.log());
 		}
 		
 		return collision;
+	}
+
+	//this.log = function(){
+	//	console.log(this.p.log() + this.r.log());
+	//}
+}
+
+function AI(name, accuracy, confidence, preemption, recheck, fidget) {
+	this.name = name;
+
+		//All values from 0.01 to 0.99//
+		//First calculate where ball should hit//
+		//Accuracy is an area around that point that AI guesses the ball will go//
+	this.accuracy = accuracy;
+		//Confidence is the area around the chosen accuracy point that AI feels safe to be in//
+	this.confidence = confidence;
+		//Preemption is how soon AI moves to catch the ball//
+	this.preemption = preemption;
+		//Recheck is how often AI updates calculations//
+	this.recheck = recheck;
+		//Fidget affects actions when AI isn't trying to catch the ball//
+	this.fidget = fidget;
+
+	this.checkInterval = 50;
+
+	this.calculateHit = function(){
+		ballppos = new Vector2(ball.pos.x, ball.pos.y);
+		ballpvel = new Vector2(ball.velocity.x, ball.velocity.y);
+
+		collisionTop = new Line(new Vector2(p1.pos.x + p1.width / 2, bound.pos.y - bound.height / 2), new Vector2(p2.pos.x - p2.width / 2, bound.pos.y - bound.height / 2));
+		collisionRight = new Line(new Vector2(p2.pos.x - p2.width / 2, bound.pos.y - bound.height / 2), new Vector2(p2.pos.x - p2.width / 2, bound.pos.y + bound.height / 2));
+		collisionBottom = new Line(new Vector2(p2.pos.x - p2.width / 2, bound.pos.y + bound.height / 2), new Vector2(p1.pos.x + p1.width / 2, bound.pos.y + bound.height / 2));
+		collisionLeft = new Line(new Vector2(p1.pos.x + p1.width / 2, bound.pos.y + bound.height / 2), new Vector2(p1.pos.x + p1.width / 2,bound.pos.y - bound.height / 2));
+
+		mathTarget = false;
+		bounceCount = 0;
+		while(!mathTarget){
+			ballProjection = new Line(ballppos, ballppos.extend(1000,ballpvel));
+			if(ballProjection.collide(collisionTop)){
+				console.log(bounceCount+"top");
+				pPoint = new Vector2(collisionPoint.x, collisionPoint.y);
+				pVelocity = ballpvel.reflect(collisionNormal);
+			}
+			if(ballProjection.collide(collisionBottom)){
+				console.log(bounceCount+"bottom");
+				pPoint = new Vector2(collisionPoint.x, collisionPoint.y);
+				pVelocity = ballpvel.reflect(collisionNormal);
+			}
+			if(ballProjection.collide(collisionLeft)){
+				console.log(bounceCount+"left");
+				pPoint = new Vector2(collisionPoint.x, collisionPoint.y);
+				pVelocity = ballpvel.reflect(collisionNormal);
+			}
+			if(ballProjection.collide(collisionRight)){
+				console.log(bounceCount+"right");
+				pPoint = new Vector2(0,0);
+				pVelocity = new Vector2(0,0);
+				mathTarget = new Vector2(collisionPoint.x, collisionPoint.y);
+			}
+			console.log("("+ballProjection.p.x+","+ballProjection.p.y+"),("+ballProjection.r.x+","+ballProjection.r.y+")");
+			if(collisionPoint) console.log("("+collisionPoint.x+","+collisionPoint.y+")");
+			ballppos = new Vector2(pPoint.x, pPoint.y);
+			ballpvel = new Vector2(pVelocity.x, pVelocity.y);
+			bounceCount++;
+			if(bounceCount > 50) break;
+		}
+		return mathTarget;
 	}
 }
 
@@ -219,6 +333,7 @@ function keyDown(event) {
 
 		//space//
 	if(event.keyCode == 32){
+		if(win) restart();
 		pause = !pause;
 	}
 }
@@ -274,6 +389,51 @@ function updateGame() {
 		if(!ai && down2){
 			Accel.y = 2;
 		}
+
+///////////////////////////////////////////////////////////////////////////
+//                                   AI                                  //
+///////////////////////////////////////////////////////////////////////////
+		if(ai){
+			ai.checkInterval -= ai.recheck;
+			if(ai.checkInterval <= 0){
+				console.log("checking");
+				ai.checkInterval += 50;
+				if(ball.velocity.x > 0 && ball.x + ball.velocity.x > pg.width / 2){
+					ai.checkInterval -= 30;
+				}
+				mTarget = ai.calculateHit();
+				bLine = new Line(ball.pos, mTarget);
+				bDistance = bLine.length;
+				aRange = new Range(mTarget.y-(bDistance/ai.accuracy),mTarget.y+(bDistance/ai.accuracy));
+				aTarget = new Vector2(p2.pos.x, aRange.random());
+				cRange = new Range(aTarget.y-(bounceCount/ai.confidence),aTarget.y+(bounceCount/ai.confidence));
+			}
+			if(cRange && !cRange.inRange(p2.pos,p2.height) && bDistance < ai.preemtion * 100){
+				if(p2.pos.y + p2.height / 2 < cRange.min){
+					Accel.y = 2;
+				}
+				if(p2.pos.y - p2.height / 2 > cRange.max){
+					Accel.y = -2
+				}
+			}else{
+				rngCheck = Math.random();
+				if(rngCheck < ai.fidget / 4){
+					ai.fup = true;
+					ai.fdown = false;
+				}else if(rngCheck < ai.fidget / 2){
+					ai.fup = false;
+					ai.fdown = true;
+				}else if(rngCheck < 3 * ai.fidget / 4){
+					ai.fup = !ai.fup;
+				}else if(rngCheck < ai.fidget){
+					ai.fdown = !ai.fdown;
+				}
+
+				Accel.y = 0;
+				if(ai.fup) Accel.y -= 2;
+				if(ai.fdown) Accel.y += 2;
+			}
+		}
 		p2.velocity.y = clamp(p2.velocity.accel(Accel, 1).y, -paddleSpeed, paddleSpeed);
 		p2.pos = p2.pos.add(p2.velocity);
 		p2.pos.y = clamp(p2.pos.y, bound.pos.y - bound.height / 2 + p2.height / 2, bound.pos.y + bound.height / 2 - p2.height / 2);
@@ -300,15 +460,13 @@ function updateGame() {
 			ball.velocity.y = Math.abs(ball.velocity.y);
 		}
 		if(projectedPath.collide(rightBound)){
-			pause = true;
-			console.log("Player 1 wins!");
+			winner("Player 1");
 		}
 		if(projectedPath.collide(bottomBound)){
 			ball.velocity.y = Math.abs(ball.velocity.y) * -1;
 		}
 		if(projectedPath.collide(leftBound)){
-			pause = true;
-			console.log("Player 2 wins!");
+			winner("Player 2");
 		}
 		if(projectedPath.collide(player1)){
 			ball.velocity.x = Math.abs(ball.velocity.x);
@@ -327,6 +485,7 @@ function updateGame() {
 		ball.pos = ball.pos.add(ball.velocity);
 		if(collisionPoint){
 			ball.pos = collisionPoint.extend(ball.width / 2, collisionNormal);
+			console.log("!!!("+collisionPoint.x+","+collisionPoint.y+")");
 		}
 		
 		ball.div.style.left = ball.pos.x - ball.width / 2 + "px";
@@ -358,6 +517,7 @@ function sign(value) {
 	if(!value) return 0;
 	return value / Math.abs(value)
 }
+
 //-----------------------------------------------------------------------//
 		</script>
 	</head>
