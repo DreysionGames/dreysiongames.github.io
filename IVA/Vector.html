@@ -103,7 +103,6 @@ function loadStuff() {
 
 	drag = -1;
 
-
 	ctx = gr.getContext("2d");
 
 	points = [];
@@ -125,6 +124,13 @@ function loadGraph() {
 		scalePoint = new Vector2(xRange.scale(points[i].pos.x)*gr.width,yRange.scale(points[i].pos.y)*gr.height);
 		drawPoint(scalePoint);
 	}
+	for(i=0;i<connections;i++){
+		pointA = points[p1.children[i].id].pos;
+		pointB = points[p2.children[i].id].pos;
+		sPointA = new Vector2(xRange.scale(pointA.x)*gr.width,yRange.scale(pointA.y)*gr.height);
+		sPointB = new Vector2(xRange.scale(pointB.x)*gr.width,yRange.scale(pointB.y)*gr.height);
+		drawLine(new Line(sPointA,sPointB));
+	}
 }
 
 
@@ -133,7 +139,7 @@ function loadGraph() {
 ///////////////////////////////////////////////////////////////////////////
 
 function label(text,x,y){
-	//calculate exact location based on gr size
+	//Todo: calculate exact location based on gr size
 	ctx.fillText(text,x,y);
 }
 
@@ -183,6 +189,7 @@ function Point(index) {
 
 	this.button = document.createElement("div");
 	this.button.classList.add("point");
+	this.button.id=index;
 	this.xInput = document.createElement("input");
 	this.xInput.value = this.pos.x;
 	this.xInput.type="number";
@@ -214,50 +221,79 @@ function mouseMove() {
 		d.style.display="block";
 		d.style.left = event.clientX - 10 + "px";
 		d.style.top = event.clientY - 10 + "px";
-		gr.style.backgroundColor = "#FFFFBB";
-		for(child of p1.children){
-			child.style.backgroundColor = "#FFFFBB";
-		}
-		//p2.style.backgroundColor = "#FFFFBB";
+		highlight("#FFFFBB");
 	}
-	//c.innerHTML = event.clientX+","+event.clientY;
-	//c.innerHTML = drag;
-	//c.innerHTML = dropTo;
 }
 
 function mouseUp() {
 	d.style.display = "none";
-	gr.style.backgroundColor = "#FFFFFF";
-	for(child of p1.children){
-		child.style.backgroundColor = "#FFFFFF";
-	}
-	//p2.style.backgroundColor = "#FFFFFF";
+	highlight("#FFFFFF");
 
-	if(dropTo == "canvas"){
-		
-	}else if(dropTo == "points"){
-		if(points[drag].connected >= 0){
-			points[drag].connected = -1;
-			points[points[drag].connected].connected = -1;
+	if(drag >= 0){
+		if(dropTo == -1 || dropTo == drag){
+			drag = -1;
+			return;
 		}
-	}else if(dropTo >= 0){
-		if(points[drag].connected >= 0){
-			points[points[drag].connected].connected = -1;
+		if(dropTo == "canvas"){
+			
+		}else if(dropTo == "points"){
+			if(points[drag].connected >= 0){
+				points[points[drag].connected].connected = -1;
+				if(points[points[drag].connected].button.parentElement == p2){
+					points[points[drag].connected].button.remove();
+					p1.appendChild(points[points[drag].connected].button);
+				}
+				connections--;
+				points[drag].connected = -1;
+				c.innerHTML = "Removed line ("+points[dropTo].pos.x+", "+points[dropTo].pos.y+") to ("+points[drag].pos.x+", "+points[drag].pos.y+")";
+			}
+			points[drag].button.remove();
+			p1.appendChild(points[drag].button);
+		}else if(points[drag].connected != dropTo && dropTo >= 0){
+			if(points[drag].connected >= 0){
+				points[points[drag].connected].connected = -1;
+				if(points[points[drag].connected].button.parentElement == p2){
+					points[points[drag].connected].button.remove();
+					p1.appendChild(points[points[drag].connected].button);
+				}
+				connections--;
+			}
+			if(points[dropTo].connected >= 0){
+				points[points[dropTo].connected].connected = -1;
+				if(points[points[dropTo].connected].button.parentElement == p2){
+					points[points[dropTo].connected].button.remove();
+					p1.appendChild(points[points[dropTo].connected].button);
+				}
+				connections--;
+			}
+			points[drag].connected = dropTo;
+			points[dropTo].connected = drag;
+			points[drag].button.remove();
+			points[dropTo].button.remove();
+			p1.insertBefore(points[dropTo].button,p1.children[connections]);
+			p2.insertBefore(points[drag].button,p2.children[connections]);
+			connections++;
+			c.innerHTML = "Created line ("+points[dropTo].pos.x+", "+points[dropTo].pos.y+") to ("+points[drag].pos.x+", "+points[drag].pos.y+")";
 		}
-		points[drag].connected = dropTo;
-		points[dropTo].connected = drag;
+		loadGraph();
 	}
 	
-	if(dropTo >= 0){
-		index = Array.prototype.indexOf.call(p1,points[drag].button);
-		c.innerHTML = drag + " is connected with " + dropTo + "--"+index;
-	}
 	drag = -1;
 }
 
 function mouseOver(which) {
 	dropTo=which;
 	event.stopPropagation();
+}
+
+function highlight(color){
+	gr.style.backgroundColor = color;
+	for(child of p1.children){
+		child.style.backgroundColor = color;
+	}
+	for(child of p2.children){
+		child.style.backgroundColor = color;
+	}
 }
 
 
@@ -291,7 +327,6 @@ function changeValue(index) {
 				<div id="connects"></div>
 				<div id="buttons">
 					<button id="addpoint" onclick="addPoint()">Add Point</button>
-					<button id="connectpoints" onclick="connectPoints()">Connect Points</button>
 				</div>
 				<div id="console"></div>
 			</div>
