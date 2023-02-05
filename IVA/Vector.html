@@ -155,6 +155,11 @@ function drawLine(line) {
 	ctx.stroke();
 }
 
+function translateToGraph(mousePos){
+	
+	return
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 //                                Objects                                //
@@ -192,12 +197,12 @@ function Point(index) {
 	this.button.id=index;
 	this.xInput = document.createElement("input");
 	this.xInput.value = this.pos.x;
-	this.xInput.type="number";
+	this.xInput.type="float";
 	this.xInput.addEventListener("change",function(){changeValue(index);},false);
 	this.button.append(this.xInput);
 	this.yInput = document.createElement("input");
 	this.yInput.value = this.pos.y;
-	this.yInput.type="number";
+	this.yInput.type="float";
 	this.yInput.addEventListener("change",function(){changeValue(index);},false);
 	this.button.append(this.yInput);
 	this.button.addEventListener("mousedown",function(){drag=index;},false);
@@ -221,13 +226,13 @@ function mouseMove() {
 		d.style.display="block";
 		d.style.left = event.clientX - 10 + "px";
 		d.style.top = event.clientY - 10 + "px";
-		highlight("#FFFFBB");
+		highlightDrop("#FFFFBB");
 	}
 }
 
 function mouseUp() {
 	d.style.display = "none";
-	highlight("#FFFFFF");
+	highlightDrop("#FFFFFF");
 
 	if(drag >= 0){
 		if(dropTo == -1 || dropTo == drag){
@@ -235,7 +240,9 @@ function mouseUp() {
 			return;
 		}
 		if(dropTo == "canvas"){
-			
+			points[drag].xInput.value = event.layerX / gr.width * xRange.b;
+			points[drag].yInput.value = event.layerY / gr.height * yRange.b;
+			points[drag].pos = new Vector2(points[drag].xInput.value,points[drag].yInput.value);
 		}else if(dropTo == "points"){
 			if(points[drag].connected >= 0){
 				points[points[drag].connected].connected = -1;
@@ -273,10 +280,11 @@ function mouseUp() {
 			p1.insertBefore(points[dropTo].button,p1.children[connections]);
 			p2.insertBefore(points[drag].button,p2.children[connections]);
 			connections++;
-			c.innerHTML = "Created line ("+points[dropTo].pos.x+", "+points[dropTo].pos.y+") to ("+points[drag].pos.x+", "+points[drag].pos.y+")";
+			c.innerHTML = "Created line ("+Math.floor(points[dropTo].pos.x)+", "+Math.floor(points[dropTo].pos.y)+") to ("+Math.floor(points[drag].pos.x)+", "+Math.floor(points[drag].pos.y)+")";
 		}
 		loadGraph();
 	}
+	if(drag >= 0 && drag != dropTo) points[drag].button.style.backgroundColor = "#FFFFFF";
 	
 	drag = -1;
 }
@@ -286,7 +294,7 @@ function mouseOver(which) {
 	event.stopPropagation();
 }
 
-function highlight(color){
+function highlightDrop(color){
 	gr.style.backgroundColor = color;
 	for(child of p1.children){
 		child.style.backgroundColor = color;
@@ -294,6 +302,7 @@ function highlight(color){
 	for(child of p2.children){
 		child.style.backgroundColor = color;
 	}
+	if(drag >= 0)points[drag].button.style.backgroundColor = "#CCAA00";
 }
 
 
