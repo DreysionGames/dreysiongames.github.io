@@ -118,6 +118,10 @@ function loadGraph() {
 		yRange.a = Math.min(yRange.a,points[i].pos.y);
 		yRange.b = Math.max(yRange.b,points[i].pos.y);
 	}
+	xRange.a = xRange.a - 10;
+	xRange.b = xRange.b + 10;
+	yRange.a = yRange.a - 10;
+	yRange.b = yRange.b + 10;
 
 	ctx.clearRect(0,0,gr.width,gr.height);
 	for(i=0;i<points.length;i++){
@@ -240,8 +244,8 @@ function mouseUp() {
 			return;
 		}
 		if(dropTo == "canvas"){
-			points[drag].xInput.value = event.layerX / gr.width * xRange.b;
-			points[drag].yInput.value = event.layerY / gr.height * yRange.b;
+			points[drag].xInput.value = (event.layerX / gr.width) * (xRange.b - xRange.a) + xRange.a;
+			points[drag].yInput.value = (event.layerY / gr.height) * (yRange.b - yRange.a) + yRange.a;
 			points[drag].pos = new Vector2(points[drag].xInput.value,points[drag].yInput.value);
 		}else if(dropTo == "points"){
 			if(points[drag].connected >= 0){
