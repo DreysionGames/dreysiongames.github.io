@@ -12,6 +12,10 @@ div {
 	position: absolute;
 }
 
+input {
+	width: 50px;
+}
+
 #container {
 	top:0px;
 	left:0px;
@@ -24,7 +28,7 @@ button {
 }
 
 .point {
-	position: static;
+	position: relative;
 	display: inline-block;
 	border: 1px solid #000000;
 	height: 80px;
@@ -35,6 +39,12 @@ button {
 	width: 30px;
 }
 
+.delete {
+	border: 1px solid #000000;
+	bottom: 0px;
+	right: 0px;
+}
+
 #drag {
 	height: 20px;
 	width: 20px;
@@ -42,6 +52,10 @@ button {
 	border: 1px solid #000000;
 	display: none;
 	pointer-events: none;
+}
+
+#math {
+	bottom: 40px;
 }
 		</style>
 		<script>
@@ -137,6 +151,15 @@ function loadGraph() {
 	}
 }
 
+function setLines(){
+	for(i=0;i<points.length;i++){
+		points[i].line.innerHTML="";
+	}
+	for(i=0;i<connections;i++){
+		points[p1.children[i].id].line.innerHTML="Line "+i;
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 //                                Drawing                                //
@@ -202,17 +225,50 @@ function Point(index) {
 	this.xInput = document.createElement("input");
 	this.xInput.value = this.pos.x;
 	this.xInput.type="float";
-	this.xInput.addEventListener("change",function(){changeValue(index);},false);
+	this.xInput.addEventListener("change",function(){changeValue(this.parentElement.id);},false);
 	this.button.append(this.xInput);
 	this.yInput = document.createElement("input");
 	this.yInput.value = this.pos.y;
 	this.yInput.type="float";
-	this.yInput.addEventListener("change",function(){changeValue(index);},false);
+	this.yInput.addEventListener("change",function(){changeValue(this.parentElement.id);},false);
 	this.button.append(this.yInput);
-	this.button.addEventListener("mousedown",function(){drag=index;},false);
-	this.button.addEventListener("mouseover",function(){mouseOver(index);},false);
+	this.line = document.createElement("span");
+	this.button.append(this.line);
+	this.x = document.createElement("div");
+	this.x.classList.add("delete");
+	this.x.addEventListener("click",function(){points[this.parentElement.id].removePoint();});
+	this.x.innerHTML = "X";
+	this.button.append(this.x);
+	this.button.addEventListener("mousedown",function(){drag=this.id;},false);
+	this.button.addEventListener("mouseover",function(){mouseOver(this.id);},false);
 	this.button.addEventListener("mouseout",function(){mouseOver(-1);},false);
 	p1.append(this.button);
+
+	this.removePoint = function(){
+		if(this.connected >= 0){
+			points[this.connected].connected = -1;
+			if(points[this.connected].button.parentElement == p2){
+				points[this.connected].button.remove();
+				p1.append(points[this.connected].button);
+			}
+			connections--;
+		}
+
+		this.button.remove();
+		for(i=this.index+1;i<points.length;i++){
+			points[i-1]=points[i];
+			points[i-1].button.id--;
+			points[i-1].index--;
+			if(points[i-1].connected >= 0){
+				points[points[i-1].connected].connected--;
+			}
+		}
+		points.length--;
+		c.innerHTML = "Removed point (" + Math.floor(this.pos.x) + ", " + Math.floor(this.pos.y) + ")";
+		setLines();
+		loadGraph();
+	}
+	this.getIndex = function(){return this.index;}
 }
 
 function Connection(PointA, PointB) {
@@ -256,7 +312,7 @@ function mouseUp() {
 				}
 				connections--;
 				points[drag].connected = -1;
-				c.innerHTML = "Removed line ("+points[dropTo].pos.x+", "+points[dropTo].pos.y+") to ("+points[drag].pos.x+", "+points[drag].pos.y+")";
+				c.innerHTML = "Removed line ("+points[drag].pos.x+", "+points[drag].pos.y+") to ("+points[drag].pos.x+", "+points[drag].pos.y+")";
 			}
 			points[drag].button.remove();
 			p1.appendChild(points[drag].button);
@@ -286,6 +342,7 @@ function mouseUp() {
 			connections++;
 			c.innerHTML = "Created line ("+Math.floor(points[dropTo].pos.x)+", "+Math.floor(points[dropTo].pos.y)+") to ("+Math.floor(points[drag].pos.x)+", "+Math.floor(points[drag].pos.y)+")";
 		}
+		setLines();
 		loadGraph();
 	}
 	if(drag >= 0 && drag != dropTo) points[drag].button.style.backgroundColor = "#FFFFFF";
@@ -306,7 +363,7 @@ function highlightDrop(color){
 	for(child of p2.children){
 		child.style.backgroundColor = color;
 	}
-	if(drag >= 0)points[drag].button.style.backgroundColor = "#CCAA00";
+	if(drag >= 0 && drag < points.length) points[drag].button.style.backgroundColor = "#CCAA00";
 }
 
 
@@ -339,6 +396,19 @@ function changeValue(index) {
 				<div id="points" onmouseover="mouseOver('points')" onmouseout="mouseOver(-1)"></div>
 				<div id="connects"></div>
 				<div id="buttons">
+					<div id="math">
+						<select>
+							<option>Add Vectors</option>
+							<option>Subtract Vectors</option>
+							<option>Dot Product</option>
+							<option>Cross Product</option>
+							<option>Collide Lines</option>
+							<option>Reflect on Line</option>
+						</select>
+						<input type="number">
+						<input type="number">
+						<span id="result"></span>
+					</div>
 					<button id="addpoint" onclick="addPoint()">Add Point</button>
 				</div>
 				<div id="console"></div>
