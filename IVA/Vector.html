@@ -116,6 +116,9 @@ function loadStuff() {
 	c.style.bottom = "0px";
 
 	drag = -1;
+	dropTo = -1;
+	xRange = new Range(-10,10);
+	yRange = new Range(-10,10);
 
 	ctx = gr.getContext("2d");
 
@@ -182,11 +185,6 @@ function drawLine(line) {
 	ctx.stroke();
 }
 
-function translateToGraph(mousePos){
-	
-	return
-}
-
 
 ///////////////////////////////////////////////////////////////////////////
 //                                Objects                                //
@@ -207,6 +205,12 @@ function Range(a,b) {
 function Vector2(x,y) {
 	this.x = x;
 	this.y = y;
+
+	this.inRadius = function(PointB, radius){
+		x = this.x - PointB.x;
+		y = this.y - PointB.y;
+		return Math.sqrt((x * x) + (y * y)) < radius;
+	}
 }
 
 function Line(p,r) {
@@ -294,7 +298,9 @@ function mouseUp() {
 	d.style.display = "none";
 	highlightDrop("#FFFFFF");
 
-	if(drag >= 0){
+	/*if(drag == "canvas" && dropTo == "canvas"){
+		dropPoint = new Vector2((event.layerX / gr.width) * (xRange.b - xRange.a) + xRange.a, (event.layerY / gr.height) * (yRange.b - yRange.a) + yRange.a);
+	}else */if(drag >= 0){
 		if(dropTo == -1 || dropTo == drag){
 			drag = -1;
 			return;
@@ -351,7 +357,9 @@ function mouseUp() {
 }
 
 function mouseOver(which) {
-	dropTo=which;
+	if(drag != -1){
+		dropTo=which;
+	}
 	event.stopPropagation();
 }
 
@@ -364,6 +372,18 @@ function highlightDrop(color){
 		child.style.backgroundColor = color;
 	}
 	if(drag >= 0 && drag < points.length) points[drag].button.style.backgroundColor = "#CCAA00";
+}
+
+function clickGraph(){
+	drag = "canvas";
+	dropTo = "canvas";
+	clickPoint = new Vector2((event.layerX / gr.width) * (xRange.b - xRange.a) + xRange.a, (event.layerY / gr.height) * (yRange.b - yRange.a) + yRange.a);
+	radius = (10 / gr.width) * (xRange.b - xRange.a);
+	for(i=0;i<points.length;i++){
+		if(clickPoint.inRadius(points[i].pos,radius)){
+			drag = points[i].index;
+		}
+	}
 }
 
 
@@ -390,7 +410,7 @@ function changeValue(index) {
 	</head>
 	<body onload="loadStuff()" onmousemove="mouseMove()" onmouseup="mouseUp()" onselectstart="return false">
 		<div id="container">
-			<canvas id="graph" onmouseover="mouseOver('canvas')" onmouseout="mouseOver(-1)"></canvas>
+			<canvas id="graph" onmouseover="mouseOver('canvas')" onmouseout="mouseOver(-1)" onmousedown="clickGraph()"></canvas>
 			<div id="controls">
 				<center>Points:</center>
 				<div id="points" onmouseover="mouseOver('points')" onmouseout="mouseOver(-1)"></div>
