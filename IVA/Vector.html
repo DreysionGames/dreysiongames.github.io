@@ -45,6 +45,12 @@ button {
 	right: 0px;
 }
 
+.math-drop {
+	border:1px solid #000000;
+	height: 60px;
+	text-align:center;
+}
+
 #drag {
 	height: 20px;
 	width: 20px;
@@ -75,26 +81,26 @@ function loadStuff() {
 	gr = document.getElementById("graph");
 	cr = document.getElementById("controls");
 	d = document.getElementById("drag");
+	pp = document.getElementById("point-point");
+	ll = document.getElementById("line-line");
 
 	gr.style.top = H * 0.05 + "px";
 	gr.style.left = W * 0.05 + "px";
 	if(W > H){
 		gr.width = W * 0.65;
 		gr.height = H * 0.9;
-		cr.style.top = H * 0.05 + "px";
-		cr.style.right = W * 0.05 + "px";
-		cr.style.width = W * 0.15 + "px";
-		cr.style.height = H * 0.9 + "px";
-		p1.style.top = "20px";
-		p1.style.width = W * 0.075 + "px";
-		p1.style.height = H * 0.6 + "px";
+		setLayout(cr, W - (W * 0.2), H * 0.05 , W * 0.15, gr.height);
+		setLayout(p1, 0, 20, W * 0.075, H * 0.6);
 		p1.style.overflowY = "scroll";
-		p2.style.top = "20px";
-		p2.style.width = W * 0.075 + "px";
-		p2.style.height = H * 0.6 + "px";
+		setLayout(p2, W * 0.075, 20, W * 0.075, H * 0.6);
 		p2.style.overflowY = "scroll";
-		p2.style.right = "0px";
-		b.style.bottom = "20px";
+		setLayout(b,0,gr.height-60,numberFromStyle(cr.style.width),0);
+		setLayout(document.getElementById("math"), 0, -100, numberFromStyle(cr.style.width)+2+"px", 80);
+		setLayout(pp, 0, 20, numberFromStyle(cr.style.width), 0);
+		setLayout(ll, 0, 20, numberFromStyle(cr.style.width), 0);
+		for(div of document.getElementsByClassName("math-drop")){
+			setLayout(div, "", 20, numberFromStyle(p1.style.width)-1, 60)
+		}
 	}else{
 		gr.width = W * 0.9;
 		gr.height = H * 0.65;
@@ -123,7 +129,32 @@ function loadStuff() {
 	ctx = gr.getContext("2d");
 
 	points = [];
+	mpoints = [];
+	rpoints = [];
+	lines = [];
+	mlines = [];
+	rlines = [];
 	connections = 0;
+
+	mVectorA = new Vector2(0,0);
+	mVectorB = new Vector2(0,0);
+	mLineA = new Line(mVectorA, mVectorB);
+	mLineB = new Line(mVectorA, mVectorB);
+}
+
+function setLayout(id, left, top, width, height){
+	id.style.left = left + "px";
+	id.style.top = top + "px";
+	id.style.width = width + "px";
+	id.style.height = height + "px";
+}
+
+function numberFromStyle(string){
+	return string.split("p")[0];
+}
+
+function round2(num){
+	return Math.floor(num*100)/100;
 }
 
 function loadGraph() {
@@ -135,22 +166,47 @@ function loadGraph() {
 		yRange.a = Math.min(yRange.a,points[i].pos.y);
 		yRange.b = Math.max(yRange.b,points[i].pos.y);
 	}
-	xRange.a = xRange.a - 10;
-	xRange.b = xRange.b + 10;
-	yRange.a = yRange.a - 10;
-	yRange.b = yRange.b + 10;
+	for(p of mpoints){
+		xRange.a = Math.min(xRange.a,p.x);
+		xRange.b = Math.max(xRange.b,p.x);
+		yRange.a = Math.min(yRange.a,p.y);
+		yRange.b = Math.max(yRange.b,p.y);
+	}
+	for(p of rpoints){
+		xRange.a = Math.min(xRange.a,p.x);
+		xRange.b = Math.max(xRange.b,p.x);
+		yRange.a = Math.min(yRange.a,p.y);
+		yRange.b = Math.max(yRange.b,p.y);
+	}
+	xRange.a = (xRange.a /1) - 10;
+	xRange.b = (xRange.b /1) + 10;
+	yRange.a = (yRange.a /1) - 10;
+	yRange.b = (yRange.b /1) + 10;
 
 	ctx.clearRect(0,0,gr.width,gr.height);
-	for(i=0;i<points.length;i++){
-		scalePoint = new Vector2(xRange.scale(points[i].pos.x)*gr.width,yRange.scale(points[i].pos.y)*gr.height);
-		drawPoint(scalePoint);
+	for(p of points){
+		scalePoint = new Vector2(xRange.scale(p.pos.x)*gr.width,yRange.scale(p.pos.y)*gr.height);
+		drawPoint(scalePoint, "#000000");
 	}
-	for(i=0;i<connections;i++){
-		pointA = points[p1.children[i].id].pos;
-		pointB = points[p2.children[i].id].pos;
-		sPointA = new Vector2(xRange.scale(pointA.x)*gr.width,yRange.scale(pointA.y)*gr.height);
-		sPointB = new Vector2(xRange.scale(pointB.x)*gr.width,yRange.scale(pointB.y)*gr.height);
-		drawLine(new Line(sPointA,sPointB));
+	for(p of mpoints){
+		scalePoint = new Vector2(xRange.scale(p.x)*gr.width,yRange.scale(p.y)*gr.height);
+		drawPoint(scalePoint, "#0000FF");
+	}
+	for(p of rpoints){
+		scalePoint = new Vector2(xRange.scale(p.x)*gr.width,yRange.scale(p.y)*gr.height);
+		drawPoint(scalePoint, "#FF0000");
+	}
+	for(l of lines){
+		scaleLine = new Line(new Vector2(xRange.scale(l.p.x)*gr.width,yRange.scale(l.p.y)*gr.height), new Vector2(xRange.scale(l.r.x)*gr.width,yRange.scale(l.r.y)*gr.height));
+		drawLine(scaleLine, "#000000");
+	}
+	for(l of mlines){
+		scaleLine = new Line(new Vector2(xRange.scale(l.p.x)*gr.width,yRange.scale(l.p.y)*gr.height), new Vector2(xRange.scale(l.r.x)*gr.width,yRange.scale(l.r.y)*gr.height));
+		drawLine(scaleLine, "#0000FF");
+	}
+	for(l of rlines){
+		scaleLine = new Line(new Vector2(xRange.scale(l.p.x)*gr.width,yRange.scale(l.p.y)*gr.height), new Vector2(xRange.scale(l.r.x)*gr.width,yRange.scale(l.r.y)*gr.height));
+		drawLine(scaleLine, "#FF0000");
 	}
 }
 
@@ -173,15 +229,18 @@ function label(text,x,y){
 	ctx.fillText(text,x,y);
 }
 
-function drawPoint(vector){
+function drawPoint(vector, color){
 	ctx.beginPath();
 	ctx.arc(vector.x,vector.y,10,0,2*Math.PI);
+	ctx.strokeStyle = color;
 	ctx.stroke();
 }
 
-function drawLine(line) {
+function drawLine(line, color) {
+	ctx.beginPath();
 	ctx.moveTo(line.p.x,line.p.y);
 	ctx.lineTo(line.r.x,line.r.y);
+	ctx.strokeStyle = color;
 	ctx.stroke();
 }
 
@@ -211,6 +270,13 @@ function Vector2(x,y) {
 		y = this.y - PointB.y;
 		return Math.sqrt((x * x) + (y * y)) < radius;
 	}
+
+	this.add = function(VectorB){
+		return new Vector2((this.x /1) + (VectorB.x /1), (this.y /1) + (VectorB.y /1));
+	}
+	this.subtract = function(VectorB){
+		return new Vector2((this.x /1) - (VectorB.x /1), (this.y /1) - (VectorB.y /1));
+	}
 }
 
 function Line(p,r) {
@@ -222,6 +288,7 @@ function Point(index) {
 	this.index = index;
 	this.pos = new Vector2(0,0);
 	this.connected = -1;
+	this.lineIndex = -1;
 
 	this.button = document.createElement("div");
 	this.button.classList.add("point");
@@ -251,10 +318,15 @@ function Point(index) {
 	this.removePoint = function(){
 		if(this.connected >= 0){
 			points[this.connected].connected = -1;
-			if(points[this.connected].button.parentElement == p2){
-				points[this.connected].button.remove();
-				p1.append(points[this.connected].button);
+			//if(points[this.connected].button.parentElement == p2){
+			points[this.connected].button.remove();
+			p1.append(points[this.connected].button);
+			//}
+			for(p of points){
+				if(p.lineIndex > this.lineIndex) p.lineIndex--;
 			}
+			lines.splice(this.lineIndex,1);
+			points[this.connected].lineIndex = -1;
 			connections--;
 		}
 
@@ -268,7 +340,7 @@ function Point(index) {
 			}
 		}
 		points.length--;
-		c.innerHTML = "Removed point (" + Math.floor(this.pos.x) + ", " + Math.floor(this.pos.y) + ")";
+		c.innerHTML = "Removed point (" + round2(this.pos.x) + ", " + round2(this.pos.y) + ")";
 		setLines();
 		loadGraph();
 	}
@@ -282,7 +354,7 @@ function Connection(PointA, PointB) {
 
 
 ///////////////////////////////////////////////////////////////////////////
-//                                Buttons                                //
+//                                 Input                                 //
 ///////////////////////////////////////////////////////////////////////////
 
 function mouseMove() {
@@ -298,9 +370,7 @@ function mouseUp() {
 	d.style.display = "none";
 	highlightDrop("#FFFFFF");
 
-	/*if(drag == "canvas" && dropTo == "canvas"){
-		dropPoint = new Vector2((event.layerX / gr.width) * (xRange.b - xRange.a) + xRange.a, (event.layerY / gr.height) * (yRange.b - yRange.a) + yRange.a);
-	}else */if(drag >= 0){
+	if(drag >= 0){
 		if(dropTo == -1 || dropTo == drag){
 			drag = -1;
 			return;
@@ -309,44 +379,84 @@ function mouseUp() {
 			points[drag].xInput.value = (event.layerX / gr.width) * (xRange.b - xRange.a) + xRange.a;
 			points[drag].yInput.value = (event.layerY / gr.height) * (yRange.b - yRange.a) + yRange.a;
 			points[drag].pos = new Vector2(points[drag].xInput.value,points[drag].yInput.value);
+			if(points[drag].connected >= 0){
+				if(points[drag].button.parentElement == p1) lines[points[drag].lineIndex].p = points[drag].pos;
+				if(points[drag].button.parentElement == p2) lines[points[drag].lineIndex].r = points[drag].pos;
+			}
+		}else if(dropTo == "pp1" || dropTo == "pp2"){
+			text="("+round2(points[drag].pos.x)+","+round2(points[drag].pos.y)+")";
+			document.getElementById(dropTo+"s").innerHTML=text;
+			if(dropTo=="pp1") mVectorA = points[drag].pos;
+			else mVectorB = points[drag].pos;
+			selectMath();
+		}else if(dropTo == "ll1" || dropTo == "ll2"){
+			if(points[drag].connected != -1){
+				l1 = points[drag].button.parentElement==p1 ? points[drag].pos : points[points[drag].connected].pos;
+				l2 = points[drag].button.parentElement==p2 ? points[drag].pos : points[points[drag].connected].pos;
+				text="("+l1.x+","+l1.y+")-("+l2.x+","+l2.y+")";
+				document.getElementById(dropTo+"s").innerHTML=text;
+				if(dropTo=="ll1") mLineA = lines[points[drag].lineIndex];
+				else mLineB = lines[points[drag].lineIndex];
+			}
+			selectMath();
 		}else if(dropTo == "points"){
 			if(points[drag].connected >= 0){
 				points[points[drag].connected].connected = -1;
-				if(points[points[drag].connected].button.parentElement == p2){
-					points[points[drag].connected].button.remove();
-					p1.appendChild(points[points[drag].connected].button);
-				}
+				//if(points[points[drag].connected].button.parentElement == p2){
+				points[points[drag].connected].button.remove();
+				p1.appendChild(points[points[drag].connected].button);
+				//}
+				points[points[drag].connected].lineIndex = -1;
 				connections--;
 				points[drag].connected = -1;
-				c.innerHTML = "Removed line ("+points[drag].pos.x+", "+points[drag].pos.y+") to ("+points[drag].pos.x+", "+points[drag].pos.y+")";
+				c.innerHTML = "Removed line ("+round2(points[drag].pos.x)+", "+round2(points[drag].pos.y)+") to ("+round2(points[drag].pos.x)+", "+round2(points[drag].pos.y)+")";
 			}
 			points[drag].button.remove();
 			p1.appendChild(points[drag].button);
+			lines.splice(points[drag].lineIndex,1);
+			points[drag].lineIndex = -1;
+			for(p of points){
+				if(p.lineIndex > points[drag].lineIndex) p.lineIndex--;
+			}
 		}else if(points[drag].connected != dropTo && dropTo >= 0){
 			if(points[drag].connected >= 0){
 				points[points[drag].connected].connected = -1;
-				if(points[points[drag].connected].button.parentElement == p2){
-					points[points[drag].connected].button.remove();
-					p1.appendChild(points[points[drag].connected].button);
-				}
+				//if(points[points[drag].connected].button.parentElement == p2){
+				points[points[drag].connected].button.remove();
+				p1.appendChild(points[points[drag].connected].button);
+				//}
+				lines.splice(points[points[drag].connected].lineIndex,1);
+				points[points[drag].connected].lineIndex = -1;
 				connections--;
+				for(p of points){
+					if(p.lineIndex > points[drag].lineIndex) p.lineIndex--;
+				}
 			}
 			if(points[dropTo].connected >= 0){
 				points[points[dropTo].connected].connected = -1;
-				if(points[points[dropTo].connected].button.parentElement == p2){
-					points[points[dropTo].connected].button.remove();
-					p1.appendChild(points[points[dropTo].connected].button);
-				}
+				//if(points[points[dropTo].connected].button.parentElement == p2){
+				points[points[dropTo].connected].button.remove();
+				p1.appendChild(points[points[dropTo].connected].button);
+				//}
+				lines.splice(points[points[dropTo].connected].lineIndex,1);
+				points[points[dropTo].connected].lineIndex = -1;
 				connections--;
+				for(p of points){
+					if(p.lineIndex > points[dropTo].lineIndex) p.lineIndex--;
+				}
 			}
+			
 			points[drag].connected = dropTo;
 			points[dropTo].connected = drag;
 			points[drag].button.remove();
 			points[dropTo].button.remove();
 			p1.insertBefore(points[dropTo].button,p1.children[connections]);
 			p2.insertBefore(points[drag].button,p2.children[connections]);
+			lines[lines.length]=new Line(points[dropTo].pos,points[drag].pos);
+			points[dropTo].lineIndex = lines.length-1;
+			points[drag].lineIndex = lines.length-1;
 			connections++;
-			c.innerHTML = "Created line ("+Math.floor(points[dropTo].pos.x)+", "+Math.floor(points[dropTo].pos.y)+") to ("+Math.floor(points[drag].pos.x)+", "+Math.floor(points[drag].pos.y)+")";
+			c.innerHTML = "Created line ("+round2(points[dropTo].pos.x)+", "+round2(points[dropTo].pos.y)+") to ("+round2(points[drag].pos.x)+", "+round2(points[drag].pos.y)+")";
 		}
 		setLines();
 		loadGraph();
@@ -354,6 +464,7 @@ function mouseUp() {
 	if(drag >= 0 && drag != dropTo) points[drag].button.style.backgroundColor = "#FFFFFF";
 	
 	drag = -1;
+	dropTo = -1;
 }
 
 function mouseOver(which) {
@@ -370,6 +481,13 @@ function highlightDrop(color){
 	}
 	for(child of p2.children){
 		child.style.backgroundColor = color;
+	}
+	for(div of document.getElementsByClassName("math-drop")){
+		div.style.backgroundColor = color;
+	}
+	if(drag >= 0 && points[drag].connected == -1){
+		document.getElementById("ll1").style.backgroundColor = "#FFFFFF";
+		document.getElementById("ll2").style.backgroundColor = "#FFFFFF";
 	}
 	if(drag >= 0 && drag < points.length) points[drag].button.style.backgroundColor = "#CCAA00";
 }
@@ -396,13 +514,70 @@ function addPoint() {
 	loadGraph();
 }
 
-function connectPoints() {
-
-}
-
 function changeValue(index) {
 	points[index].pos = new Vector2(points[index].xInput.value,points[index].yInput.value);
+	if(points[index].connected >= 0){
+		if(points[index].button.parentElement == p1) lines[points[index].lineIndex].p = points[index].pos;
+		if(points[index].button.parentElement == p2) lines[points[index].lineIndex].r = points[index].pos;
+	}
 	loadGraph();
+}
+
+function selectMath() {
+	m = document.getElementById("mathtype").value;
+	r = document.getElementById("result");
+
+	if(m=="add"){
+		mpoints = [new Vector2(0,0),
+			new Vector2(mVectorA.x, mVectorA.y),
+			new Vector2(mVectorB.x, mVectorB.y),
+		];
+		rpoints[0]=mpoints[1].add(mpoints[2]);
+		mlines = [new Line(mpoints[0],mpoints[1]),
+			new Line(mpoints[0],mpoints[2]),
+			new Line(mpoints[1],rpoints[0]),
+			new Line(mpoints[2],rpoints[0])
+		];
+
+		pp.style.display = "block";
+		ll.style.display = "none";
+		
+		r.innerHTML = "Result: ("+round2(rpoints[0].x)+","+round2(rpoints[0].y)+")";
+	}
+	if(m=="sub") {
+		mpoints = [new Vector2(0,0),
+			new Vector2(mVectorA.x, mVectorA.y),
+			new Vector2(mVectorB.x, mVectorB.y),
+		];
+		rpoints[0]=mpoints[1].subtract(mpoints[2]);
+		mlines = [new Line(mpoints[0],mpoints[2])];
+		rlines = [new Line(mpoints[1],rpoints[0])];
+
+		pp.style.display = "block";
+		ll.style.display = "none";
+
+		r.innerHTML = "Result: ("+round2(rpoints[0].x)+","+round2(rpoints[0].y)+")";
+	}
+	if(m=="dot"){
+		mpoints = [mVectorA,mVectorB];
+		pp.style.display = "block";
+		ll.style.display = "none";
+	}
+	if(m=="crs") {
+		mpoints = [mVectorA,mVectorB];
+		pp.style.display = "block";
+		ll.style.display = "none";
+	}
+	if(m=="cld"){
+		mpoints = [mLineA.p,mLineA.r,mLineB.p,mLineB.r];
+		pp.style.display = "none";
+		ll.style.display = "block";
+	}
+	if(m=="ref") {
+		mpoints = [mLineA.p,mLineA.r,mLineB.p,mLineB.r];
+		pp.style.display = "none";
+		ll.style.display = "block";
+	}
 }
 
 //-----------------------------------------------------------------------//
@@ -417,16 +592,24 @@ function changeValue(index) {
 				<div id="connects"></div>
 				<div id="buttons">
 					<div id="math">
-						<select>
-							<option>Add Vectors</option>
-							<option>Subtract Vectors</option>
-							<option>Dot Product</option>
-							<option>Cross Product</option>
-							<option>Collide Lines</option>
-							<option>Reflect on Line</option>
+						<select id="mathtype" onchange="selectMath()">
+							<option value="add">Add Vectors</option>
+							<option value="sub">Subtract Vectors</option>
+							<option value="dot">Dot Product</option>
+							<option value="crs">Cross Product</option>
+							<option value="cld">Collide Lines</option>
+							<option value="ref">Reflect on Line</option>
 						</select>
-						<input type="number">
-						<input type="number">
+		<!---Bad naming practice, I just don't care-->
+						<div id="point-point">
+							<div id="pp1" class="math-drop" style="left:-1px" onmouseover="mouseOver('pp1')">Point:<br><span id="pp1s">(0,0)</span></div>
+							<div id="pp2" class="math-drop" style="right:-1px" onmouseover="mouseOver('pp2')">Point:<br><span id="pp2s">(0,0)</span></div>
+						</div>
+						<div id="line-line" style="display:none">
+							<div id="ll1" class="math-drop" style="left:-1px" onmouseover="mouseOver('ll1')">Line:<br><span id="ll1s">(0,0)-(0,0)</span></div>
+							<div id="ll2" class="math-drop" style="right:-1px" onmouseover="mouseOver('ll2')">Line:<br><span id="ll2s">(0,0)-(0,0)</span></div>
+						</div>
+						<br>
 						<span id="result"></span>
 					</div>
 					<button id="addpoint" onclick="addPoint()">Add Point</button>
