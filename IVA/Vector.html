@@ -140,6 +140,10 @@ function loadStuff() {
 	mVectorB = new Vector2(0,0);
 	mLineA = new Line(mVectorA, mVectorB);
 	mLineB = new Line(mVectorA, mVectorB);
+
+	z=false;
+
+	loadGraph();
 }
 
 function setLayout(id, left, top, width, height){
@@ -158,8 +162,12 @@ function round2(num){
 }
 
 function loadGraph() {
-	xRange = new Range(points[0].pos.x,points[0].pos.x);
-	yRange = new Range(points[0].pos.y,points[0].pos.y);
+	xRange = new Range(0,0);
+	yRange = new Range(0,0);
+	if(points[0]){
+		xRange = new Range(points[0].pos.x,points[0].pos.x);
+		yRange = new Range(points[0].pos.y,points[0].pos.y);
+	}
 	for(i=1;i<points.length;i++){
 		xRange.a = Math.min(xRange.a,points[i].pos.x);
 		xRange.b = Math.max(xRange.b,points[i].pos.x);
@@ -184,13 +192,16 @@ function loadGraph() {
 	yRange.b = (yRange.b /1) + 10;
 
 	ctx.clearRect(0,0,gr.width,gr.height);
+	drawLine(new Line(new Vector2(xRange.scale(0)*gr.width,0), new Vector2(xRange.scale(0)*gr.width,gr.height)),"#000000");
+	drawLine(new Line(new Vector2(0,yRange.scale(0)*gr.height), new Vector2(gr.width,yRange.scale(0)*gr.height)),"#000000");
 	for(p of points){
 		scalePoint = new Vector2(xRange.scale(p.pos.x)*gr.width,yRange.scale(p.pos.y)*gr.height);
 		drawPoint(scalePoint, "#000000");
 	}
 	for(p of mpoints){
 		scalePoint = new Vector2(xRange.scale(p.x)*gr.width,yRange.scale(p.y)*gr.height);
-		drawPoint(scalePoint, "#0000FF");
+		if(z && p.x == 0 && p.y == 0) drawPoint(scalePoint, "#AAAA00");
+		else drawPoint(scalePoint, "#0000FF");
 	}
 	for(p of rpoints){
 		scalePoint = new Vector2(xRange.scale(p.x)*gr.width,yRange.scale(p.y)*gr.height);
@@ -271,12 +282,35 @@ function Vector2(x,y) {
 		return Math.sqrt((x * x) + (y * y)) < radius;
 	}
 
+	this.magnitude = function(){
+		return Math.sqrt((this.x * this.x) + (this.y * this.y));
+	}
+	this.normalized = function(){
+		if (this.magnitude() == 0) return new Vector2(0,0);
+		return new Vector2(this.x / this.magnitude(), this.y / this.magnitude());
+	}
+
 	this.add = function(VectorB){
 		return new Vector2((this.x /1) + (VectorB.x /1), (this.y /1) + (VectorB.y /1));
 	}
 	this.subtract = function(VectorB){
 		return new Vector2((this.x /1) - (VectorB.x /1), (this.y /1) - (VectorB.y /1));
 	}
+	this.cross = function(VectorB){
+		//Only works in three dimensions
+		//Returns only the 3rd dimension; X and Y are both at 0, the origin
+		return (this.x * VectorB.y) - (this.y * VectorB.x);
+	}
+	this.dot = function(VectorB){
+		return (this.x * VectorB.x) + (this.y * VectorB.y);
+	}
+	this.multiply = function(num){
+		return new Vector2(this.x * num, this.y * num);
+	}
+}
+
+function bisect(VectorA,VectorB){
+	return VectorA.normalized().add(VectorB.normalized()).normalized();
 }
 
 function Line(p,r) {
@@ -526,8 +560,16 @@ function changeValue(index) {
 function selectMath() {
 	m = document.getElementById("mathtype").value;
 	r = document.getElementById("result");
+	z = false;
+
+	mpoints = [];
+	rpoints = [];
+	mlines = [];
+	rlines = [];
+	r.innerHtml = "";
 
 	if(m=="add"){
+		z=true;
 		mpoints = [new Vector2(0,0),
 			new Vector2(mVectorA.x, mVectorA.y),
 			new Vector2(mVectorB.x, mVectorB.y),
@@ -545,6 +587,7 @@ function selectMath() {
 		r.innerHTML = "Result: ("+round2(rpoints[0].x)+","+round2(rpoints[0].y)+")";
 	}
 	if(m=="sub") {
+		z=true;
 		mpoints = [new Vector2(0,0),
 			new Vector2(mVectorA.x, mVectorA.y),
 			new Vector2(mVectorB.x, mVectorB.y),
@@ -559,14 +602,40 @@ function selectMath() {
 		r.innerHTML = "Result: ("+round2(rpoints[0].x)+","+round2(rpoints[0].y)+")";
 	}
 	if(m=="dot"){
+		z=true;
 		mpoints = [mVectorA,mVectorB];
 		pp.style.display = "block";
 		ll.style.display = "none";
+		mpoints = [new Vector2(0,0),
+			new Vector2(mVectorA.x,mVectorA.y),
+			new Vector2(mVectorB.x,mVectorB.y)
+		];
+		rpoints[0]=bisect(mpoints[1],mpoints[2]).multiply(mpoints[1].dot(mpoints[2]));
+		mlines=[
+			new Line(mpoints[0],mpoints[1]),
+			new Line(mpoints[0],mpoints[2])
+		];
+		rlines[0]=new Line(mpoints[0],rpoints[0]);
+		
+		r.innerHTML = "Result: "+round2(mpoints[1].dot(mpoints[2]));
 	}
 	if(m=="crs") {
+		z=true;
 		mpoints = [mVectorA,mVectorB];
 		pp.style.display = "block";
 		ll.style.display = "none";
+		mpoints = [new Vector2(0,0),
+			new Vector2(mVectorA.x,mVectorA.y),
+			new Vector2(mVectorB.x,mVectorB.y)
+		];
+		rpoints[0] = new Vector2(0,mpoints[1].cross(mpoints[2]));
+		mlines = [
+			new Line(mpoints[0],mpoints[1]),
+			new Line(mpoints[0],mpoints[2])
+		]
+		rlines[0] = new Line(mpoints[0],rpoints[0]);
+		
+		r.innerHTML = "Result: (0,0,"+round2(mpoints[1].cross(mpoints[2]))+")";
 	}
 	if(m=="cld"){
 		mpoints = [mLineA.p,mLineA.r,mLineB.p,mLineB.r];
@@ -578,6 +647,7 @@ function selectMath() {
 		pp.style.display = "none";
 		ll.style.display = "block";
 	}
+	loadGraph();
 }
 
 //-----------------------------------------------------------------------//
@@ -593,6 +663,7 @@ function selectMath() {
 				<div id="buttons">
 					<div id="math">
 						<select id="mathtype" onchange="selectMath()">
+							<option value="">No Math</option>
 							<option value="add">Add Vectors</option>
 							<option value="sub">Subtract Vectors</option>
 							<option value="dot">Dot Product</option>
