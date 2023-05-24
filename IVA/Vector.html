@@ -45,6 +45,24 @@ button {
 	right: 0px;
 }
 
+.rotate-lock {
+	border: 1px solid #000000;
+	bottom: 0px;
+	right: 15px;
+}
+
+.scale-lock {
+	border: 1px solid #000000;
+	bottom: 0px;
+	right: 30px;
+}
+
+.normal-disp {
+	border: 1px solid #000000;
+	bottom: 0px;
+	right: 45px;
+}
+
 .math-drop {
 	border:1px solid #000000;
 	height: 60px;
@@ -72,6 +90,7 @@ button {
 //                                 Setup                                 //
 ///////////////////////////////////////////////////////////////////////////
 function loadStuff() {
+		//Getting  elements//
 	W = window.innerWidth;
 	H = window.innerHeight;
 	p1 = document.getElementById("points");
@@ -83,23 +102,56 @@ function loadStuff() {
 	d = document.getElementById("drag");
 	pp = document.getElementById("point-point");
 	ll = document.getElementById("line-line");
+	lp = document.getElementById("line-point");
 
-	gr.style.top = H * 0.05 + "px";
-	gr.style.left = W * 0.05 + "px";
+	loadLayout();
+
+		//initializing settings//
+	drag = -1;
+	dropTo = -1;
+
+	xRange = new Range(-10,10);
+	yRange = new Range(-10,10);
+
+	points = [];
+	mpoints = [];
+	rpoints = [];
+	lines = [];
+	mlines = [];
+	rlines = [];
+	connections = 0;
+
+	mVectorA = new Vector2(0,0);
+	mVectorB = new Vector2(0,0);
+	mLineA = new Line(mVectorA, mVectorB);
+	mLineB = new Line(mVectorA, mVectorB);
+
+	z=false;
+	normals=false;
+	rlock=false;
+	slock=false;
+
+	ctx = gr.getContext("2d");
+	loadGraph();
+}
+
+function loadLayout(){
+		//id, width, height left, top, right, bottom//
+	setLayout(gr, "", "", W * 0.05, H * 0.05, "", "");
 	if(W > H){
 		gr.width = W * 0.65;
 		gr.height = H * 0.9;
-		setLayout(cr, W - (W * 0.2), H * 0.05 , W * 0.15, gr.height);
-		setLayout(p1, 0, 20, W * 0.075, H * 0.6);
+		setLayout(cr, W * 0.15, gr.height, W - (W * 0.2), H * 0.05);
+		setLayout(p1, W * 0.075, H * 0.6, 0, 20);
 		p1.style.overflowY = "scroll";
-		setLayout(p2, W * 0.075, 20, W * 0.075, H * 0.6);
+		setLayout(p2, W * 0.075, H * 0.6, W * 0.075, 20);
 		p2.style.overflowY = "scroll";
-		setLayout(b,0,gr.height-60,numberFromStyle(cr.style.width),0);
-		setLayout(document.getElementById("math"), 0, -100, numberFromStyle(cr.style.width)+2+"px", 80);
-		setLayout(pp, 0, 20, numberFromStyle(cr.style.width), 0);
-		setLayout(ll, 0, 20, numberFromStyle(cr.style.width), 0);
+		setLayout(b, numberFromStyle(cr.style.width), 0, 0, gr.height-60);
+		setLayout(document.getElementById("math"), numberFromStyle(cr.style.width)+2+"px", 80, 0, -100);
+		setLayout(pp, numberFromStyle(cr.style.width), 0, 0, 20);
+		setLayout(ll, numberFromStyle(cr.style.width), 0, 0, 20);
 		for(div of document.getElementsByClassName("math-drop")){
-			setLayout(div, "", 20, numberFromStyle(p1.style.width)-1, 60)
+			setLayout(div, numberFromStyle(p1.style.width)-1, 60, "", 20)
 		}
 	}else{
 		gr.width = W * 0.9;
@@ -120,45 +172,6 @@ function loadStuff() {
 		c.style.right = "0px";
 	}
 	c.style.bottom = "0px";
-
-	drag = -1;
-	dropTo = -1;
-	xRange = new Range(-10,10);
-	yRange = new Range(-10,10);
-
-	ctx = gr.getContext("2d");
-
-	points = [];
-	mpoints = [];
-	rpoints = [];
-	lines = [];
-	mlines = [];
-	rlines = [];
-	connections = 0;
-
-	mVectorA = new Vector2(0,0);
-	mVectorB = new Vector2(0,0);
-	mLineA = new Line(mVectorA, mVectorB);
-	mLineB = new Line(mVectorA, mVectorB);
-
-	z=false;
-
-	loadGraph();
-}
-
-function setLayout(id, left, top, width, height){
-	id.style.left = left + "px";
-	id.style.top = top + "px";
-	id.style.width = width + "px";
-	id.style.height = height + "px";
-}
-
-function numberFromStyle(string){
-	return string.split("p")[0];
-}
-
-function round2(num){
-	return Math.floor(num*100)/100;
 }
 
 function loadGraph() {
@@ -209,14 +222,17 @@ function loadGraph() {
 	}
 	for(l of lines){
 		scaleLine = new Line(new Vector2(xRange.scale(l.p.x)*gr.width,yRange.scale(l.p.y)*gr.height), new Vector2(xRange.scale(l.r.x)*gr.width,yRange.scale(l.r.y)*gr.height));
+		if(l.normalView) scaleLine.normalView = true;
 		drawLine(scaleLine, "#000000");
 	}
 	for(l of mlines){
 		scaleLine = new Line(new Vector2(xRange.scale(l.p.x)*gr.width,yRange.scale(l.p.y)*gr.height), new Vector2(xRange.scale(l.r.x)*gr.width,yRange.scale(l.r.y)*gr.height));
+		if(l.normalView) scaleLine.normalView = true;
 		drawLine(scaleLine, "#0000FF");
 	}
 	for(l of rlines){
 		scaleLine = new Line(new Vector2(xRange.scale(l.p.x)*gr.width,yRange.scale(l.p.y)*gr.height), new Vector2(xRange.scale(l.r.x)*gr.width,yRange.scale(l.r.y)*gr.height));
+		if(l.normalView) scaleLine.normalView = true;
 		drawLine(scaleLine, "#FF0000");
 	}
 }
@@ -253,6 +269,16 @@ function drawLine(line, color) {
 	ctx.lineTo(line.r.x,line.r.y);
 	ctx.strokeStyle = color;
 	ctx.stroke();
+	if(line.normalView){
+		ctx.beginPath();
+		ctx.strokeStyle = "#000000";
+		ctx.moveTo(line.center().x,line.center().y);
+		ctx.lineTo(line.center().add(line.normal1().multiply(10)).x,line.center().add(line.normal1().multiply(10)).y);
+		ctx.stroke();
+		ctx.moveTo(line.center().x,line.center().y);
+		ctx.lineTo(line.center().add(line.normal2().multiply(10)).x,line.center().add(line.normal2().multiply(10)).y);
+		ctx.stroke();
+	}
 }
 
 
@@ -307,6 +333,11 @@ function Vector2(x,y) {
 	this.multiply = function(num){
 		return new Vector2(this.x * num, this.y * num);
 	}
+	this.reflect = function(normal) {
+		flip = this.multiply(-1);
+		angleToNormal = Math.acos(flip.dot(normal) / (this.magnitude() * normal.magnitude()));
+		return normal.rotate(angleToNormal).multiply(this.magnitude());
+	}
 }
 
 function bisect(VectorA,VectorB){
@@ -316,6 +347,15 @@ function bisect(VectorA,VectorB){
 function Line(p,r) {
 	this.p = p;
 	this.r = r;
+	this.length = function(){
+		return Math.sqrt((this.r.x - this.p.x) * (this.r.x - this.p.x) + (this.r.y - this.p.y) * (this.r.y - this.p.y));
+	}
+	this.center = function(){
+		return new Vector2((this.p.x + this.r.x) / 2, (this.p.y + this.r.y) / 2);
+	}
+	this.normal1 = function(){return new Vector2(-(this.r.y - this.p.y),this.r.x - this.p.x).normalized();}
+	this.normal2 = function(){return new Vector2(this.r.y - this.p.y, -(this.r.x - this.p.x)).normalized();}
+	this.normalView = false;
 }
 
 function Point(index) {
@@ -344,6 +384,23 @@ function Point(index) {
 	this.x.addEventListener("click",function(){points[this.parentElement.id].removePoint();});
 	this.x.innerHTML = "X";
 	this.button.append(this.x);
+	this.rotationLock = document.createElement("div");
+	this.rotationLock.classList.add("rotate-lock");
+	this.rotationLock.addEventListener("click",function(){rlock=!rlock;});
+	this.rotationLock.innerHTML = "R";
+	this.button.append(this.rotationLock);
+	this.scaleLock = document.createElement("div");
+	this.scaleLock.classList.add("scale-lock");
+	this.scaleLock.addEventListener("click",function(){slock=!slock;});
+	this.scaleLock.innerHTML = "S";
+	this.button.append(this.scaleLock);
+	this.displayNormal = document.createElement("div");
+	this.displayNormal.classList.add("normal-disp");
+	this.displayNormal.addEventListener("click",function(){
+		lines[points[this.parentElement.id].lineIndex].normalView = !lines[points[this.parentElement.id].lineIndex].normalView;
+	});
+	this.displayNormal.innerHTML = "N";
+	this.button.append(this.displayNormal);
 	this.button.addEventListener("mousedown",function(){drag=this.id;},false);
 	this.button.addEventListener("mouseover",function(){mouseOver(this.id);},false);
 	this.button.addEventListener("mouseout",function(){mouseOver(-1);},false);
@@ -583,6 +640,7 @@ function selectMath() {
 
 		pp.style.display = "block";
 		ll.style.display = "none";
+		lp.style.display = "none";
 		
 		r.innerHTML = "Result: ("+round2(rpoints[0].x)+","+round2(rpoints[0].y)+")";
 	}
@@ -598,6 +656,7 @@ function selectMath() {
 
 		pp.style.display = "block";
 		ll.style.display = "none";
+		lp.style.display = "none";
 
 		r.innerHTML = "Result: ("+round2(rpoints[0].x)+","+round2(rpoints[0].y)+")";
 	}
@@ -606,6 +665,7 @@ function selectMath() {
 		mpoints = [mVectorA,mVectorB];
 		pp.style.display = "block";
 		ll.style.display = "none";
+		lp.style.display = "none";
 		mpoints = [new Vector2(0,0),
 			new Vector2(mVectorA.x,mVectorA.y),
 			new Vector2(mVectorB.x,mVectorB.y)
@@ -624,6 +684,7 @@ function selectMath() {
 		mpoints = [mVectorA,mVectorB];
 		pp.style.display = "block";
 		ll.style.display = "none";
+		lp.style.display = "none";
 		mpoints = [new Vector2(0,0),
 			new Vector2(mVectorA.x,mVectorA.y),
 			new Vector2(mVectorB.x,mVectorB.y)
@@ -641,13 +702,37 @@ function selectMath() {
 		mpoints = [mLineA.p,mLineA.r,mLineB.p,mLineB.r];
 		pp.style.display = "none";
 		ll.style.display = "block";
+		lp.style.display = "none";
 	}
 	if(m=="ref") {
 		mpoints = [mLineA.p,mLineA.r,mLineB.p,mLineB.r];
 		pp.style.display = "none";
 		ll.style.display = "block";
+		lp.style.display = "none";
 	}
 	loadGraph();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+//                                Utility                                //
+///////////////////////////////////////////////////////////////////////////
+
+function setLayout(id, width, height left, top, right, bottom){
+	id.style.width = width + "px";
+	id.style.height = height + "px";
+	id.style.left = left + "px";
+	id.style.top = top + "px";
+	id.style.right = right + "px";
+	id.style.bottom = bottom + "px";
+}
+
+function numberFromStyle(string){
+	return string.split("p")[0];
+}
+
+function round2(num){
+	return Math.floor(num*100)/100;
 }
 
 //-----------------------------------------------------------------------//
@@ -671,7 +756,6 @@ function selectMath() {
 							<option value="cld">Collide Lines</option>
 							<option value="ref">Reflect on Line</option>
 						</select>
-		<!---Bad naming practice, I just don't care-->
 						<div id="point-point">
 							<div id="pp1" class="math-drop" style="left:-1px" onmouseover="mouseOver('pp1')">Point:<br><span id="pp1s">(0,0)</span></div>
 							<div id="pp2" class="math-drop" style="right:-1px" onmouseover="mouseOver('pp2')">Point:<br><span id="pp2s">(0,0)</span></div>
@@ -679,6 +763,10 @@ function selectMath() {
 						<div id="line-line" style="display:none">
 							<div id="ll1" class="math-drop" style="left:-1px" onmouseover="mouseOver('ll1')">Line:<br><span id="ll1s">(0,0)-(0,0)</span></div>
 							<div id="ll2" class="math-drop" style="right:-1px" onmouseover="mouseOver('ll2')">Line:<br><span id="ll2s">(0,0)-(0,0)</span></div>
+						</div>
+						<div id="line-point" style="display:none">
+							<div id="lpl" class="math-drop" style="left:-1px" onmouseover="mouseOver('lpl')">Line:<br><span id="lpls">(0,0)-(0,0)</span></div>
+							<div id="lpp" class="math-drop" style="right:-1px" onmouseover="mouseOver('lpp')">Line:<br><span id="lpps">(0,0)-(0,0)</span></div>
 						</div>
 						<br>
 						<span id="result"></span>
