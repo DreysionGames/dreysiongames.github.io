@@ -3,9 +3,27 @@
     <head>
         <script src="/socket.io/socket.io.js"></script>
         <script src="app.js" defer></script>
+        <style>
+            .horiz {
+                display:inline-block;
+            }
+        </style>
     </head>
     <body>
-        <h3>HI</h3>
+        <h3>WEBSOCKETS!!!</h3>
         <button id="Start">Start</button>
+        Name: <input id="newname" />
+        <button id="rename">Submit</button>
+        <div id="Lobby">
+            <div id="names" class="horiz"></div>
+            <div id="ready" class="horiz"></div>
+        </div>
     </body>
+    <script id="server-popup" type="text/template">
+        <div class="popup">
+            <h3>Generic Title</h3>
+            <p>Generic Description</p>
+            <button id="accept">Cool!</button>
+        </div>
+    </script>
 </html>
