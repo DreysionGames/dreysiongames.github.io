@@ -2,6 +2,7 @@ const path = require('path');
 const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
+const { stat } = require('fs');
 let app = express();
 let server = http.createServer(app);
 let io = socketIO(server);
@@ -11,29 +12,43 @@ const port = process.env.PORT || 3000;
 
 app.use(express.static(publicPath));
 
-var gameState = "Starting";
+const states = {
+    JOINING: 0,
+    STARTING: 1,
+    TRAINING: 2,
+    COMPETING: 3
+}
+var gameState = states.JOINING;
+
 var next;
 
 var players = [];
-var currentPlayer;
+var spectators = [];
+let PLAYERS;
+var currentPlayer=0;
 
 server.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
 
 io.on('connection', (socket) => {
-    players[players.length] = new Player(socket.id);
+    if(gameState!=states.JOINING){
+        addPlayer(socket.id,spectators,true);
+        console.log(`${spectators[spectators.length-1].name} is spectating.`);
+        return;
+    }
+    addPlayer(socket.id,players,true);
 	console.log(`${players[players.length-1].name} just connected.`);
-    Names();
-    Ready();
     socket.on('disconnect', () => {
-        for(i=0;i<players.length;i++){
+        remPlayer(socket.id,players,true);
+        remPlayer(socket.id,spectators,true);
+        /*for(i=0;i<players.length;i++){
             if(players[i].id == socket.id){
                 console.log(`${players[i].name} has disconnected.`);
                 players[i] = null;
                 players=players.filter((player) => player !== null && player !== undefined);
             }
-        }
+        }*/
         Names();
         Ready();
     });
@@ -42,12 +57,33 @@ io.on('connection', (socket) => {
         findPlayer(socket.id).name = data.newName;
         Names();
     });
+    socket.on('queue',(data) => {
+        findPlayer(socket.id).queued = data.queued;
+        console.log(`${findPlayer(socket.id).name} is${findPlayer(socket.id).queued ? "" : " not"} queued`);
+        if(findPlayer(socket.id).queued) {
+            addPlayer(socket.id,players,false);
+            remPlayer(socket.id,spectators,false);
+        } else {
+            addPlayer(socket.id,spectators,false);
+            remPlayer(socket.id,players,false);
+        }
+    });
     socket.on('startGame', () => {
         console.log(`${findPlayer(socket.id).name} is ready to start the game`)
         findPlayer(socket.id).ready=1;
         if(Ready()){
+            console.log("A game has started");
+            var p = players;
+            var s = spectators;
+            players=[...p,...s].filter(p => p.queued = true);
+            spectators = [...p,...s].filter(s => s.queued = false);
+            console.log(`Players: ${players.map((p) => p.name)}`);
+            console.log(`Spectators: ${spectators.map(s => s.name)}`);
+            
+            PLAYERS=players;
             next=0;
-            io.emit('startGame');
+            gameState=states.STARTING;
+            Next(true);
         }
     });
     socket.on('pickCards', (data) => {
@@ -56,17 +92,20 @@ io.on('connection', (socket) => {
         //update player's card list
     });
     socket.on('endTurn', () => {
-        //player++
+        currentPlayer++;
+        if(currentPlayer==players.length) currentPlayer=0;
         next=0;
         io.emit('switchTurn', {
-            player: player
+            player: currentPlayer
         });
     });
     socket.on('accept', () => {
+        findPlayer(socket.id).ready=1;
         if(Ready()){Next(true);}
     });
     socket.on('decline', () => {
-        Next(false);
+        findPlayer(socket.id).ready=1;
+        if(Ready()){Next(false);}
     });
 });
 
@@ -93,7 +132,8 @@ function Next(val){
         players[i].ready=0;
         Ready();
     }
-    if(gameState=="Starting"){
+    var C=io.sockets.sockets[players[currentPlayer].id];
+    if(gameState==states.STARTING){
         switch(next){
             case 0:
                 //except need different cards for each player, cache the results for later verification
@@ -135,22 +175,22 @@ function Next(val){
                 });
                 break;
             case 3:
-                io.emit('role'); //player turn order
+                io.emit('roll'); //player turn order
                 break;
             case 4:
                 //set action/reaction cards
                 io.emit('setCards');
                 break;
             case 5:
-                gameState="Training";
+                gameState++;
                 next=0;
         }
         return;
     }
-    if(gameState=="Training"){
+    if(gameState==states.TRAINING){
         switch(next){
-            case 0:
-                io.emit('drawTokens', {
+            case 0: //Draw tokens
+                C.emit('drawTokens', {
                     draw: 2,
                     list: [
                         tokenPool[Math.floor(Math.random()*4)],
@@ -158,27 +198,25 @@ function Next(val){
                     ]
                 })
                 break;
-            case 1:
-                if(player.enemies){
-                    //enemies attack
-                    break;
+            case 1: //Monsters attack the player, if there are any monsters
+                if(players[currentPlayer].targets.length){
+                    //should have a react option for each target
+                    //includes attack used, but not damage. That needs logic not yet included
+                    C.emit('reactOption', {
+                        attacker: currentPlayer
+                    });
                 }
-                next++;
-            case 2:
-                io.emit('role'); //check for encounters
                 break;
-            case 3:
-                io.emit('skillOption');
+            case 2: //check for events/encounters
+                C.emit('roll');
                 break;
-            case 4:
-                //only emit to single player if attack
-                io.emit('reactOption', {
-                    attacker: currentPlayer
-                });
+            case 3: //Player can activate an artifact or a continuous spell, or attack a monster if there are any
+                C.emit('skillOption');
+                break;
         }
         return;
     }
-    if(gameState=="Competing"){
+    if(gameState==states.COMPETING){
         switch(next){
             case 0:
                 //announce bracket
@@ -252,9 +290,10 @@ class Player {
     constructor(id) {
         this.id = id;
         this.name = "Player " + Math.floor(Math.random()*10000);
-        this.health = 25;
+        this.queued = true;
         this.ready = 0;
 
+        this.health = 25;
         this.energy = new Energy(0, 0, 0, 0);
         this.skills = [];
         this.active = [];
@@ -285,4 +324,31 @@ function findPlayer(id){
     for(i=0;i<players.length;i++){
         if(players[i].id==id) return players[i];
     }
+    for(i=0;i<spectators.length;i++){
+        if(spectators[i].id==id) return spectators[i];
+    }
+}
+
+function addPlayer(id,list,newcomer){
+    for(i=0;i<list.length;i++){
+        if(list[i]==findPlayer(id)) return;
+    }
+    if(newcomer) {
+        list[list.length]=new Player(id);
+    } else {
+        list[list.length]=findPlayer(id);
+    }
+    Names();
+    Ready();
+}
+
+function remPlayer(id,list,disconnect){
+    for(i=0;i<list.length;i++){
+        if(list[i].id == id){
+            if(disconnect) console.log(`${list[i].name} has disconnected.`);
+            list.splice(i,1);
+        }
+    }
+    Names();
+    Ready();
 }

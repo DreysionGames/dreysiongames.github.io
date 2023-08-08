@@ -1,21 +1,19 @@
 let socket = io.connect('http://localhost:3000');
 
-document.getElementById("Start").addEventListener('click', () => {
-    socket.emit('startGame');
-});
+
 document.getElementById("rename").addEventListener('click', () => {
     pName = document.getElementById("newname").value;
     socket.emit('rename', {
-        id: id,
         newName: document.getElementById("newname").value
     });
 });
-var templatePickCards
-var templateDrawCards
-var templateDrawTokens
-
-var id;
-var pName;
+document.getElementById("queue").addEventListener('click', () => {
+    console.log(document.getElementById("queue").checked);
+    socket.emit('queue', {queued: document.getElementById("queue").checked});
+});
+document.getElementById("Start").addEventListener('click', () => {
+    socket.emit('startGame');
+});
 
 socket.on('id', (data) => {
     id=data.id;
@@ -36,15 +34,15 @@ socket.on('startGame', () => {
 });
 
 socket.on('pickCards', (data) => {
-    console.log("drawing ${data.draw} cards from the ${data.type} pile, pick ${data.pick}");
+    console.log(`drawing ${data.draw} cards from the ${data.type} pile, pick ${data.pick}`);
 });
 
 socket.on('drawCards', (data) => {
-    console.log("drawing ${data.draw} cards from the ${data.type} pile, received ${data.cardsList}");
+    console.log(`drawing ${data.draw} cards from the ${data.type} pile, received ${data.cardsList}`);
 });
 
 socket.on('drawTokens', (data) => {
-    console.log("drawing ${data.number} tokens, received ${data.tokensList}");
+    console.log(`drawing ${data.number} tokens, received ${data.tokensList}`);
 });
 
 socket.on('drawEvent', (data) => {
@@ -64,7 +62,7 @@ socket.on('drawEvent', (data) => {
 });
 
 socket.on('switchTurn', (data) => {
-    console.log("It's ${data.player}'s turn now!");
+    console.log(`It's ${data.player}'s turn now!`);
 });
 
 socket.on('skillOption', () => {
@@ -72,9 +70,9 @@ socket.on('skillOption', () => {
 });
 
 socket.on('reactOption', (data) => {
-    console.log("${data.attacker} is using a skill against you, do you want to react?");
+    console.log(`${data.attacker} is using a skill against you, do you want to react?`);
 });
 
 socket.on('continueOption', (data) => {
-    console.log("Your ${data.skill} is activated and consuming energy. Do you want to keep it going?");
+    console.log(`Your ${data.skill} is activated and consuming energy. Do you want to keep it going?`);
 });
