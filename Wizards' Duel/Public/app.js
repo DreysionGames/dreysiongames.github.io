@@ -1,5 +1,8 @@
-let socket = io.connect('http://localhost:3000');
+let socket = io.connect('http://192.168.1.65:3000');
 
+socket.on("connect_error", (err) => {
+    console.log(`connect_error due to ${err.message}`);
+});
 
 document.getElementById("rename").addEventListener('click', () => {
     pName = document.getElementById("newname").value;
@@ -14,9 +17,7 @@ document.getElementById("Start").addEventListener('click', () => {
     socket.emit('startGame');
 });
 
-socket.on('test', () => {
-    console.log("TESTING");
-});
+
 socket.on('names', (data) => {
     document.getElementById("names").innerHTML=data.nameList.map(p => p).join('<br>');
 })

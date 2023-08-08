@@ -2,7 +2,6 @@ const path = require('path');
 const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
-const { stat, read } = require('fs');
 let app = express();
 let server = http.createServer(app);
 let io = socketIO(server);
@@ -29,7 +28,7 @@ var spectators = [];
 var PLAYERS;
 var currentPlayer=0;
 
-server.listen(port, () => {
+server.listen(port, "192.168.1.65", () => {
     console.log(`Listening on port ${port}`);
 });
 
@@ -105,7 +104,7 @@ function startGame(){
         var s = spectators;
         players=[...p,...s].filter(p => p.queued);
         spectators = [...p,...s].filter(s => !s.queued);
-        console.log(`Players: ${players.map((p) => p.name)}`);
+        console.log(`Players: ${players.map(p => p.name)}`);
         console.log(`Spectators: ${spectators.map(s => s.name)}`);
         
         PLAYERS=players;
@@ -130,7 +129,7 @@ function newGame(){
         players[i].targets = [];
     }
     for(i=0;i<spectators.length;i++){
-        players[i].ready=0;
+        spectators[i].ready=0;
     }
 }
 
@@ -158,6 +157,7 @@ function Ready(){
     for(i=0;i<ready.length;i++){
         if(ready[i]==0 || ready[i]==undefined){return false;}
     }
+    if(ready.length==0) return false;
     return true;
 }
 
