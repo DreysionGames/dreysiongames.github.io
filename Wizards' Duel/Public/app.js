@@ -15,8 +15,8 @@ document.getElementById("Start").addEventListener('click', () => {
     socket.emit('startGame');
 });
 
-socket.on('id', (data) => {
-    id=data.id;
+socket.on('test', () => {
+    console.log("TESTING");
 });
 socket.on('names', (data) => {
     document.getElementById("names").innerHTML=data.nameList.map(p => p).join('<br>');

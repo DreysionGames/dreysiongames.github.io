@@ -12,6 +12,8 @@ const port = process.env.PORT || 3000;
 
 app.use(express.static(publicPath));
 
+var connectedSockets =[];
+
 const states = {
     JOINING: 0,
     STARTING: 1,
@@ -32,6 +34,7 @@ server.listen(port, () => {
 });
 
 io.on('connection', (socket) => {
+    connectedSockets[socket.id]=socket;
     if(gameState!=states.JOINING){
         addPlayer(socket.id,spectators,true);
         console.log(`${spectators[spectators.length-1].name} is spectating.`);
@@ -40,6 +43,8 @@ io.on('connection', (socket) => {
     addPlayer(socket.id,players,true);
 	console.log(`${players[players.length-1].name} just connected.`);
     socket.on('disconnect', () => {
+        connectedSockets.splice(socket.id,1);
+        remPlayer(socket.id,PLAYERS,true);
         remPlayer(socket.id,players,true);
         remPlayer(socket.id,spectators,true);
         /*for(i=0;i<players.length;i++){
@@ -110,14 +115,16 @@ io.on('connection', (socket) => {
 });
 
 function Names(){
-    var names = players.map((p) => p.name);
+    if(PLAYERS.length) var names = PLAYERS.map(p => p.name);
+    else var names = players.map((p) => p.name);
     io.emit('names', {
         nameList: names
     });
 }
 
 function Ready(){
-    var ready = players.map((r) => r.ready);
+    if(PLAYERS.length) var ready = PLAYERS.map(r => r.ready);
+    else var ready = players.map((r) => r.ready);
     io.emit('ready', {
         readyList: ready
     });
@@ -128,11 +135,13 @@ function Ready(){
 }
 
 function Next(val){
-    for(i=0;i<players.length;i++){
-        players[i].ready=0;
-        Ready();
+    var C=connectedSockets[players[currentPlayer].id];
+
+    for(i=0;i<PLAYERS.length;i++){
+        PLAYERS[i].ready=0;
     }
-    var C=io.sockets.sockets[players[currentPlayer].id];
+    Ready();
+    
     if(gameState==states.STARTING){
         switch(next){
             case 0:
@@ -238,8 +247,8 @@ function Next(val){
                 break;
             case 3:
                 //if applicable
-                io.emit('reactOption', {
-                    attacker: currentPlayer
+                connectedSockets[players[currentPlayer].target.id].emit('reactOption', {
+                    attacker: players[currentPlayer].name
                 });
         }
         return;
@@ -327,6 +336,10 @@ function findPlayer(id){
     for(i=0;i<spectators.length;i++){
         if(spectators[i].id==id) return spectators[i];
     }
+    for(i=0;i<PLAYERS.length;i++){
+        if(PLAYERS[i].id==id) return PLAYERS[i];
+    }
+    console.log(`Could not find player with id ${id}`);
 }
 
 function addPlayer(id,list,newcomer){
