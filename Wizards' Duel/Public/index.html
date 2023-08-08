@@ -4,6 +4,14 @@
         <script src="/socket.io/socket.io.js"></script>
         <script src="app.js" defer></script>
         <style>
+            #popup {
+                position:absolute;
+                border:1px solid #000000;
+                border-radius: 20px;
+                padding: 20px;
+                text-align: center;
+            }
+
             .horiz {
                 display:inline-block;
             }
@@ -21,12 +29,11 @@
             <div id="names" class="horiz"></div>
             <div id="ready" class="horiz"></div>
         </div>
-    </body>
-    <script id="server-popup" type="text/template">
-        <div class="popup">
-            <h3>Generic Title</h3>
-            <p>Generic Description</p>
-            <button id="accept">Cool!</button>
+        <div id="popup">
+            <h3 id="title"></h3>
+            <p id="description"></p>
+            <div id="visual"></div>
+            <button id="accept">Accept</button>
         </div>
-    </script>
+    </body>
 </html>

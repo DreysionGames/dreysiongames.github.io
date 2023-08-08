@@ -2,7 +2,7 @@ const path = require('path');
 const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
-const { stat } = require('fs');
+const { stat, read } = require('fs');
 let app = express();
 let server = http.createServer(app);
 let io = socketIO(server);
@@ -26,7 +26,7 @@ var next;
 
 var players = [];
 var spectators = [];
-let PLAYERS;
+var PLAYERS;
 var currentPlayer=0;
 
 server.listen(port, () => {
@@ -42,20 +42,16 @@ io.on('connection', (socket) => {
     }
     addPlayer(socket.id,players,true);
 	console.log(`${players[players.length-1].name} just connected.`);
+
     socket.on('disconnect', () => {
         connectedSockets.splice(socket.id,1);
-        remPlayer(socket.id,PLAYERS,true);
+        if(PLAYERS){
+            remPlayer(socket.id,PLAYERS,true);
+            if(PLAYERS.length == 0) newGame();
+        }
         remPlayer(socket.id,players,true);
         remPlayer(socket.id,spectators,true);
-        /*for(i=0;i<players.length;i++){
-            if(players[i].id == socket.id){
-                console.log(`${players[i].name} has disconnected.`);
-                players[i] = null;
-                players=players.filter((player) => player !== null && player !== undefined);
-            }
-        }*/
         Names();
-        Ready();
     });
     socket.on('rename', (data) => {
         console.log(`${findPlayer(socket.id).name} is now named ${data.newName}`);
@@ -77,18 +73,7 @@ io.on('connection', (socket) => {
         console.log(`${findPlayer(socket.id).name} is ready to start the game`)
         findPlayer(socket.id).ready=1;
         if(Ready()){
-            console.log("A game has started");
-            var p = players;
-            var s = spectators;
-            players=[...p,...s].filter(p => p.queued = true);
-            spectators = [...p,...s].filter(s => s.queued = false);
-            console.log(`Players: ${players.map((p) => p.name)}`);
-            console.log(`Spectators: ${spectators.map(s => s.name)}`);
-            
-            PLAYERS=players;
-            next=0;
-            gameState=states.STARTING;
-            Next(true);
+            startGame();
         }
     });
     socket.on('pickCards', (data) => {
@@ -114,17 +99,59 @@ io.on('connection', (socket) => {
     });
 });
 
+function startGame(){
+    console.log("A game has started");
+        var p = players;
+        var s = spectators;
+        players=[...p,...s].filter(p => p.queued);
+        spectators = [...p,...s].filter(s => !s.queued);
+        console.log(`Players: ${players.map((p) => p.name)}`);
+        console.log(`Spectators: ${spectators.map(s => s.name)}`);
+        
+        PLAYERS=players;
+        next=0;
+        gameState=states.STARTING;
+        Next(true);
+}
+
+function newGame(){
+    console.log("Game reset");
+    gameState=states.JOINING;
+    PLAYERS=[];
+    for(i=0;i<players.length;i++){
+        players[i].ready=0;
+        players[i].health=25;
+        players[i].energy = new Energy(0, 0, 0, 0);
+        players[i].skills = [];
+        players[i].active = [];
+        players[i].actions = [];
+        players[i].reacions = [];
+        players[i].artifacts = [];
+        players[i].targets = [];
+    }
+    for(i=0;i<spectators.length;i++){
+        players[i].ready=0;
+    }
+}
+
 function Names(){
     if(PLAYERS && PLAYERS.length) var names = PLAYERS.map(p => p.name);
-    else var names = players.map((p) => p.name);
+    else{
+        ps = [...players,...spectators].filter(p => p.queued);
+        var names = ps.map(p => p.name);
+    }
     io.emit('names', {
         nameList: names
     });
+    Ready();
 }
 
 function Ready(){
     if(PLAYERS && PLAYERS.length) var ready = PLAYERS.map(r => r.ready);
-    else var ready = players.map((r) => r.ready);
+    else {
+        ps = [...players,...spectators].filter(p => p.queued);
+        var ready = ps.map(p => p.ready);
+    }
     io.emit('ready', {
         readyList: ready
     });
@@ -336,10 +363,11 @@ function findPlayer(id){
     for(i=0;i<spectators.length;i++){
         if(spectators[i].id==id) return spectators[i];
     }
+    
+    if(!PLAYERS) return;
     for(i=0;i<PLAYERS.length;i++){
         if(PLAYERS[i].id==id) return PLAYERS[i];
     }
-    console.log(`Could not find player with id ${id}`);
 }
 
 function addPlayer(id,list,newcomer){
@@ -352,7 +380,6 @@ function addPlayer(id,list,newcomer){
         list[list.length]=findPlayer(id);
     }
     Names();
-    Ready();
 }
 
 function remPlayer(id,list,disconnect){
@@ -363,5 +390,5 @@ function remPlayer(id,list,disconnect){
         }
     }
     Names();
-    Ready();
+    if(gameState==states.JOINING && Ready()) startGame();
 }

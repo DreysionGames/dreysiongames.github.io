@@ -8,7 +8,6 @@ document.getElementById("rename").addEventListener('click', () => {
     });
 });
 document.getElementById("queue").addEventListener('click', () => {
-    console.log(document.getElementById("queue").checked);
     socket.emit('queue', {queued: document.getElementById("queue").checked});
 });
 document.getElementById("Start").addEventListener('click', () => {
@@ -35,6 +34,10 @@ socket.on('startGame', () => {
 
 socket.on('pickCards', (data) => {
     console.log(`drawing ${data.draw} cards from the ${data.type} pile, pick ${data.pick}`);
+    popup(
+        "Pick Cards",
+        "You draw " + data.draw + " cards, pick " + data.pick + " to keep:"
+    );
 });
 
 socket.on('drawCards', (data) => {
@@ -76,3 +79,16 @@ socket.on('reactOption', (data) => {
 socket.on('continueOption', (data) => {
     console.log(`Your ${data.skill} is activated and consuming energy. Do you want to keep it going?`);
 });
+
+function popup(title,description){
+    p=document.getElementById("popup");
+    t=document.getElementById("title");
+    d=document.getElementById("description");
+    v=document.getElementById("visual");
+    a=document.getElementById("accept");
+
+    t.innerHTML=title;
+    d.innerHTML=description;
+
+    p.style.display="visible";
+}
