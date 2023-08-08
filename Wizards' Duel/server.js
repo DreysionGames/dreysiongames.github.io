@@ -115,7 +115,7 @@ io.on('connection', (socket) => {
 });
 
 function Names(){
-    if(PLAYERS.length) var names = PLAYERS.map(p => p.name);
+    if(PLAYERS && PLAYERS.length) var names = PLAYERS.map(p => p.name);
     else var names = players.map((p) => p.name);
     io.emit('names', {
         nameList: names
@@ -123,7 +123,7 @@ function Names(){
 }
 
 function Ready(){
-    if(PLAYERS.length) var ready = PLAYERS.map(r => r.ready);
+    if(PLAYERS && PLAYERS.length) var ready = PLAYERS.map(r => r.ready);
     else var ready = players.map((r) => r.ready);
     io.emit('ready', {
         readyList: ready
