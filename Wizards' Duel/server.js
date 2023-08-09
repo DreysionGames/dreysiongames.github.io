@@ -37,10 +37,10 @@ io.on('connection', (socket) => {
     if(gameState!=states.JOINING){
         addPlayer(socket.id,spectators,true);
         console.log(`${spectators[spectators.length-1].name} is spectating.`);
-        return;
+    }else{
+        addPlayer(socket.id,players,true);
+	    console.log(`${players[players.length-1].name} just connected.`);
     }
-    addPlayer(socket.id,players,true);
-	console.log(`${players[players.length-1].name} just connected.`);
 
     socket.on('disconnect', () => {
         connectedSockets.splice(socket.id,1);
@@ -372,7 +372,7 @@ function findPlayer(id){
 
 function addPlayer(id,list,newcomer){
     for(i=0;i<list.length;i++){
-        if(list[i]==findPlayer(id)) return;
+        if(list[i].id==id) return;
     }
     if(newcomer) {
         list[list.length]=new Player(id);
