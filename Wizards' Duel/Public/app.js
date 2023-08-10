@@ -4,6 +4,7 @@ socket.on("connect_error", (err) => {
     console.log(`connect_error due to ${err.message}`);
 });
 
+var pName;
 var selected = [];
 var picking=0;
 
@@ -35,11 +36,13 @@ socket.on('ready', (data) => {
 socket.on('startGame', () => {
     console.log('game Started');
 });
+socket.on('reset', () => {
+    document.getElementById("popup").style.display="none";
+});
 
 socket.on('pickCards', (data) => {
     console.log(`drawing ${data.draw} cards from the ${data.type} pile, pick ${data.pick}`);
     picking = data.pick;
-    console.log(data.list);
     popup(
         "Pick Cards",
         "You draw " + data.draw + " cards, pick " + data.pick + " to keep:",
@@ -115,7 +118,6 @@ function popup(title,description,type,draw,pick){
     }
 
     for(var i=pick;i>0;i--){
-        console.log(`For: ${i-1}`);
         selectCard(i-1);
     }
 

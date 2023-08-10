@@ -31,6 +31,9 @@ var currentPlayer=0;
 server.listen(port, "192.168.1.65", () => {
     console.log(`Listening on port ${port}`);
 });
+server.on('close', () => {
+    io.emit('reset');
+});
 
 io.on('connection', (socket) => {
     connectedSockets[socket.id]=socket;
@@ -107,7 +110,7 @@ function startGame(){
         console.log(`Players: ${players.map(p => p.name)}`);
         console.log(`Spectators: ${spectators.map(s => s.name)}`);
         
-        PLAYERS=players;
+        PLAYERS=[...players];
         next=0;
         gameState=states.STARTING;
         Next(true);
@@ -131,6 +134,7 @@ function newGame(){
     for(i=0;i<spectators.length;i++){
         spectators[i].ready=0;
     }
+    io.emit('reset');
 }
 
 function Names(){
@@ -146,7 +150,9 @@ function Names(){
 }
 
 function Ready(){
-    if(PLAYERS && PLAYERS.length) var ready = PLAYERS.map(r => r.ready);
+    if(PLAYERS && PLAYERS.length) {
+        var ready = PLAYERS.map(r => r.ready);
+    }
     else {
         ps = [...players,...spectators].filter(p => p.queued);
         var ready = ps.map(p => p.ready);
