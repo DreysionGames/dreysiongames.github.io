@@ -31,7 +31,7 @@ var currentPlayer=0;
 server.listen(port, "192.168.1.65", () => {
     console.log(`Listening on port ${port}`);
 });
-server.on('close', () => {
+process.on('exit', () => {
     io.emit('reset');
 });
 

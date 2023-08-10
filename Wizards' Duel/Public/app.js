@@ -1,7 +1,17 @@
 let socket = io.connect('http://192.168.1.65:3000');
 
-socket.on("connect_error", (err) => {
+socket.on('connect', () => {
+    if(pName) {
+        socket.emit('rename', {newName: pName});
+    }
+    socket.emit('queue', {queued: document.getElementById("queue").checked});
+});
+socket.on('connect_error', (err) => {
     console.log(`connect_error due to ${err.message}`);
+});
+socket.on('disconnect', () => {
+    console.log("Connection interrupted");
+    Reset();
 });
 
 var pName;
@@ -37,7 +47,7 @@ socket.on('startGame', () => {
     console.log('game Started');
 });
 socket.on('reset', () => {
-    document.getElementById("popup").style.display="none";
+    Reset();
 });
 
 socket.on('pickCards', (data) => {
@@ -137,4 +147,8 @@ function selectCard(card){
         if(selected.includes(i)) v.children[i].classList.add("selected");
         else if(v.children[i].classList.contains("selected")) v.children[i].classList.remove("selected");
     }
+}
+
+function Reset(){
+    document.getElementById("popup").style.display="none";
 }

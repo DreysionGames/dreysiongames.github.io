@@ -1,0 +1,1 @@
+console.log(`Window size: ${window.innerWidth}x${window.innerHeight}`);
