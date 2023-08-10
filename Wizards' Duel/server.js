@@ -171,57 +171,60 @@ function Next(val){
     
     if(gameState==states.STARTING){
         switch(next){
-            case 0:
-                //except need different cards for each player, cache the results for later verification
-                io.emit('pickCards', {
-                    type: "skill",
-                    draw: 5,
-                    pick: 2,
-                    list: [
-                        skillPool[Math.floor(Math.random()*skillPool.length)],
-                        skillPool[Math.floor(Math.random()*skillPool.length)],
-                        skillPool[Math.floor(Math.random()*skillPool.length)],
-                        skillPool[Math.floor(Math.random()*skillPool.length)],
-                        skillPool[Math.floor(Math.random()*skillPool.length)]
-                    ]
+            case 0: //Everyone draws 5 cards, then picks 2 and discards 3
+                PLAYERS.forEach(function(player) {
+                    connectedSockets[player.id].emit('pickCards', {
+                        type: "skill",
+                        draw: 5,
+                        pick: 2,
+                        list: [
+                            skillPool[Math.floor(Math.random()*skillPool.length)][0],
+                            skillPool[Math.floor(Math.random()*skillPool.length)][0],
+                            skillPool[Math.floor(Math.random()*skillPool.length)][0],
+                            skillPool[Math.floor(Math.random()*skillPool.length)][0],
+                            skillPool[Math.floor(Math.random()*skillPool.length)][0]
+                        ]
+                    });
                 });
                 break;
-            case 1:
-                io.emit('pickCards', {
-                    type: "artifact",
-                    draw: 3,
-                    pick: 1,
-                    list: [
-                        artifactPool[Math.floor(Math.random()*artifactPool.length)],
-                        artifactPool[Math.floor(Math.random()*artifactPool.length)],
-                        artifactPool[Math.floor(Math.random()*artifactPool.length)]
-                    ]
+            case 1: //Everyone draws 3 cards, then picks 1 and discards 2
+                PLAYERS.forEach(function(player) {
+                    connectedSockets[player.id].emit('pickCards', {
+                        type: "artifact",
+                        draw: 3,
+                        pick: 1,
+                        list: [
+                            artifactPool[Math.floor(Math.random()*artifactPool.length)][0],
+                            artifactPool[Math.floor(Math.random()*artifactPool.length)][0],
+                            artifactPool[Math.floor(Math.random()*artifactPool.length)][0]
+                        ]
+                    });
                 });
                 break;
-            case 2:
-                io.emit('drawTokens', {
-                    draw: 5,
-                    list: [
-                        tokenPool[Math.floor(Math.random()*4)],
-                        tokenPool[Math.floor(Math.random()*4)],
-                        tokenPool[Math.floor(Math.random()*4)],
-                        tokenPool[Math.floor(Math.random()*4)],
-                        tokenPool[Math.floor(Math.random()*4)]
-                    ]
+            case 2: //Everyone draws 5 energy tokens
+                PLAYERS.forEach(function(player) {
+                    connectedSockets[player.id].emit('drawTokens', {
+                        draw: 5,
+                        list: [
+                            tokenPool[Math.floor(Math.random()*4)],
+                            tokenPool[Math.floor(Math.random()*4)],
+                            tokenPool[Math.floor(Math.random()*4)],
+                            tokenPool[Math.floor(Math.random()*4)],
+                            tokenPool[Math.floor(Math.random()*4)]
+                        ]
+                    });
                 });
                 break;
-            case 3:
-                io.emit('roll'); //player turn order
+            case 3: //Everyone rolls a die for turn order
+                io.emit('roll');
                 break;
-            case 4:
-                //set action/reaction cards
+            case 4: //Everyone decides where to put skill cards: action or reaction
                 io.emit('setCards');
                 break;
             case 5:
                 gameState++;
                 next=0;
         }
-        return;
     }
     if(gameState==states.TRAINING){
         switch(next){
@@ -250,7 +253,6 @@ function Next(val){
                 C.emit('skillOption');
                 break;
         }
-        return;
     }
     if(gameState==states.COMPETING){
         switch(next){
@@ -263,9 +265,9 @@ function Next(val){
                     draw: 3,
                     pick: 1,
                     list: [
-                        skillPool[Math.floor(Math.random()*skillPool.length)],
-                        skillPool[Math.floor(Math.random()*skillPool.length)],
-                        skillPool[Math.floor(Math.random()*skillPool.length)]
+                        skillPool[Math.floor(Math.random()*skillPool.length)][0],
+                        skillPool[Math.floor(Math.random()*skillPool.length)][0],
+                        skillPool[Math.floor(Math.random()*skillPool.length)][0]
                     ]
                 });
                 break;
@@ -278,14 +280,14 @@ function Next(val){
                     attacker: players[currentPlayer].name
                 });
         }
-        return;
     }
     next++;
 }
 
 const skillPool = [
     ["Fireball", 5],
-    ["Icicle", 5]
+    ["Icicle", 5],
+    ["Fire Wall", 2]
 ];
 
 var skillWeight=0;

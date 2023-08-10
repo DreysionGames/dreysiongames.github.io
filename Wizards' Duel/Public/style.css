@@ -1,0 +1,30 @@
+#popup {
+    display: none;
+    position: absolute;
+    border: 1px solid #000000;
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#visual {
+    display: flex;
+    align-items: center;
+    height: 30%;
+    width: 60%;
+}
+
+.horiz {
+    display: inline-block;
+}
+
+.card {
+    margin: 10px;
+}
+
+.selected {
+    border: 3px solid #FFAA00;
+}

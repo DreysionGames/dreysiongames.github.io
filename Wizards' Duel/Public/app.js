@@ -4,6 +4,9 @@ socket.on("connect_error", (err) => {
     console.log(`connect_error due to ${err.message}`);
 });
 
+var selected = [];
+var picking=0;
+
 document.getElementById("rename").addEventListener('click', () => {
     pName = document.getElementById("newname").value;
     socket.emit('rename', {
@@ -35,9 +38,14 @@ socket.on('startGame', () => {
 
 socket.on('pickCards', (data) => {
     console.log(`drawing ${data.draw} cards from the ${data.type} pile, pick ${data.pick}`);
+    picking = data.pick;
+    console.log(data.list);
     popup(
         "Pick Cards",
-        "You draw " + data.draw + " cards, pick " + data.pick + " to keep:"
+        "You draw " + data.draw + " cards, pick " + data.pick + " to keep:",
+        data.type,
+        data.draw,
+        data.pick
     );
 });
 
@@ -81,7 +89,7 @@ socket.on('continueOption', (data) => {
     console.log(`Your ${data.skill} is activated and consuming energy. Do you want to keep it going?`);
 });
 
-function popup(title,description){
+function popup(title,description,type,draw,pick){
     p=document.getElementById("popup");
     t=document.getElementById("title");
     d=document.getElementById("description");
@@ -91,5 +99,40 @@ function popup(title,description){
     t.innerHTML=title;
     d.innerHTML=description;
 
-    p.style.display="visible";
+    if(type == "skill"){
+        for(i=0;i<draw;i++){
+            c=document.createElement("img");
+            cc=document.createAttribute("class");
+            cc.value="card";
+            cs=document.createAttribute("src");
+            cs.value="Images/back1.png";
+            c.setAttributeNode(cc);
+            c.setAttributeNode(cs);
+            v.appendChild(c);
+            let index = i;
+            c.addEventListener('click',function() {selectCard(index)});
+        }
+    }
+
+    for(var i=pick;i>0;i--){
+        console.log(`For: ${i-1}`);
+        selectCard(i-1);
+    }
+
+    p.style.display="block";
+}
+
+function selectCard(card){
+    if(selected.includes(card)) return;
+    var v = document.getElementById("visual");
+
+    if(selected.length>=picking){
+        selected.splice(0,1);
+        selected.length=picking-1;
+    }
+    selected[selected.length] = card;
+    for(var i=0;i<v.children.length;i++){
+        if(selected.includes(i)) v.children[i].classList.add("selected");
+        else if(v.children[i].classList.contains("selected")) v.children[i].classList.remove("selected");
+    }
 }
