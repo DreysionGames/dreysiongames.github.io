@@ -44,6 +44,14 @@ socket.on('ready', (data) => {
     }
     document.getElementById("ready").innerHTML=ready.map(r=>r).join('<br>');
 });
+socket.on('autoReady', (data) => {
+    if(data.readyIn > 0) console.log(`Ready in ${data.readyIn}`);
+    if(rolling > 0 && data.readyIn == 5) roll();
+    if(data.readyIn == 0){
+        if(selected.length) acceptPick();
+        accept();
+    }
+});
 socket.on('startGame', () => {
     console.log('game Started');
 });

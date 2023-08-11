@@ -93,31 +93,45 @@ io.on('connection', (socket) => {
     });
     socket.on('accept', () => {
         findPlayer(socket.id).ready=1;
-        if(Ready()){Next(true);}
+        findPlayer(socket.id).autoReady=0;
+        if(Ready()) Next(true);
     });
     socket.on('decline', () => {
         findPlayer(socket.id).ready=1;
-        if(Ready()){Next(false);}
+        findPlayer(socket.id).autoReady=0;
+        if(Ready()) Next(false);
     });
 });
 
 function startGame(){
     console.log("A game has started");
-        var p = players;
-        var s = spectators;
-        players=[...p,...s].filter(p => p.queued);
-        spectators = [...p,...s].filter(s => !s.queued);
-        console.log(`Players: ${players.map(p => p.name)}`);
-        console.log(`Spectators: ${spectators.map(s => s.name)}`);
-        
-        PLAYERS=[...players];
-        next=0;
-        gameState=states.STARTING;
-        Next(true);
+    var p = players;
+    var s = spectators;
+    players=[...p,...s].filter(p => p.queued);
+    spectators = [...p,...s].filter(s => !s.queued);
+    console.log(`Players: ${players.map(p => p.name)}`);
+    console.log(`Spectators: ${spectators.map(s => s.name)}`);
+    PLAYERS=[...players];
+
+    autoReady = setInterval(function(){
+        for(i=0;i<PLAYERS.length;i++){
+            if(PLAYERS[i].autoReady > 0){
+                PLAYERS[i].autoReady--;
+                connectedSockets[PLAYERS[i].id].emit('autoReady', {
+                    readyIn: PLAYERS[i].autoReady
+                });
+            }
+        }
+    },1000);
+
+    next=0;
+    gameState=states.STARTING;
+    Next(true);
 }
 
 function newGame(){
     console.log("Game reset");
+    clearInterval(autoReady);
     gameState=states.JOINING;
     PLAYERS=[];
     for(i=0;i<players.length;i++){
@@ -191,6 +205,7 @@ function Next(val){
                             skillPool[Math.floor(Math.random()*skillPool.length)][0]
                         ]
                     });
+                    player.autoReady = 20;
                 });
                 break;
             case 1: //Everyone draws 3 cards, then picks 1 and discards 2
@@ -205,6 +220,7 @@ function Next(val){
                             artifactPool[Math.floor(Math.random()*artifactPool.length)][0]
                         ]
                     });
+                    player.autoReady = 10;
                 });
                 break;
             case 2: //Everyone draws 5 energy tokens
@@ -219,6 +235,7 @@ function Next(val){
                             tokenPool[Math.floor(Math.random()*4)]
                         ]
                     });
+                    player.autoReady = 5;
                 });
                 break;
             case 3: //Everyone rolls a die for turn order
@@ -226,7 +243,8 @@ function Next(val){
                     connectedSockets[player.id].emit('roll', {
                         purpose: "Roll the dice to determine turn order",
                         rng: Math.floor(Math.random()*6)+1
-                    })
+                    });
+                    player.autoReady = 10;
                 });
                 break;
             case 4: //Everyone decides where to put skill cards: action or reaction
@@ -342,6 +360,7 @@ class Player {
         this.name = "Player " + Math.floor(Math.random()*10000);
         this.queued = true;
         this.ready = 0;
+        this.autoReady = 0;
 
         this.health = 25;
         this.energy = new Energy(0, 0, 0, 0);
