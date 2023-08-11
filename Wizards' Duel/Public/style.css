@@ -17,6 +17,18 @@
     width: 60%;
 }
 
+#dice {
+    width:60px;
+    font-size: xx-large;
+    padding: 10px;
+    border: 1px solid #000000;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+}
+
 .horiz {
     display: inline-block;
 }

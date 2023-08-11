@@ -222,7 +222,12 @@ function Next(val){
                 });
                 break;
             case 3: //Everyone rolls a die for turn order
-                io.emit('roll');
+                PLAYERS.forEach(function(player) {
+                    connectedSockets[player.id].emit('roll', {
+                        purpose: "Roll the dice to determine turn order",
+                        rng: Math.floor(Math.random()*6)+1
+                    })
+                });
                 break;
             case 4: //Everyone decides where to put skill cards: action or reaction
                 io.emit('setCards');

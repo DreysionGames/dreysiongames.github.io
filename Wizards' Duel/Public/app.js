@@ -17,6 +17,7 @@ socket.on('disconnect', () => {
 var pName;
 var selected = [];
 var picking=0;
+var rolling=0;
 
 document.getElementById("rename").addEventListener('click', () => {
     pName = document.getElementById("newname").value;
@@ -64,10 +65,24 @@ socket.on('pickCards', (data) => {
 
 socket.on('drawCards', (data) => {
     console.log(`drawing ${data.draw} cards from the ${data.type} pile, received ${data.cardsList}`);
+    popup(
+        "Draw Cards",
+        "You drew " + data.draw + " cards.",
+        data.type,
+        data.draw,
+        0
+    );
 });
 
 socket.on('drawTokens', (data) => {
-    console.log(`drawing ${data.number} tokens, received ${data.tokensList}`);
+    console.log(`drawing ${data.draw} tokens, received ${data.list}`);
+    popup(
+        "Draw Energy Tokens",
+        "You drew " + data.draw + " tokens,",
+        "token",
+        data.draw,
+        0
+    );
 });
 
 socket.on('drawEvent', (data) => {
@@ -84,6 +99,18 @@ socket.on('drawEvent', (data) => {
         return;
     }
     console.log("A special event is occurring!");
+});
+
+socket.on('roll', (data) => {
+    console.log(`Rolled ${data.rng}`);
+    rolling=data.rng;
+    popup(
+        "Roll the Dice",
+        data.purpose,
+        "dice",
+        0,
+        0,
+    );
 });
 
 socket.on('switchTurn', (data) => {
@@ -113,18 +140,29 @@ function popup(title,description,type,draw,pick){
     d.innerHTML=description;
 
     if(pick>0) a.addEventListener('click',acceptPick);
-
-    for(i=0;i<draw;i++){
-        c=document.createElement("img");
-        cc=document.createAttribute("class");
-        cc.value="card";
-        cs=document.createAttribute("src");
-        cs.value="Images/back1.png"; //Change image based on card type when other images are available
-        c.setAttributeNode(cc);
-        c.setAttributeNode(cs);
+    if(type=="dice"){
+        c=document.createElement("div");
+        ci=document.createAttribute("id");
+        ci.value="dice";
+        c.setAttributeNode(ci);
+        c.innerHTML=1;
         v.appendChild(c);
-        let index = i;
-        c.addEventListener('click',function() {selectCard(index)});
+        c.addEventListener('click',roll);
+    }
+
+    if(type!="token"){
+        for(i=0;i<draw;i++){
+            c=document.createElement("img");
+            cc=document.createAttribute("class");
+            cc.value="card";
+            cs=document.createAttribute("src");
+            cs.value="Images/back1.png"; //Change image based on card type when other images are available
+            c.setAttributeNode(cc);
+            c.setAttributeNode(cs);
+            v.appendChild(c);
+            let index = i;
+            c.addEventListener('click',function() {selectCard(index)});
+        }
     }
 
     for(var i=pick;i>0;i--){
@@ -135,6 +173,7 @@ function popup(title,description,type,draw,pick){
 }
 
 function accept(){
+    picking=0;
     document.getElementById("popup").style.display="none";
     [...document.getElementById("visual").children].forEach(element => {
         removeElementWithListeners(element);
@@ -148,6 +187,18 @@ function acceptPick(){
         list: selected
     });
     selected = [];
+}
+
+function roll(){
+    document.getElementById("dice").removeEventListener('click',roll);
+    rollAnim=setInterval(function(){
+        document.getElementById("dice").innerHTML=Math.floor(Math.random()*6);
+        if(Math.random() < 0.05){
+            document.getElementById("dice").innerHTML=rolling;
+            clearInterval(rollAnim);
+            rolling=0;
+        }
+    },150);
 }
 
 function selectCard(card){
