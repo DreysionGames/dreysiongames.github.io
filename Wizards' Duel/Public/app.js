@@ -112,19 +112,19 @@ function popup(title,description,type,draw,pick){
     t.innerHTML=title;
     d.innerHTML=description;
 
-    if(type == "skill"){
-        for(i=0;i<draw;i++){
-            c=document.createElement("img");
-            cc=document.createAttribute("class");
-            cc.value="card";
-            cs=document.createAttribute("src");
-            cs.value="Images/back1.png";
-            c.setAttributeNode(cc);
-            c.setAttributeNode(cs);
-            v.appendChild(c);
-            let index = i;
-            c.addEventListener('click',function() {selectCard(index)});
-        }
+    if(pick>0) a.addEventListener('click',acceptPick);
+
+    for(i=0;i<draw;i++){
+        c=document.createElement("img");
+        cc=document.createAttribute("class");
+        cc.value="card";
+        cs=document.createAttribute("src");
+        cs.value="Images/back1.png"; //Change image based on card type when other images are available
+        c.setAttributeNode(cc);
+        c.setAttributeNode(cs);
+        v.appendChild(c);
+        let index = i;
+        c.addEventListener('click',function() {selectCard(index)});
     }
 
     for(var i=pick;i>0;i--){
@@ -132,6 +132,22 @@ function popup(title,description,type,draw,pick){
     }
 
     p.style.display="block";
+}
+
+function accept(){
+    document.getElementById("popup").style.display="none";
+    [...document.getElementById("visual").children].forEach(element => {
+        removeElementWithListeners(element);
+    });
+    socket.emit('accept');
+}
+
+function acceptPick(){
+    document.getElementById("accept").removeEventListener('click',acceptPick);
+    socket.emit('pickCards',{
+        list: selected
+    });
+    selected = [];
 }
 
 function selectCard(card){
@@ -151,4 +167,15 @@ function selectCard(card){
 
 function Reset(){
     document.getElementById("popup").style.display="none";
+    if(document.getElementById("visual").innerHTML!=""){
+        [...document.getElementById("visual").children].forEach(element => {
+            removeElementWithListeners(element);
+        });
+    }
+}
+
+function removeElementWithListeners(element){
+    const clone = element.cloneNode(true);
+    element.parentNode.replaceChild(clone, element);
+    clone.parentNode.removeChild(clone);
 }

@@ -56,13 +56,13 @@ io.on('connection', (socket) => {
         Names();
     });
     socket.on('rename', (data) => {
-        console.log(`${findPlayer(socket.id).name} is now named ${data.newName}`);
+        console.log(`${findPlayer(socket.id).name} is now named ${data.newName}.`);
         findPlayer(socket.id).name = data.newName;
         Names();
     });
     socket.on('queue',(data) => {
         findPlayer(socket.id).queued = data.queued;
-        console.log(`${findPlayer(socket.id).name} is${findPlayer(socket.id).queued ? "" : " not"} queued`);
+        console.log(`${findPlayer(socket.id).name} is${findPlayer(socket.id).queued ? "" : " not"} queued.`);
         if(findPlayer(socket.id).queued) {
             addPlayer(socket.id,players,false);
             remPlayer(socket.id,spectators,false);
@@ -72,7 +72,7 @@ io.on('connection', (socket) => {
         }
     });
     socket.on('startGame', () => {
-        console.log(`${findPlayer(socket.id).name} is ready to start the game`)
+        console.log(`${findPlayer(socket.id).name} is ready to start the game.`)
         findPlayer(socket.id).ready=1;
         if(Ready()){
             startGame();
@@ -80,7 +80,7 @@ io.on('connection', (socket) => {
     });
     socket.on('pickCards', (data) => {
         //Check to see the picked cards match the list sent to them in the first place
-        console.log("${data.player} picked: ${data.list}");
+        console.log(`${findPlayer(socket.id)} picked: ${data.list}.`);
         //update player's card list
     });
     socket.on('endTurn', () => {
@@ -302,7 +302,8 @@ for(i=0;i<skillPool.length;i++){
 }
 
 const artifactPool = [
-    
+    ["Magic Pendant", 3],
+    ["Spell Book", 2]
 ];
 
 var artifactWeight=0;
