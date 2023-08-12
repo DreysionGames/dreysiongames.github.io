@@ -5,24 +5,37 @@
         <script src="app.js" defer></script>
         <script src="layout.js" defer></script>
         <link href="style.css" rel="stylesheet" type="text/css" />
+        <link href="favicon.ico" rel="icon" type="image/ico">
     </head>
     <body>
-        <h3>WEBSOCKETS!!!</h3>
-        Name: <input id="newname" /><button id="rename">Submit</button>
-        <br />
-        Queue up: <input id="queue" type="checkbox" checked />
-        <br />
-        <button id="Start">Start</button>
-        
-        <div id="Lobby">
-            <div id="names" class="horiz"></div>
-            <div id="ready" class="horiz"></div>
+        <h2 id="title">Wizards' Duel</h2>
+        <div id="profiles">Profiles</div>
+        <div id="hand">Hand</div>
+        <div id="roomsettings">Room</div>
+        <div id="phoneutil">
+            <button onclick="phoneActivate('setup')">Waiting Room</button>
+            <button onclick="phoneActivate('bracket')">Bracket</button>
+            <button onclick="phoneActivate('hand')">Hand</button>
+            <button onclick="phoneActivate('roomsettings')">Room</button>
+        </div>
+        <div id="bracket">Bracket</div>
+        <div id="setup">
+            Name: <input id="newname" /><button id="rename">Submit</button>
+            <br />
+            Queue up: <input id="queue" type="checkbox" checked />
+            <br />
+            <button id="Start">Start</button>
+            <div id="waiting">
+                <div id="names" class="horiz"></div>
+                <div id="ready" class="horiz"></div>
+            </div>
         </div>
         <div id="popup">
             <h3 id="title"></h3>
             <p id="description"></p>
             <div id="visual"></div>
             <button id="accept" onclick="accept()">Accept</button>
+            <div id="readyin"></div>
         </div>
         <!--<button onclick="socket.emit('test')">Test</button>-->
     </body>

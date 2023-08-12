@@ -1,7 +1,21 @@
+body div {
+    position: absolute;
+    border: 1px solid #000000;
+}
+
+body div div {
+    position: static;
+    border: none;
+}
+
+#phoneutil {
+    width: 100%;
+    bottom: 0px;
+}
+
 #popup {
     display: none;
     position: absolute;
-    border: 1px solid #000000;
     border-radius: 20px;
     padding: 20px;
     text-align: center;
@@ -17,7 +31,7 @@
     width: 60%;
 }
 
-#dice {
+.dice {
     width:60px;
     font-size: xx-large;
     padding: 10px;

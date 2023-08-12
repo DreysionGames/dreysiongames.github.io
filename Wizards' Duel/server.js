@@ -22,6 +22,7 @@ const states = {
 var gameState = states.JOINING;
 
 var next;
+var autoready;
 
 var players = [];
 var spectators = [];
@@ -51,8 +52,8 @@ io.on('connection', (socket) => {
             remPlayer(socket.id,PLAYERS,true);
             if(PLAYERS.length == 0) newGame();
         }
-        remPlayer(socket.id,players,true);
-        remPlayer(socket.id,spectators,true);
+        remPlayer(socket.id,players,false);
+        remPlayer(socket.id,spectators,false);
         Names();
     });
     socket.on('rename', (data) => {
@@ -72,6 +73,7 @@ io.on('connection', (socket) => {
         }
     });
     socket.on('startGame', () => {
+        if(gameState != states.JOINING) return;
         console.log(`${findPlayer(socket.id).name} is ready to start the game.`)
         findPlayer(socket.id).ready=1;
         if(Ready()){
@@ -113,6 +115,7 @@ function startGame(){
     console.log(`Spectators: ${spectators.map(s => s.name)}`);
     PLAYERS=[...players];
 
+    if(autoready) clearInterval(autoready);
     autoReady = setInterval(function(){
         for(i=0;i<PLAYERS.length;i++){
             if(PLAYERS[i].autoReady > 0){
@@ -126,6 +129,7 @@ function startGame(){
 
     next=0;
     gameState=states.STARTING;
+    io.emit('startGame');
     Next(true);
 }
 
@@ -198,11 +202,11 @@ function Next(val){
                         draw: 5,
                         pick: 2,
                         list: [
-                            skillPool[Math.floor(Math.random()*skillPool.length)][0],
-                            skillPool[Math.floor(Math.random()*skillPool.length)][0],
-                            skillPool[Math.floor(Math.random()*skillPool.length)][0],
-                            skillPool[Math.floor(Math.random()*skillPool.length)][0],
-                            skillPool[Math.floor(Math.random()*skillPool.length)][0]
+                            skillPool[Math.floor(Math.random()*skillPool.length)].name,
+                            skillPool[Math.floor(Math.random()*skillPool.length)].name,
+                            skillPool[Math.floor(Math.random()*skillPool.length)].name,
+                            skillPool[Math.floor(Math.random()*skillPool.length)].name,
+                            skillPool[Math.floor(Math.random()*skillPool.length)].name
                         ]
                     });
                     player.autoReady = 20;
@@ -215,9 +219,9 @@ function Next(val){
                         draw: 3,
                         pick: 1,
                         list: [
-                            artifactPool[Math.floor(Math.random()*artifactPool.length)][0],
-                            artifactPool[Math.floor(Math.random()*artifactPool.length)][0],
-                            artifactPool[Math.floor(Math.random()*artifactPool.length)][0]
+                            artifactPool[Math.floor(Math.random()*artifactPool.length)].name,
+                            artifactPool[Math.floor(Math.random()*artifactPool.length)].name,
+                            artifactPool[Math.floor(Math.random()*artifactPool.length)].name
                         ]
                     });
                     player.autoReady = 10;
@@ -242,7 +246,9 @@ function Next(val){
                 PLAYERS.forEach(function(player) {
                     connectedSockets[player.id].emit('roll', {
                         purpose: "Roll the dice to determine turn order",
-                        rng: Math.floor(Math.random()*6)+1
+                        rng: [
+                            Math.floor(Math.random()*6)+1
+                        ]
                     });
                     player.autoReady = 10;
                 });
@@ -294,9 +300,9 @@ function Next(val){
                     draw: 3,
                     pick: 1,
                     list: [
-                        skillPool[Math.floor(Math.random()*skillPool.length)][0],
-                        skillPool[Math.floor(Math.random()*skillPool.length)][0],
-                        skillPool[Math.floor(Math.random()*skillPool.length)][0]
+                        skillPool[Math.floor(Math.random()*skillPool.length)].name,
+                        skillPool[Math.floor(Math.random()*skillPool.length)].name,
+                        skillPool[Math.floor(Math.random()*skillPool.length)].name
                     ]
                 });
                 break;
@@ -312,47 +318,6 @@ function Next(val){
     }
     next++;
 }
-
-const skillPool = [
-    ["Fireball", 5],
-    ["Icicle", 5],
-    ["Fire Wall", 2]
-];
-
-var skillWeight=0;
-for(i=0;i<skillPool.length;i++){
-    skillWeight+=skillPool[i][1];
-}
-
-const artifactPool = [
-    ["Magic Pendant", 3],
-    ["Spell Book", 2]
-];
-
-var artifactWeight=0;
-for(i=0;i<artifactPool.length;i++){
-    artifactWeight+=artifactPool[i][1];
-}
-
-const eventPool = [
-
-];
-
-var eventWeight=0;
-for(i=0;i<eventPool.length;i++){
-    eventWeight+=eventPool[i][1];
-}
-
-const tokenPool = [
-    "fire",
-    "water",
-    "earth",
-    "air"
-];
-
-const enemyPool = [
-
-];
 
 class Player {
     constructor(id) {
@@ -370,6 +335,14 @@ class Player {
         this.reacions = [];
         this.artifacts = [];
         this.targets = [];
+    }
+}
+
+class Card {
+    constructor(name,type,deck){
+        this.name = name;
+        this.type = type;
+        this.deckCount = deck;
     }
 }
 
@@ -425,3 +398,44 @@ function remPlayer(id,list,disconnect){
     Names();
     if(gameState==states.JOINING && Ready()) startGame();
 }
+
+const skillPool = [
+    new Card("Fireball","skill",5),
+    new Card("Icicle","skill",5),
+    new Card("Fire Wall","skill",3)
+];
+
+var skillWeight=0;
+for(i=0;i<skillPool.length;i++){
+    skillWeight+=skillPool[i][1];
+}
+
+const artifactPool = [
+    new Card("Magic Pendant","artifact",3),
+    new Card("Spell Book","artifact",2)
+];
+
+var artifactWeight=0;
+for(i=0;i<artifactPool.length;i++){
+    artifactWeight+=artifactPool[i][1];
+}
+
+const eventPool = [
+
+];
+
+var eventWeight=0;
+for(i=0;i<eventPool.length;i++){
+    eventWeight+=eventPool[i][1];
+}
+
+const tokenPool = [
+    "fire",
+    "water",
+    "earth",
+    "air"
+];
+
+const enemyPool = [
+
+];

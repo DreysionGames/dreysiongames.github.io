@@ -17,7 +17,7 @@ socket.on('disconnect', () => {
 var pName;
 var selected = [];
 var picking=0;
-var rolling=0;
+var rolling=[];
 
 document.getElementById("rename").addEventListener('click', () => {
     pName = document.getElementById("newname").value;
@@ -45,15 +45,17 @@ socket.on('ready', (data) => {
     document.getElementById("ready").innerHTML=ready.map(r=>r).join('<br>');
 });
 socket.on('autoReady', (data) => {
-    if(data.readyIn > 0) console.log(`Ready in ${data.readyIn}`);
-    if(rolling > 0 && data.readyIn == 5) roll();
+    if(data.readyIn > 0) document.getElementById("readyin").innerHTML = data.readyIn;
+    if(rolling.length > 0 && data.readyIn == 5) roll();
     if(data.readyIn == 0){
+        document.getElementById("readyin").innerHTML = "";
         if(selected.length) acceptPick();
         accept();
     }
 });
 socket.on('startGame', () => {
     console.log('game Started');
+    layoutStart();
 });
 socket.on('reset', () => {
     Reset();
@@ -150,9 +152,9 @@ function popup(title,description,type,draw,pick){
     if(pick>0) a.addEventListener('click',acceptPick);
     if(type=="dice"){
         c=document.createElement("div");
-        ci=document.createAttribute("id");
-        ci.value="dice";
-        c.setAttributeNode(ci);
+        cc=document.createAttribute("class");
+        cc.value="dice";
+        c.setAttributeNode(cc);
         c.innerHTML=1;
         v.appendChild(c);
         c.addEventListener('click',roll);
@@ -168,8 +170,8 @@ function popup(title,description,type,draw,pick){
             c.setAttributeNode(cc);
             c.setAttributeNode(cs);
             v.appendChild(c);
-            let index = i;
-            c.addEventListener('click',function() {selectCard(index)});
+            let cIndex = i;
+            c.addEventListener('click',function() {selectCard(cIndex)});
         }
     }
 
@@ -183,6 +185,7 @@ function popup(title,description,type,draw,pick){
 function accept(){
     picking=0;
     document.getElementById("popup").style.display="none";
+    document.getElementById("readyin").innerHTML = "";
     [...document.getElementById("visual").children].forEach(element => {
         removeElementWithListeners(element);
     });
@@ -198,15 +201,20 @@ function acceptPick(){
 }
 
 function roll(){
-    document.getElementById("dice").removeEventListener('click',roll);
-    rollAnim=setInterval(function(){
-        document.getElementById("dice").innerHTML=Math.floor(Math.random()*6);
-        if(Math.random() < 0.05){
-            document.getElementById("dice").innerHTML=rolling;
-            clearInterval(rollAnim);
-            rolling=0;
-        }
-    },150);
+    var dice = document.getElementsByClassName("dice");
+    rollAnim = [];
+    for(i=0;i<dice.length;i++){
+        dice[i].removeEventListener('click',roll);
+        let dIndex = i;
+        rollAnim[i]=setInterval(function(){
+            dice[dIndex].innerHTML=Math.floor(Math.random()*6);
+            if(Math.random() < 0.05){
+                dice[dIndex].innerHTML=rolling[dIndex];
+                clearInterval(rollAnim[dIndex]);
+                rolling=[];
+            }
+        },150);
+    }
 }
 
 function selectCard(card){
@@ -231,6 +239,7 @@ function Reset(){
             removeElementWithListeners(element);
         });
     }
+    layoutReset();
 }
 
 function removeElementWithListeners(element){
