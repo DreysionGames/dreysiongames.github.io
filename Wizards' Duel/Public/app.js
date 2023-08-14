@@ -5,6 +5,7 @@ socket.on('connect', () => {
         socket.emit('rename', {newName: pName});
     }
     socket.emit('queue', {queued: document.getElementById("queue").checked});
+    socket.emit('layout', {W: window.innerWidth, H: window.innerHeight});
 });
 socket.on('connect_error', (err) => {
     console.log(`connect_error due to ${err.message}`);
@@ -14,10 +15,12 @@ socket.on('disconnect', () => {
     Reset();
 });
 
+var profiles = [];
 var pName;
 var selected = [];
 var picking=0;
 var rolling=[];
+var sType;
 
 document.getElementById("rename").addEventListener('click', () => {
     pName = document.getElementById("newname").value;
@@ -35,7 +38,7 @@ document.getElementById("Start").addEventListener('click', () => {
 
 socket.on('names', (data) => {
     document.getElementById("names").innerHTML=data.nameList.map(p => p).join('<br>');
-})
+});
 socket.on('ready', (data) => {
     ready=[];
     for(i=0;i<data.readyList.length;i++){
@@ -52,6 +55,23 @@ socket.on('autoReady', (data) => {
         if(selected.length) acceptPick();
         accept();
     }
+});
+socket.on('profiles', (data) => {
+    profiles = [];
+    console.log(data.players);
+    data.players.forEach(player => {
+        let newProf = profile(player.name);
+        profiles[player.profileID] = newProf;
+    });
+});
+socket.on('changeProfile', (data) => {
+    modProfile(
+        data.player.profileID, 
+        data.player.name, 
+        data.player.active, 
+        data.player.actions,
+        data.player.reactions,
+        data.player.artifacts);
 });
 socket.on('startGame', () => {
     console.log('game Started');
@@ -149,7 +169,10 @@ function popup(title,description,type,draw,pick){
     t.innerHTML=title;
     d.innerHTML=description;
 
-    if(pick>0) a.addEventListener('click',acceptPick);
+    if(pick>0) {
+        sType = type;
+        a.addEventListener('click',acceptPick);
+    }
     if(type=="dice"){
         c=document.createElement("div");
         cc=document.createAttribute("class");
@@ -182,6 +205,28 @@ function popup(title,description,type,draw,pick){
     p.style.display="block";
 }
 
+function profile(name){
+    var profdiv = document.createElement("div");
+    var profclass = document.createAttribute("class");
+    profclass.value = "profile-card";
+    var profname = document.createElement("h3");
+    profname.innerHTML = name;
+    var profhand = document.createElement("div");
+
+    profdiv.class = profclass;
+    profdiv.appendChild(profname);
+    profdiv.appendChild(profhand);
+    document.getElementById("profiles").appendChild(profdiv);
+
+    return profdiv;
+}
+
+function modProfile(id, name, active, actions, reactions, artifacts) {
+    var prof = profiles[id];
+    prof.children[0].innerHTML = name;
+    prof.children[1].innerHTML;
+}
+
 function accept(){
     picking=0;
     document.getElementById("popup").style.display="none";
@@ -192,9 +237,10 @@ function accept(){
     socket.emit('accept');
 }
 
-function acceptPick(){
+function acceptPick(type){
     document.getElementById("accept").removeEventListener('click',acceptPick);
     socket.emit('pickCards',{
+        type: sType,
         list: selected
     });
     selected = [];

@@ -24,9 +24,9 @@ var gameState = states.JOINING;
 var next;
 var autoready;
 
+var everyone = [];
 var players = [];
 var spectators = [];
-var PLAYERS;
 var currentPlayer=0;
 
 server.listen(port, "192.168.1.65", () => {
@@ -38,52 +38,54 @@ process.on('exit', () => {
 
 io.on('connection', (socket) => {
     connectedSockets[socket.id]=socket;
+    addPlayer(socket.id,everyone,true);
     if(gameState!=states.JOINING){
-        addPlayer(socket.id,spectators,true);
+        addPlayer(socket.id,spectators,false);
         console.log(`${spectators[spectators.length-1].name} is spectating.`);
     }else{
-        addPlayer(socket.id,players,true);
-	    console.log(`${players[players.length-1].name} just connected.`);
+        console.log(`${everyone[everyone.length-1].name} has just joined.`)
     }
 
     socket.on('disconnect', () => {
         connectedSockets.splice(socket.id,1);
-        if(PLAYERS){
-            remPlayer(socket.id,PLAYERS,true);
-            if(PLAYERS.length == 0) newGame();
+        if(players){
+            remPlayer(socket.id,players,true);
+            if(players.length == 0) newGame();
         }
-        remPlayer(socket.id,players,false);
         remPlayer(socket.id,spectators,false);
+        remPlayer(socket.id,everyone,false);
         Names();
     });
     socket.on('rename', (data) => {
-        console.log(`${findPlayer(socket.id).name} is now named ${data.newName}.`);
-        findPlayer(socket.id).name = data.newName;
+        console.log(`${findPlayer(socket.id, everyone).name} is now named ${data.newName}.`);
+        findPlayer(socket.id, everyone).name = data.newName;
         Names();
     });
     socket.on('queue',(data) => {
-        findPlayer(socket.id).queued = data.queued;
-        console.log(`${findPlayer(socket.id).name} is${findPlayer(socket.id).queued ? "" : " not"} queued.`);
-        if(findPlayer(socket.id).queued) {
-            addPlayer(socket.id,players,false);
-            remPlayer(socket.id,spectators,false);
-        } else {
-            addPlayer(socket.id,spectators,false);
-            remPlayer(socket.id,players,false);
-        }
+        findPlayer(socket.id, everyone).queued = data.queued;
+        console.log(`${findPlayer(socket.id, everyone).name} is${findPlayer(socket.id, everyone).queued ? "" : " not"} queued.`);
+    });
+    socket.on('layout', (data) => {
+        console.log(`Screen dimensions: ${data.W}x${data.H}`)
     });
     socket.on('startGame', () => {
         if(gameState != states.JOINING) return;
-        console.log(`${findPlayer(socket.id).name} is ready to start the game.`)
-        findPlayer(socket.id).ready=1;
+        console.log(`${findPlayer(socket.id, everyone).name} is ready to start the game.`);
+        findPlayer(socket.id, everyone).ready=1;
         if(Ready()){
             startGame();
         }
     });
     socket.on('pickCards', (data) => {
-        //Check to see the picked cards match the list sent to them in the first place
-        console.log(`${findPlayer(socket.id)} picked: ${data.list}.`);
-        //update player's card list
+        var p = findPlayer(socket.id, players);
+        console.log(`${p.name} picked: ${data.list}.`);
+        
+        if(data.type == "skills"){
+            p.skills.push(p.selecting[data.list[0]])
+        }else if(data.type == "artifacts"){
+            p.artifacts.push(p.selecting[data.list[1]])
+        }
+        p.selecting = [];
     });
     socket.on('endTurn', () => {
         currentPlayer++;
@@ -94,34 +96,31 @@ io.on('connection', (socket) => {
         });
     });
     socket.on('accept', () => {
-        findPlayer(socket.id).ready=1;
-        findPlayer(socket.id).autoReady=0;
+        findPlayer(socket.id, players).ready=1;
+        findPlayer(socket.id, players).autoReady=0;
         if(Ready()) Next(true);
     });
     socket.on('decline', () => {
-        findPlayer(socket.id).ready=1;
-        findPlayer(socket.id).autoReady=0;
+        findPlayer(socket.id, players).ready=1;
+        findPlayer(socket.id, players).autoReady=0;
         if(Ready()) Next(false);
     });
 });
 
 function startGame(){
     console.log("A game has started");
-    var p = players;
-    var s = spectators;
-    players=[...p,...s].filter(p => p.queued);
-    spectators = [...p,...s].filter(s => !s.queued);
+    players = everyone.filter(p => p.queued);
+    spectators = everyone.filter(s => !s.queued);
     console.log(`Players: ${players.map(p => p.name)}`);
     console.log(`Spectators: ${spectators.map(s => s.name)}`);
-    PLAYERS=[...players];
 
     if(autoready) clearInterval(autoready);
     autoReady = setInterval(function(){
-        for(i=0;i<PLAYERS.length;i++){
-            if(PLAYERS[i].autoReady > 0){
-                PLAYERS[i].autoReady--;
-                connectedSockets[PLAYERS[i].id].emit('autoReady', {
-                    readyIn: PLAYERS[i].autoReady
+        for(i=0;i<players.length;i++){
+            if(players[i].autoReady > 0){
+                players[i].autoReady--;
+                connectedSockets[players[i].id].emit('autoReady', {
+                    readyIn: players[i].autoReady
                 });
             }
         }
@@ -129,6 +128,9 @@ function startGame(){
 
     next=0;
     gameState=states.STARTING;
+    io.emit('profiles', {
+        players: players
+    });
     io.emit('startGame');
     Next(true);
 }
@@ -137,7 +139,6 @@ function newGame(){
     console.log("Game reset");
     clearInterval(autoReady);
     gameState=states.JOINING;
-    PLAYERS=[];
     for(i=0;i<players.length;i++){
         players[i].ready=0;
         players[i].health=25;
@@ -152,14 +153,16 @@ function newGame(){
     for(i=0;i<spectators.length;i++){
         spectators[i].ready=0;
     }
+    players=[];
+    spectators=[];
     io.emit('reset');
 }
 
 function Names(){
-    if(PLAYERS && PLAYERS.length) var names = PLAYERS.map(p => p.name);
+    if(players && players.length) var names = players.map(p => p.name);
     else{
-        ps = [...players,...spectators].filter(p => p.queued);
-        var names = ps.map(p => p.name);
+        var q = [...everyone].filter(p => p.queued);
+        var names = q.map(p => p.name);
     }
     io.emit('names', {
         nameList: names
@@ -168,12 +171,12 @@ function Names(){
 }
 
 function Ready(){
-    if(PLAYERS && PLAYERS.length) {
-        var ready = PLAYERS.map(r => r.ready);
+    if(players && players.length) {
+        var ready = players.map(p => p.ready);
     }
     else {
-        ps = [...players,...spectators].filter(p => p.queued);
-        var ready = ps.map(p => p.ready);
+        var q = [...everyone].filter(p => p.queued);
+        var ready = q.map(p => p.ready);
     }
     io.emit('ready', {
         readyList: ready
@@ -188,62 +191,60 @@ function Ready(){
 function Next(val){
     var C=connectedSockets[players[currentPlayer].id];
 
-    for(i=0;i<PLAYERS.length;i++){
-        PLAYERS[i].ready=0;
+    for(i=0;i<players.length;i++){
+        players[i].ready=0;
     }
     Ready();
     
     if(gameState==states.STARTING){
         switch(next){
             case 0: //Everyone draws 5 cards, then picks 2 and discards 3
-                PLAYERS.forEach(function(player) {
+                players.forEach(function(player) {
+                    player.selecting = [
+                        skillPool[Math.floor(Math.random()*skillPool.length)].name,
+                        skillPool[Math.floor(Math.random()*skillPool.length)].name,
+                        skillPool[Math.floor(Math.random()*skillPool.length)].name,
+                        skillPool[Math.floor(Math.random()*skillPool.length)].name,
+                        skillPool[Math.floor(Math.random()*skillPool.length)].name
+                    ];
                     connectedSockets[player.id].emit('pickCards', {
                         type: "skill",
                         draw: 5,
                         pick: 2,
-                        list: [
-                            skillPool[Math.floor(Math.random()*skillPool.length)].name,
-                            skillPool[Math.floor(Math.random()*skillPool.length)].name,
-                            skillPool[Math.floor(Math.random()*skillPool.length)].name,
-                            skillPool[Math.floor(Math.random()*skillPool.length)].name,
-                            skillPool[Math.floor(Math.random()*skillPool.length)].name
-                        ]
+                        list: player.selecting
                     });
                     player.autoReady = 20;
                 });
                 break;
             case 1: //Everyone draws 3 cards, then picks 1 and discards 2
-                PLAYERS.forEach(function(player) {
+                players.forEach(function(player) {
+                    player.selecting = [
+                        artifactPool[Math.floor(Math.random()*artifactPool.length)].name,
+                        artifactPool[Math.floor(Math.random()*artifactPool.length)].name,
+                        artifactPool[Math.floor(Math.random()*artifactPool.length)].name
+                    ];
                     connectedSockets[player.id].emit('pickCards', {
                         type: "artifact",
                         draw: 3,
                         pick: 1,
-                        list: [
-                            artifactPool[Math.floor(Math.random()*artifactPool.length)].name,
-                            artifactPool[Math.floor(Math.random()*artifactPool.length)].name,
-                            artifactPool[Math.floor(Math.random()*artifactPool.length)].name
-                        ]
+                        list: player.selecting
                     });
                     player.autoReady = 10;
                 });
                 break;
             case 2: //Everyone draws 5 energy tokens
-                PLAYERS.forEach(function(player) {
+                players.forEach(function(player) {
+                    energyDraw = drawEnergy(5);
+                    player.energy.add(energyDraw);
                     connectedSockets[player.id].emit('drawTokens', {
                         draw: 5,
-                        list: [
-                            tokenPool[Math.floor(Math.random()*4)],
-                            tokenPool[Math.floor(Math.random()*4)],
-                            tokenPool[Math.floor(Math.random()*4)],
-                            tokenPool[Math.floor(Math.random()*4)],
-                            tokenPool[Math.floor(Math.random()*4)]
-                        ]
+                        list: energyDraw
                     });
                     player.autoReady = 5;
                 });
                 break;
             case 3: //Everyone rolls a die for turn order
-                PLAYERS.forEach(function(player) {
+                players.forEach(function(player) {
                     connectedSockets[player.id].emit('roll', {
                         purpose: "Roll the dice to determine turn order",
                         rng: [
@@ -322,20 +323,31 @@ function Next(val){
 class Player {
     constructor(id) {
         this.id = id;
-        this.name = "Player " + Math.floor(Math.random()*10000);
+        this.profileID = genID();
+        this.name = "Player " + this.profileID;
         this.queued = true;
         this.ready = 0;
         this.autoReady = 0;
+        this.selecting = [];
 
         this.health = 25;
         this.energy = new Energy(0, 0, 0, 0);
         this.skills = [];
         this.active = [];
         this.actions = [];
-        this.reacions = [];
+        this.reactions = [];
         this.artifacts = [];
         this.targets = [];
     }
+}
+
+function genID() {
+    var id = Math.floor(Math.random() * 10000);
+    var curIDs = everyone.map(p => p.profileID);
+    for(i=0;i<curIDs.length;i++){
+        if(id == curIDs[i]) return genID();
+    }
+    return id;
 }
 
 class Card {
@@ -362,17 +374,23 @@ class Energy {
     }
 }
 
-function findPlayer(id){
-    for(i=0;i<players.length;i++){
-        if(players[i].id==id) return players[i];
+function drawEnergy(num){
+    var draw = new Energy(0,0,0,0);
+    options = [
+        draw.fire,
+        draw.water,
+        draw.earth,
+        draw.air
+    ];
+    for(i=0; i<num; i++){
+        options[Math.floor(Math.random()*4)]++;
     }
-    for(i=0;i<spectators.length;i++){
-        if(spectators[i].id==id) return spectators[i];
-    }
-    
-    if(!PLAYERS) return;
-    for(i=0;i<PLAYERS.length;i++){
-        if(PLAYERS[i].id==id) return PLAYERS[i];
+    return draw;
+}
+
+function findPlayer(id, list){
+    for(i=0;i<list.length;i++){
+        if(list[i].id==id) return list[i];
     }
 }
 
@@ -383,7 +401,7 @@ function addPlayer(id,list,newcomer){
     if(newcomer) {
         list[list.length]=new Player(id);
     } else {
-        list[list.length]=findPlayer(id);
+        list[list.length]=findPlayer(id, everyone);
     }
     Names();
 }

@@ -2,7 +2,7 @@ window.addEventListener('resize', setLayout);
 
 title = document.getElementById("title");
 setup = document.getElementById("setup");
-profiles = document.getElementById("profiles");
+profileStrip = document.getElementById("profiles");
 room = document.getElementById("roomsettings");
 bracket = document.getElementById("bracket");
 hand = document.getElementById("hand");
@@ -18,10 +18,10 @@ function setLayout(){
     H = window.innerHeight;
 
     title.style.height = Math.min(H / 5, 80) + "px";
-    profiles.style.top = title.style.height;
-    profiles.style.left = "0px";
-    profiles.style.height = parseFloat(title.style.height) * 1.5 + "px";
-    hand.style.top = parseFloat(title.style.height) * 2.5 + "px";
+    profileStrip.style.top = title.style.height;
+    profileStrip.style.left = "0px";
+    profileStrip.style.height = parseFloat(title.style.height) * 1.5 + "px";
+    hand.style.top = parseFloat(title.style.height) * 2.5 - 1 + "px";
 
     room.style.right = "0px";
     hand.style.left = "0px";
@@ -33,7 +33,7 @@ function setLayout(){
         }
     }
 
-    profiles.style.display = layoutGameStarted ? "block" : "none";
+    profileStrip.style.display = layoutGameStarted ? "block" : "none";
 
     if(H > W) {tallLayout();}
     else {wideLayout();}
@@ -42,7 +42,7 @@ function setLayout(){
 function tallLayout(){
     phone.style.display = "block";
     phone.style.height = title.style.height;
-    profiles.style.width = "100%";
+    profileStrip.style.width = "100%";
 
     setup.style.width="100%";
     room.style.width="100%";
@@ -74,7 +74,7 @@ function wideLayout(){
     bracket.style.display="block";
     hand.style.display="block";
     room.style.display="block";
-    profiles.style.width = "78%";
+    profileStrip.style.width = "78%";
 
     setup.style.width = "20%";
     room.style.width = "20%";
