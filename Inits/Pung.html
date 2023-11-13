@@ -137,12 +137,19 @@ var pai;
 var ball;
 
 var hitPoints = [];
+var AIModels = [	//name,color,attention,accuracy,confidence,animation//
+	new AI("Lenny","yellow",0.7,0.9,1,0.2),
+	new AI("Martha","magenta",0.9,0.6,0.2,1)
+];
 
 //helpful visualizations
 var showAI = false;
 var showBallPath = true;
 var showGoalHit = true;
 var goal;
+var goalTarg;
+var goalColor = "white";
+var goalGlow = 0;
 var showGuessRange = true;
 var showGoalGuess = true;
 var showGoalRange = true;
@@ -193,6 +200,7 @@ function loadStuff(){
 	layout();
 
 	window.addEventListener('resize', layout);
+	window.requestAnimationFrame(update);
 
 	//newGame();
 }
@@ -229,8 +237,6 @@ function layout(){
 	}
 
 	p2.position.x = gWidth-80;
-	
-	window.requestAnimationFrame(update);
 }
 
 function newGame() {
@@ -239,7 +245,9 @@ function newGame() {
 	document.getElementById("p1").innerHTML = p1Name;
 	p1Color = document.getElementById("color-p1").value;
 	if(ai) {
-		p2Name = document.getElementById("name-ai").value;
+		pai = AIModels[document.getElementById("name-ai").value];
+		p2Name = pai.name;
+		p2Color = pai.color;
 		
 	} else {
 		p2Name = document.getElementById("name-p2").value;
@@ -270,9 +278,7 @@ function newGame() {
 	p1.position.y = gHeight / 2;
 	p2.position.y = gHeight / 2;
 	ball = new Ball();
-	if(ai) {
-		pai = new AI("AI",0.5,0.5,0.5,0.5);
-	}
+	ball.color = "white";
 
 	mn.style.visibility = "hidden";
 	pause = false;
@@ -476,8 +482,9 @@ function Paddle() {
 	this.velocity = new Vector2(0,0);
 }
 
-function AI(name,attention,accuracy,confidence,animation) {
+function AI(name,color,attention,accuracy,confidence,animation) {
 	this.name = name;
+	this.color = color;
 	this.attention = attention;	//How soon the AI starts predicting the path
 	this.accuracy = accuracy;	//After calculating path, the range the AI might guess the path will go
 	this.confidence = confidence;	//How far from the guessed point the AI wants to be
@@ -694,6 +701,9 @@ function checkCollisions() {
 		p1Score++;
 		rounds++;
 		score();
+		goalTarg = new Vector2(ball.position.x, ball.position.y);
+		goalColor = ballColor;
+		goalGlow = 0;
 		if(((win == "points" || win == "bounces") && winCount <= p1Score) || 
 		   (win == "rounds" && winCount <= rounds)) {
 			gameOver();
@@ -711,6 +721,9 @@ function checkCollisions() {
 		p2Score++;
 		rounds++;
 		score();
+		goalTarg = new Vector2(ball.position.x, ball.position.y);
+		goalColor = ballColor;
+		goalGlow = 0;
 		if(((win == "points" || win == "bounces") && winCount <= p2Score) || 
 		   (win == "rounds" && winCount <= rounds)) {
 			gameOver();
@@ -959,6 +972,20 @@ function drawVFX() {
 		ball.glow -= 0.1;
 		if(ball.glow < 0) ball.glow = 0;
 	}
+	if(goalTarg) {
+		ctx.beginPath();
+		gradient = ctx.createRadialGradient(goalTarg.x, goalTarg.y, 1, goalTarg.x, goalTarg.y, goalGlow);
+		var goalColor2 = colorToRGB(goalColor);
+		gradient.addColorStop(0.1,`rgba(${goalColor2.join(",")},0.9)`);
+		gradient.addColorStop(0.9,`rgba(${goalColor2.join(",")},0.2)`);
+		ctx.fillStyle = gradient;
+		ctx.arc(goalTarg.x, goalTarg.y, goalGlow, 0, Math.PI*2);
+		ctx.fill();
+		goalGlow+=10;
+		if(goalGlow > 200) {
+			goalTarg = null;
+		}
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1043,7 +1070,8 @@ function colorToRGB(string) {
 					Color: <input id="color-p2" type="text" value="white" /><br />
 					<label for="player-ai">AI? <input id="player-ai" type="radio" name="player" value="ai" checked /></label>
 					Model: <select id="name-ai">
-						<option value="Morgan">Hi</option>
+						<option value=0>Lenny</option>
+						<option value=1>Martha</option>
 					</select><br /><br />
 					<hr /><br />
 					<button>Add AI Model</button>
