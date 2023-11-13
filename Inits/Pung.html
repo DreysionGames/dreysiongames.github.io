@@ -9,24 +9,105 @@ I'm a bit proud
 	<head>
 		<title>Pung</title>
 		<style>
-div {
-	position: absolute;
-	border: 1px solid #000000;
-	background-color: #FFFFFF;
+h1 {
+	margin-top: 75px;
+	text-align: center;
+	font-size: 48px;
 }
 
-#playground {
-	background-color: #454545;
+h2, h3 {
+	text-align: center;
+}
+
+h3 {
+	margin: 35px;
+}
+
+body {
+	background-color: #454556;
+}
+
+canvas {
+	margin-top: 50px;
+	border: 1px solid #000000;
+	background-color: #000000;
+} 
+
+#status {
+	position: relative;
+	height: 80px;
+	opacity: 0.6;
+}
+
+#status:hover {
+	opacity: 0.9;
+}
+
+#status div {
+	position: absolute;
+	height: 40px;
+	border: 1px solid #FFFFFF;
+	padding: 20px;
+	color: #FFFFFF;
 	overflow: hidden;
 }
 
-#ball {
-	border-radius: 6px;
+#menu {
+	position: absolute;
+	border: 1px solid #000000;
+	background-color: #676778;
 }
 
-#bounds {
-	background-color: transparent;
-	border: 3px solid #FFFFFF;
+.half {
+	display: inline-block;
+	border: 1px solid #000000;
+	overflow-y: scroll;
+}
+
+.margin {
+	margin-left: 40px;
+	margin-right: 40px;
+}
+
+label {
+	display: inline-block;
+	min-width: 100px;
+	text-align: right;
+}
+
+input[type="text"] {
+	width: 80px;
+}
+
+input[type="number"] {
+	width: 40px;
+}
+
+#splash {
+	position: absolute;
+	left: 0px;
+	padding-top: 40px;
+	padding-bottom: 40px;
+	width: 100%;
+	background-color: #686868;
+	color: #FFFFFF;
+	border-top: 5px solid #FFFFFF;
+	border-bottom: 5px solid #FFFFFF;
+	text-align: center;
+	font-size: 60px;
+	opacity: 0.4;
+	display: none;
+}
+
+.half::-webkit-scrollbar {
+	width: 10px;
+}
+
+
+
+.half::-webkit-scrollbar-thumb {
+	background: #121223;
+	border-radius: 5px;
 }
 		</style>
 		<script>
@@ -36,473 +117,849 @@ div {
 ///////////////////////////////////////////////////////////////////////////
 //                                 Setup                                 //
 ///////////////////////////////////////////////////////////////////////////
-var playing
+
+var pg;
+var st;
+var test;
+var mn;
+var sp;
+var ctx;
+var gWidth = 0;
+var gHeight = 0;
+
+var win;
+var winCount;
+var rounds = 0;
+var ai = true;
+var p1;
+var p2;
+var pai;
+var ball;
+
+var hitPoints = [];
+
+//helpful visualizations
+var showAI = false;
+var showBallPath = true;
+var showGoalHit = true;
+var goal;
+var showGuessRange = true;
+var showGoalGuess = true;
+var showGoalRange = true;
+
+var p1Score = 0;
+var p2Score = 0;
+var p1Name = "Player 1";
+var p2Name = "Player 2";
+var p1Color = "white";
+var p2Color = "white";
+var ballColor = "white";
+var ballColor2 = [255,255,255];
+var hits = 0;
+var hitsMax = 0;
+var velocity = 0;
+var velMax = 0;
+
+var left = false;
+var up = false;
+var right = false;
+var down = false;
+var left2 = false;
+var up2 = false;
+var right2 = false;
+var down2 = false;
+
+var time = 0;
+var game = false;
+var pause = true;
 
 function loadStuff(){
-	W = window.innerWidth;
-	H = window.innerHeight;
-	Vector0 = new Vector2(0,0);
+	var w = window.innerWidth - 40;
+	var h = window.innerHeight - 240;
+	gWidth = (w > h * 5/3) ? h * 5/3 : w;
+	gHeight = (w > h * 5/3) ? h : w * 3/5;
 
-		//Game controls//
-	up1 = false;
-	up2 = false;
-	down1 = false;
-	down2 = false;
+	pg = document.getElementById("playground");
+	st = document.getElementById("status");
+	test = document.getElementById("testdiv");
+	mn = document.getElementById("menu");
+	sp = document.getElementById("splash");
+
+	ctx = pg.getContext("2d", {willReadFrequently: true});
+
+	p1 = new Paddle();
+	p2 = new Paddle();
+	ball = new Ball();
+	layout();
+
+	window.addEventListener('resize', layout);
+
+	//newGame();
+}
+
+function layout(){
+	var w = window.innerWidth - 40;
+	var h = window.innerHeight - 240;
+	gWidth = (w > h * 5/3) ? h * 5/3 : w;
+	gHeight = (w > h * 5/3) ? h : w * 3/5;
+
+	pg.width = gWidth;
+	pg.height = gHeight;
+	pg.style.marginLeft = (window.innerWidth - gWidth) / 2 + "px";
+	st.style.width = gWidth + "px";
+	st.style.marginTop = -gHeight + "px";
+	st.style.marginLeft = (window.innerWidth - gWidth) / 2 + "px";
+	for (var n in st.children) {
+		if(!isNaN(n)){
+			st.children[n].style.width = gWidth / 4 - 42 + "px";
+			st.children[n].style.left = gWidth / 4 * n + "px";
+		}
+	}
+	mn.style.width = gWidth + "px";
+	mn.style.height = gHeight + "px";
+	mn.style.left = (window.innerWidth - gWidth) / 2 + 8 + "px";
+	mn.style.top = "212px";
+	sp.style.top = window.innerHeight / 2 - 75 + "px";
+
+	for(var div in document.getElementsByClassName("half")) {
+		if(!isNaN(div)) {
+			document.getElementsByClassName("half")[div].style.width = gWidth / 2 - 4 + "px";
+			document.getElementsByClassName("half")[div].style.height = gHeight - 120 + "px";
+		}
+	}
+
+	p2.position.x = gWidth-80;
+	
+	window.requestAnimationFrame(update);
+}
+
+function newGame() {
+	ai = document.getElementById("player-ai").checked;
+	p1Name = document.getElementById("name-p1").value;
+	document.getElementById("p1").innerHTML = p1Name;
+	p1Color = document.getElementById("color-p1").value;
+	if(ai) {
+		p2Name = document.getElementById("name-ai").value;
+		
+	} else {
+		p2Name = document.getElementById("name-p2").value;
+		p2Color = document.getElementById("color-p2").value;
+	}
+	checkColors();
+	document.getElementById("p2").innerHTML = p2Name;
+
+	if(document.getElementById("win-rounds").checked) win = "rounds";
+	else if(document.getElementById("win-points").checked) win = "points";
+	else if(document.getElementById("win-bounces").checked) win = "bounces";
+	else win = "never";
+
+	if(win == "rounds") {
+		winCount = document.getElementById("count-rounds").value;
+	} else if(win == "points") {
+		winCount = document.getElementById("count-points").value;
+	} else if(win == "bounces") {
+		winCount = document.getElementById("count-bounces").value;
+	}
+	if(!winCount) win = "never";
+
+	p1Score = 0;
+	p2Score = 0;
+	hitsMax = 0;
+	velMax = 0;
+
+	p1.position.y = gHeight / 2;
+	p2.position.y = gHeight / 2;
+	ball = new Ball();
+	if(ai) {
+		pai = new AI("AI",0.5,0.5,0.5,0.5);
+	}
+
+	mn.style.visibility = "hidden";
 	pause = false;
 
-		//AI// //name, accuracy, confidence, preemption, recheck, fidget//
-	aiList = [
-		new AI("Martha", 0.3, 0.3, 0.9, 0.7, 0.6)
-	];
-	cRange = false;
+	score();
+	hit();
+	speed();
+	projTraj();
 
-		//Game variables//
-	ballSpeed = 5;
-	ballAngle = (Math.random() * 2 * Math.PI) - Math.PI;
-	paddleSpeed = 10;
-	paddleSize = 60;
-	paddleExtents = 15;
-
-		//Game init//
-	ai = aiList[0];
-	win = false;
-	update = setInterval(function(){updateGame();}, 30);
-	playing = true;
-
-		//HTML//
-	pg = new Box("playground", W * 0.025, H * 0.175, W * 0.95, H * 0.8);
-	pg.div.style.left = pg.pos.x + "px";
-	pg.div.style.top = pg.pos.y + "px";
-	p1 = new Box("player1", W * 0.1, pg.height / 2, 10, paddleSize);
-	p2 = new Box("player2", pg.width - (W * 0.1), pg.height / 2, 10, paddleSize);
-	ball = new Box("ball", pg.width / 2, pg.height / 2, 10, 10);
-	ball.velocity.x = ballSpeed * Math.cos(ballAngle);
-	ball.velocity.y = ballSpeed * Math.sin(ballAngle);
-	bound = new Box("bounds", pg.width / 2, pg.height / 2, pg.width * 0.9, pg.height * 0.9);
+	game = true;
 }
 
-function restart() {
-	win = false;
-	p1.pos.y = pg.height / 2;
-	p2.pos.y = pg.height / 2;
-	ball.pos = new Vector2(pg.width / 2, pg.height / 2);
-	ballAngle = (Math.random() * 2 * Math.PI) - Math.PI;
-	ball.velocity = new Vector2(ballSpeed * Math.cos(ballAngle), ballSpeed * Math.sin(ballAngle))
-}
-
-function winner(which) {
+function gameOver() {
 	pause = true;
-	win = which;
-	console.log(which + " wins!");
+	game = false;
+
+	if(p1Score > p2Score) {
+		splash(p1Name + " wins!");
+	} else if(p2Score > p1Score) {
+		splash(p2Name + " wins!");
+	} else {
+		splash("Draw!");
+	}
 }
 
+function score() {
+	document.getElementById("p1score").innerHTML = p1Score;
+	document.getElementById("p2score").innerHTML = p2Score;
+}
+
+function hit() {
+	if(hits > hitsMax) hitsMax = hits;
+	document.getElementById("hits").innerHTML = hits;
+	document.getElementById("hitsmax").innerHTML = hitsMax;
+}
+
+function speed() {
+	if(ball.velocity.magnitude().toFixed(2) > velMax) velMax = ball.velocity.magnitude().toFixed(2);
+	document.getElementById("speed").innerHTML = ball.velocity.magnitude().toFixed(2);
+	document.getElementById("speedmax").innerHTML = velMax;
+}
+
+function splash(text) {
+	var s = document.getElementById("splash");
+	s.innerHTML = text;
+	s.style.display = "block";
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //                                Objects                                //
 ///////////////////////////////////////////////////////////////////////////
 
-function Box(id, left, top, width, height) { 
-	this.div = document.getElementById(id);
-	this.pos = new Vector2(left, top);
-	this.width = width;
-	this.height = height;
-
-	this.div.style.left = left - (width / 2) + "px";
-	this.div.style.top = top - (height / 2) + "px";
-	this.div.style.width = width + "px";
-	this.div.style.height = height + "px";
-
-	this.velocity = new Vector2(0,0);
-}
-
-function Range(a, b){
+function Range(a, b) {
 	this.a = a;
 	this.b = b;
 	this.min = Math.min(a,b);
 	this.max = Math.max(a,b);
 	this.length = this.max - this.min;
-
+	
+	this.limit = function(min, max) {
+		return new Range(Math.max(this.a, min), Math.min(this.b, max));
+	}
 	this.random = function(){
-		return Math.random() * this.min + this.length;
+		return Math.random() * this.length + this.min;
 	}
 	this.inRange = function(pos, length){
 		return (pos - length / 2 < this.max) && (pos + length / 2 > this.min);
 	}
-	//this.log = function(){
-	//	console.log("("+this.min + ", " + this.max + ")");
-	//}
+	this.log = function(){
+		console.log("("+this.min + ", " + this.max + ")");
+	}
 }
 
-function Vector2(x, y){
-		//Basic properties//
+function Vector2(x, y) {
 	this.x = x;
 	this.y = y;
-	this.angle = function(){
+	this.angle = function() {
 		return Math.atan2(this.y, this.x);
 	}
-	this.magnitude = function(){
+	this.magnitude = function() {
 		return Math.sqrt((this.x * this.x) + (this.y * this.y));
 	}
-	this.normalized = function(){
+	this.normalized = function() {
 		return new Vector2(this.x / this.magnitude(), this.y / this.magnitude());
 	}
 
-		//Less complicated Vector math//
-	this.equals = function(VectorB){
-		return ((this.x == VectorB.x) && (this.y == VectorB.y));
-	}
-	this.subtract = function(VectorB){
+	this.subtract = function(VectorB) {
 		return new Vector2(this.x - VectorB.x, this.y - VectorB.y);
 	}
-	this.add = function(VectorB){
+	this.add = function(VectorB) {
 		return new Vector2(this.x + VectorB.x, this.y + VectorB.y);
 	}
-	this.extend = function(magnitude, VectorB){
-		return this.add(VectorB.normalized().multiply(magnitude));
+	this.addMag = function(value) {
+		var newMag = this.magnitude() + value;
+		var scale = newMag / this.magnitude();
+		return new Vector2(this.x * scale, this.y * scale);
 	}
-
-	this.multiply = function(value){
+	this.multiply = function(value) {
 		return new Vector2(this.x * value, this.y * value);
 	}
-	this.cross = function(VectorB){
+	this.divide = function(value) {
+		return new Vector2(this.x / value, this.y / value);
+	}
+	this.cross = function(VectorB) {
 		return (this.x * VectorB.y) - (this.y * VectorB.x);
 	}
-	this.dot = function(VectorB){
+	this.cross3 = function(VectorB) {
+		var x = this.y * 1 - 1 * VectorB.y;
+		var y = 1 * VectorB.x - this.x * 1;
+		var z = this.x * VectorB.y - this.y * VectorB.x;
+		return new Vector3(x,y,z);
+	}
+	this.dot = function(VectorB) {
 		return this.x * VectorB.x + this.y * VectorB.y;
 	}
-
-		//More complicated math//
-	this.toZero = function(decel){
-		x = Math.abs(this.x) - decel;
-		if(x < 0) x = 0;
-		x = x * sign(this.x);
-		y = Math.abs(this.y) - decel;
-		if(y < 0) y = 0;
-		y = y * sign(this.y);
-
-		return new Vector2(x, y);
+	this.hadamard = function(VectorB) {
+		return new Vector2(this.x * VectorB.x, this.y * VectorB.y);
 	}
-	this.accel = function(VectorB, decel){
-		if(VectorB.equals(Vector0)) {
-			return this.toZero(decel);
+
+	this.limit = function(magnitude) {
+		if(this.magnitude() <= magnitude){
+			return this;
 		}
-		return this.add(VectorB);
+		var unit = this.divide(this.magnitude());
+		return unit.multiply(magnitude);
 	}
-
-	this.rotate = function(modAngle){
-		newAngle = this.angle() + modAngle;
+	this.rotate = function(angle) {
+		newAngle = this.angle() + angle;
 		return new Vector2(this.magnitude() * Math.cos(newAngle), this.magnitude() * Math.sin(newAngle));
 	}
-	this.reflect = function(normal){
-		flip = this.multiply(-1);
-		angleToNormal = Math.acos(flip.dot(normal) / (this.magnitude() * normal.magnitude()));
-		return normal.rotate(angleToNormal).multiply(this.magnitude());
-	}
 
-	//this.log = function(){
-	//	console.log("(" + this.x + ", " + this.y + ")");
-	//}
+	this.log = function() {
+		return "("+this.x.toFixed(2)+", "+this.y.toFixed(2)+")";
+	}
 }
 
-function Line(PointA, PointB){
-	this.p = PointA;
-	this.r = PointB;
-	this.length = Math.sqrt((PointB.x - PointA.x) * (PointB.x - PointA.x) + (PointB.y - PointA.y) * (PointB.y - PointA.y));
-	this.center = new Vector2((this.p.x + this.r.x) / 2, (this.p.y + this.r.y) / 2);
-	this.normal1 = new Vector2(-(PointB.y - PointA.y),PointB.x - PointA.x).normalized();
-	this.normal2 = new Vector2(PointB.y - PointA.y, -(PointB.x - PointA.x)).normalized();
+function Vector3(x, y, z) {
+	this.x = x;
+	this.y = y;
+	this.z = z;
 
-	this.collide = function(LineB) {
-			//This is the part I copy/pasted//
-		d1 = this.p.subtract(LineB.p).cross(LineB.r.subtract(LineB.p));
-		d2 = this.r.subtract(LineB.p).cross(LineB.r.subtract(LineB.p));
-		d3 = LineB.p.subtract(this.p).cross(this.r.subtract(this.p));
-		d4 = LineB.r.subtract(this.p).cross(this.r.subtract(this.p));
+	this.cross = function(VectorB) {
+		var x = this.y * VectorB.z - this.z * VectorB.y;
+		var y = this.z * VectorB.x - this.x * VectorB.z;
+		var z = this.x * VectorB.y - this.y * VectorB.x;
+		return new Vector3(x,y,z);
+	}
+}
 
-		t = ((this.p.x - LineB.p.x) * (this.p.y - this.r.y) - (this.p.y - LineB.p.y) * (this.p.x - this.r.x)) /
-			((this.p.x - this.r.x) * (LineB.p.y - LineB.r.y) - (this.p.y - this.r.y) * (LineB.p.x - LineB.r.x));
+function Line(pointA, pointB) { //pointB must be vertical or horizontal
+	this.pointA = pointA;
+	this.pointB = pointB;
+	this.length = Math.sqrt((this.pointB.x - this.pointA.x) * (this.pointB.x - this.pointA.x) + (this.pointB.y - this.pointA.y) * (this.pointB.y - this.pointA.y));
+	this.center = new Vector2((this.pointA.x + this.pointB.x) / 2, (this.pointA.y + this.pointB.y) / 2);
+
+	this.localVector = this.pointB.subtract(this.pointA).normalized();
+
+	this.intersect = function(LineB) {
+		var vec1 = this.pointA.cross3(this.pointB);
+		var vec2 = LineB.pointA.cross3(LineB.pointB);
+		var vec3 = vec1.cross(vec2); //Vector3 cross
 		
-		collision = (((d1 < 0 && d2 > 0) || ((d1 > 0 && d2 < 0))) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)));
+		if(vec3.z == 0) return false;
+		
+		iPoint = new Vector2(vec3.x/vec3.z, vec3.y/vec3.z);
+		//console.log("intersect: "+iPoint.log()+" on "+LineB.log());
+		//console.log("In x: "+((iPoint.x < LineB.pointA.x) != (iPoint.x < LineB.pointB.x)));
+		//console.log("In y: "+((iPoint.y < LineB.pointA.y) != (iPoint.y < LineB.pointB.y)));
 
-		if(collision){
-			collisionPoint = new Vector2((this.p.x + t * (this.r.x - this.p.x)), (this.p.y + t * (this.r.y - this.p.y)));
-			collisionNormal = LineB.normal1;
-			collisionFromCenter = (collisionPoint.y - this.center.y) / (this.center.y - this.p.y);
-			collisionT = t;
-
-			//colllisionLog = console.log("Collision at point " + collisionPoint.log());
+		if(LineB.pointA.x == LineB.pointB.x){
+			if(!((iPoint.y < LineB.pointA.y) != (iPoint.y < LineB.pointB.y))){
+				return false;
+			}
 		}
+		if(LineB.pointA.y == LineB.pointB.y){
+			if(!((iPoint.x < LineB.pointA.x) != (iPoint.x < LineB.pointB.x))){
+				return false;
+			}
+		}
+		/*if(!((iPoint.x < LineB.pointA.x) != (iPoint.x < LineB.pointB.x) && (iPoint.y < LineB.pointA.y) != (iPoint.y < LineB.pointB.y))){
+			return false;																//does not work for vert/horiz lines
+		}*/
 		
-		return collision;
+		return iPoint;
 	}
 
-	//this.log = function(){
-	//	console.log(this.p.log() + this.r.log());
-	//}
+	this.log = function() {
+		return "("+this.pointA.x.toFixed(2)+","+this.pointA.y.toFixed(2)+"),("+this.pointB.x.toFixed(2)+","+this.pointB.y.toFixed(2)+")";
+	}
 }
 
-function AI(name, accuracy, confidence, preemption, recheck, fidget) {
+function Ball() {
+	this.position = new Vector2(gWidth/2, gHeight/2);
+	this.velocity = new Vector2(Math.random()*4-2,Math.random()*4-2).addMag(1);
+
+	this.glow = 0;
+}
+
+function Paddle() {
+	this.position = new Vector2(80, gHeight / 2)
+	this.velocity = new Vector2(0,0);
+}
+
+function AI(name,attention,accuracy,confidence,animation) {
 	this.name = name;
+	this.attention = attention;	//How soon the AI starts predicting the path
+	this.accuracy = accuracy;	//After calculating path, the range the AI might guess the path will go
+	this.confidence = confidence;	//How far from the guessed point the AI wants to be
+	this.animation = animation;	//How much the AI tends to move
 
-		//All values from 0.01 to 0.99//
-		//First calculate where ball should hit//
-		//Accuracy is an area around that point that AI guesses the ball will go//
-	this.accuracy = accuracy;
-		//Confidence is the area around the chosen accuracy point that AI feels safe to be in//
-	this.confidence = confidence;
-		//Preemption is how soon AI moves to catch the ball//
-	this.preemption = preemption;
-		//Recheck is how often AI updates calculations//
-	this.recheck = recheck;
-		//Fidget affects actions when AI isn't trying to catch the ball//
-	this.fidget = fidget;
-
-	this.checkInterval = 50;
-
-	this.calculateHit = function(){
-		ballppos = new Vector2(ball.pos.x, ball.pos.y);
-		ballpvel = new Vector2(ball.velocity.x, ball.velocity.y);
-
-		collisionTop = new Line(new Vector2(p1.pos.x + p1.width / 2, bound.pos.y - bound.height / 2), new Vector2(p2.pos.x - p2.width / 2, bound.pos.y - bound.height / 2));
-		collisionRight = new Line(new Vector2(p2.pos.x - p2.width / 2, bound.pos.y - bound.height / 2), new Vector2(p2.pos.x - p2.width / 2, bound.pos.y + bound.height / 2));
-		collisionBottom = new Line(new Vector2(p2.pos.x - p2.width / 2, bound.pos.y + bound.height / 2), new Vector2(p1.pos.x + p1.width / 2, bound.pos.y + bound.height / 2));
-		collisionLeft = new Line(new Vector2(p1.pos.x + p1.width / 2, bound.pos.y + bound.height / 2), new Vector2(p1.pos.x + p1.width / 2,bound.pos.y - bound.height / 2));
-
-		mathTarget = false;
-		bounceCount = 0;
-		while(!mathTarget){
-			ballProjection = new Line(ballppos, ballppos.extend(1000,ballpvel));
-			if(ballProjection.collide(collisionTop)){
-				console.log(bounceCount+"top");
-				pPoint = new Vector2(collisionPoint.x, collisionPoint.y);
-				pVelocity = ballpvel.reflect(collisionNormal);
-			}
-			if(ballProjection.collide(collisionBottom)){
-				console.log(bounceCount+"bottom");
-				pPoint = new Vector2(collisionPoint.x, collisionPoint.y);
-				pVelocity = ballpvel.reflect(collisionNormal);
-			}
-			if(ballProjection.collide(collisionLeft)){
-				console.log(bounceCount+"left");
-				pPoint = new Vector2(collisionPoint.x, collisionPoint.y);
-				pVelocity = ballpvel.reflect(collisionNormal);
-			}
-			if(ballProjection.collide(collisionRight)){
-				console.log(bounceCount+"right");
-				pPoint = new Vector2(0,0);
-				pVelocity = new Vector2(0,0);
-				mathTarget = new Vector2(collisionPoint.x, collisionPoint.y);
-			}
-			console.log("("+ballProjection.p.x+","+ballProjection.p.y+"),("+ballProjection.r.x+","+ballProjection.r.y+")");
-			if(collisionPoint) console.log("("+collisionPoint.x+","+collisionPoint.y+")");
-			ballppos = new Vector2(pPoint.x, pPoint.y);
-			ballpvel = new Vector2(pVelocity.x, pVelocity.y);
-			bounceCount++;
-			if(bounceCount > 50) break;
-		}
-		return mathTarget;
-	}
+	this.idleRange = null;
+	this.idleDir = false;
+	this.idleNum = 0;
+	this.guess = null;
+	this.guessRange = null;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 //                                 Input                                 //
 ///////////////////////////////////////////////////////////////////////////
 
-function keyDown(event) {
-
-		//W//
-	if(event.keyCode == 87){
-		up1 = true;
+function kDown(event) {
+	if(!ai && event.key == "ArrowLeft") {
+		left2 = true;
+		return
 	}
-
-		//S//
-	if(event.keyCode == 83){
-		down1 = true;
-	}
-
-		//up//
-	if(event.keyCode == 38){
+	if(!ai && event.key == "ArrowUp") {
 		up2 = true;
+		return
 	}
-
-		//down//
-	if(event.keyCode == 40){
+	if(!ai && event.key == "ArrowRight") {
+		right2 = true;
+		return
+	}
+	if(!ai && event.key == "ArrowDown") {
 		down2 = true;
+		return
 	}
-
-		//space//
-	if(event.keyCode == 32){
-		if(win) restart();
+	if(event.key == "ArrowLeft" || event.key == "a" || event.key == "A") {
+		left = true;
+		return
+	}
+	if(event.key == "ArrowUp" || event.key == "w" || event.key == "W") {
+		up = true;
+		return
+	}
+	if(event.key == "ArrowRight" || event.key == "d" || event.key == "D") {
+		right = true;
+		return
+	}
+	if(event.key == "ArrowDown" || event.key == "s" || event.key == "S") {
+		down = true;
+		return
+	}
+	if(game && event.key == " ") {
 		pause = !pause;
+		if(pause) splash("Paused");
+		else sp.style.display = "none";
+	}
+	if(game && event.key == "m" || event.key == "M") {
+		if(mn.style.visibility == "visible") {
+		//TODO: make this happen only when not typing in input//
+			//mn.style.visibility = "hidden";
+			//pause = false;
+		} else {
+			sp.style.display = "none";
+			mn.style.visibility = "visible";
+			pause = true;
+		}
+	}
+	if(!game && (event.key == "m" || event.key == "M" || event.key == " ")) {
+		sp.style.display = "none";
+		mn.style.visibility = "visible";
 	}
 }
 
-function keyUp(event) {
-
-		//W//
-	if(event.keyCode == 87){
-		up1 = false;
+function kUp(event) {
+	if(!ai && event.key == "ArrowLeft") {
+		left2 = false;
+		return
 	}
-
-		//S//
-	if(event.keyCode == 83){
-		down1 = false;
-	}
-
-		//up//
-	if(event.keyCode == 38){
+	if(!ai && event.key == "ArrowUp") {
 		up2 = false;
+		return
 	}
-
-		//down//
-	if(event.keyCode == 40){
+	if(!ai && event.key == "ArrowRight") {
+		right2 = false;
+		return
+	}
+	if(!ai && event.key == "ArrowDown") {
 		down2 = false;
+		return
+	}
+	if(event.key == "ArrowLeft" || event.key == "a" || event.key == "A") {
+		left = false;
+		return
+	}
+	if(event.key == "ArrowUp" || event.key == "w" || event.key == "W") {
+		up = false;
+		return
+	}
+	if(event.key == "ArrowRight" || event.key == "d" || event.key == "D") {
+		right = false;
+		return
+	}
+	if(event.key == "ArrowDown" || event.key == "s" || event.key == "S") {
+		down = false;
+		return
 	}
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 //                               Intervals                               //
 ///////////////////////////////////////////////////////////////////////////
 
-function updateGame() {
-	if(!pause){
-			//Update Player1//
-		Accel = new Vector2(0,0);
-		if(up1 || (ai && up2)){
-			Accel.y = -2;
-		}
-		if(down1 || (ai && down2)){
-			Accel.y = 2;
-		}
-		p1.velocity.y = clamp(p1.velocity.accel(Accel, 1).y, -paddleSpeed, paddleSpeed);
-		p1.pos = p1.pos.add(p1.velocity);
-		p1.pos.y = clamp(p1.pos.y, bound.pos.y - bound.height / 2 + p1.height / 2, bound.pos.y + bound.height / 2 - p1.height / 2);
-		p1.div.style.top = p1.pos.y - (p1.height / 2) + "px"
+function update() {
+	ctx.clearRect(0,0,gWidth,gHeight);
+	if(game && !pause) pausable();
+
+		//VFX on top because I needed ball glow behind ball. Might add second VFX function on top later//
+	drawVFX();
+	drawStuff();
+
+	window.requestAnimationFrame(update);
+}
+
+function pausable() {
+	time++;
+
+	if(ai && game) runAI();
+
+	if(up) {
+		p1.velocity = p1.velocity.add(new Vector2(0,-0.15)).limit(3.5);
+	}
+	if(down) {
+		p1.velocity = p1.velocity.add(new Vector2(0,0.15)).limit(3.5);
+	}
+	if(!up && !down) {
+		p1.velocity = p1.velocity.multiply(0.95);
+		if(p1.velocity.magnitude() < 0.05) p1.velocity = new Vector2(0,0);
+	}
 	
-			//Update Player2//
-		Accel = new Vector2(0,0);
-		if(!ai && up2){
-			Accel.y = -2;
-		}
-		if(!ai && down2){
-			Accel.y = 2;
-		}
+	if(up2) {
+		p2.velocity = p2.velocity.add(new Vector2(0,-0.15)).limit(3.5);
+	}
+	if(down2) {
+		p2.velocity = p2.velocity.add(new Vector2(0,0.15)).limit(3.5);
+	}
+	if(!up2 && !down2) {
+		p2.velocity = p2.velocity.multiply(0.95);
+		if(p2.velocity.magnitude() < 0.05) p2.velocity = new Vector2(0,0);
+	}
 
-///////////////////////////////////////////////////////////////////////////
-//                                   AI                                  //
-///////////////////////////////////////////////////////////////////////////
-		if(ai){
-			ai.checkInterval -= ai.recheck;
-			if(ai.checkInterval <= 0){
-				console.log("checking");
-				ai.checkInterval += 50;
-				if(ball.velocity.x > 0 && ball.x + ball.velocity.x > pg.width / 2){
-					ai.checkInterval -= 30;
-				}
-				mTarget = ai.calculateHit();
-				bLine = new Line(ball.pos, mTarget);
-				bDistance = bLine.length;
-				aRange = new Range(mTarget.y-(bDistance/ai.accuracy),mTarget.y+(bDistance/ai.accuracy));
-				aTarget = new Vector2(p2.pos.x, aRange.random());
-				cRange = new Range(aTarget.y-(bounceCount/ai.confidence),aTarget.y+(bounceCount/ai.confidence));
-			}
-			if(cRange && !cRange.inRange(p2.pos,p2.height) && bDistance < ai.preemtion * 100){
-				if(p2.pos.y + p2.height / 2 < cRange.min){
-					Accel.y = 2;
-				}
-				if(p2.pos.y - p2.height / 2 > cRange.max){
-					Accel.y = -2
-				}
-			}else{
-				rngCheck = Math.random();
-				if(rngCheck < ai.fidget / 4){
-					ai.fup = true;
-					ai.fdown = false;
-				}else if(rngCheck < ai.fidget / 2){
-					ai.fup = false;
-					ai.fdown = true;
-				}else if(rngCheck < 3 * ai.fidget / 4){
-					ai.fup = !ai.fup;
-				}else if(rngCheck < ai.fidget){
-					ai.fdown = !ai.fdown;
-				}
+	checkCollisions();
 
-				Accel.y = 0;
-				if(ai.fup) Accel.y -= 2;
-				if(ai.fdown) Accel.y += 2;
-			}
-		}
-		p2.velocity.y = clamp(p2.velocity.accel(Accel, 1).y, -paddleSpeed, paddleSpeed);
-		p2.pos = p2.pos.add(p2.velocity);
-		p2.pos.y = clamp(p2.pos.y, bound.pos.y - bound.height / 2 + p2.height / 2, bound.pos.y + bound.height / 2 - p2.height / 2);
-		p2.div.style.top = p2.pos.y - (p2.height / 2) + "px";
+	p1.position = p1.position.add(p1.velocity);
+	p1.position.y = clamp(p1.position.y,112,gHeight-25);
+	p2.position = p2.position.add(p2.velocity);
+	p2.position.y = clamp(p2.position.y,112,gHeight-25);
+	ball.position = ball.position.add(ball.velocity);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //                               Collisions                              //
 ///////////////////////////////////////////////////////////////////////////
-		projectedEnd = ball.pos.add(ball.velocity).extend(ball.width / 2, ball.velocity);
-		projectedPath = new Line(ball.pos.extend(ball.width / 2, ball.velocity), projectedEnd);
-		topBound = new Line(new Vector2(bound.pos.x - bound.width / 2, bound.pos.y - bound.height / 2), new Vector2(bound.pos.x + bound.width / 2, bound.pos.y - bound.height / 2));
-		rightBound = new Line(new Vector2(bound.pos.x + bound.width / 2, bound.pos.y - bound.height / 2), new Vector2(bound.pos.x + bound.width / 2, bound.pos.y + bound.height / 2));
-		bottomBound = new Line(new Vector2(bound.pos.x + bound.width / 2, bound.pos.y + bound.height / 2), new Vector2(bound.pos.x - bound.width / 2, bound.pos.y + bound.height / 2));
-		leftBound = new Line(new Vector2(bound.pos.x - bound.width / 2, bound.pos.y + bound.height / 2), new Vector2(bound.pos.x - bound.width / 2,bound.pos.y - bound.height / 2));
-		player1 = new Line(new Vector2(p1.pos.x + p1.width / 2, p1.pos.y + p1.height / 2), new Vector2(p1.pos.x + p1.width / 2, p1.pos.y - p1.height / 2));
-		player1a = new Line(new Vector2(p1.pos.x + p1.width / 2, p1.pos.y - p1.height / 2), new Vector2(p1.pos.x, p1.pos.y - p1.height / 2 - paddleExtents));
-		player1b = new Line(new Vector2(p1.pos.x, p1.pos.y + p1.height / 2 + paddleExtents), new Vector2(p1.pos.x + p1.width / 2, p1.pos.y + p1.height / 2));
-		player2 = new Line(new Vector2(p2.pos.x - p2.width / 2, p2.pos.y - p2.height / 2), new Vector2(p2.pos.x - p2.width / 2, p2.pos.y + p2.height / 2));
-		player2a = new Line(new Vector2(p2.pos.x, p2.pos.y - p2.height / 2 - paddleExtents), new Vector2(p2.pos.x - p2.width / 2, p2.pos.y - p2.height / 2));
-		player2b = new Line(new Vector2(p2.pos.x - p2.width / 2, p2.pos.y + p2.height / 2), new Vector2(p2.pos.x, p2.pos.y + p2.height / 2 + paddleExtents));
 
-		collisionPoint = null;
-		if(projectedPath.collide(topBound)){
-			ball.velocity.y = Math.abs(ball.velocity.y);
+function checkCollisions() {
+		//Check paddle collisions//
+		//TODO: When ball is angled just right, the rotator rotates the ball towards the wall after bouncing.//
+		//Game breaking for win="bounces"//
+	if((ball.position.x <= p1.position.x + 5 && ball.position.x > p1.position.x && ball.position.y < p1.position.y + 25 && ball.position.y > p1.position.y -25) || 
+	   (ball.position.x >= p2.position.x - 5 && ball.position.x < p2.position.x && ball.position.y < p2.position.y + 25 && ball.position.y > p2.position.y -25)) {
+		ball.velocity = ball.velocity.hadamard(new Vector2(-1,1));
+		if(ball.velocity.x > 0) {
+			var slope = -(ball.position.y - p1.position.y) / 5;
+			ball.velocity = ball.velocity.rotate(Math.atan(slope ** -1)/2);
+			if(right) ball.velocity = ball.velocity.add(new Vector2(0.5,0));
+			ballColor = p1Color;
 		}
-		if(projectedPath.collide(rightBound)){
-			winner("Player 1");
+		if(ball.velocity.x < 0) {
+			var slope = (ball.position.y - p2.position.y) / 5;
+			ball.velocity = ball.velocity.rotate(Math.atan(slope ** -1)/2);
+			if(left2) ball.velocity = ball.velocity.add(new Vector2(-0.5,0));
+			ballColor = p2Color;
 		}
-		if(projectedPath.collide(bottomBound)){
-			ball.velocity.y = Math.abs(ball.velocity.y) * -1;
+		ballColor2 = colorToRGB(ballColor);
+		ball.position.x = clamp(ball.position.x, p1.position.x + 5, p2.position.x - 5);
+
+		ball.glow = ball.velocity.magnitude();
+		hits++;
+		hit();
+		speed();
+		projTraj();
+	}
+		//Check top/bottom collisions//
+	if(ball.position.y <= 100 || ball.position.y >= gHeight - 4) {
+		ball.position.y = clamp(ball.position.y, 100, gHeight-4);
+		ball.velocity = ball.velocity.hadamard(new Vector2(1,-1));
+		if((ball.velocity.angle() < Math.PI && ball.velocity.angle() > Math.PI/2) || (ball.velocity.angle() < 0 && ball.velocity.angle() > -Math.PI/2)) {
+			ball.velocity = ball.velocity.rotate(Math.PI/32);
+		} else {
+			ball.velocity = ball.velocity.rotate(-Math.PI/32);
 		}
-		if(projectedPath.collide(leftBound)){
-			winner("Player 2");
-		}
-		if(projectedPath.collide(player1)){
-			ball.velocity.x = Math.abs(ball.velocity.x);
-			ball.velocity = ball.velocity.rotate(-collisionFromCenter * Math.PI / 4);
-		}
-		if(projectedPath.collide(player2)){
-			ball.velocity.x = Math.abs(ball.velocity.x) * -1;
-			ball.velocity = ball.velocity.rotate(collisionFromCenter * Math.PI / 4);
-		}
-		if(projectedPath.collide(player1a) || projectedPath.collide(player1b) ||
-				projectedPath.collide(player2a) || projectedPath.collide(player2b)){
-			ball.velocity = ball.velocity.reflect(collisionNormal);
+		if(win == "bounces") {
+			if(ballColor == p1Color){
+				p1Score++;
+				score();
+			}else if(ballColor == p2Color) {
+				p2Score++;
+				score();
+			}
 		}
 
-			//Update Ball//
-		ball.pos = ball.pos.add(ball.velocity);
-		if(collisionPoint){
-			ball.pos = collisionPoint.extend(ball.width / 2, collisionNormal);
-			console.log("!!!("+collisionPoint.x+","+collisionPoint.y+")");
+		ball.glow = ball.velocity.magnitude();
+		projTraj();
+	}
+		//Check right collision//
+	if(ball.position.x > gWidth) {
+		p1Score++;
+		rounds++;
+		score();
+		if(((win == "points" || win == "bounces") && winCount <= p1Score) || 
+		   (win == "rounds" && winCount <= rounds)) {
+			gameOver();
+			return;
 		}
-		
-		ball.div.style.left = ball.pos.x - ball.width / 2 + "px";
-		ball.div.style.top = ball.pos.y - ball.height / 2 + "px";
+		hits = 0;
+		hit();
+
+		ball = new Ball();
+		speed();
+		projTraj();
+	}
+		//Check left collision//
+	if(ball.position.x < 0) {
+		p2Score++;
+		rounds++;
+		score();
+		if(((win == "points" || win == "bounces") && winCount <= p2Score) || 
+		   (win == "rounds" && winCount <= rounds)) {
+			gameOver();
+			return;
+		}
+		hits = 0;
+		hit();
+
+		ball = new Ball();
+		speed();
+		projTraj();
 	}
 }
 
-/*
-//I recognize my collision handling isn't clean. I understand it better
-//now that I've worked with it, future projects should be nicer to look at.
-//
-//Also, there are bugs. For example, you can hit the ball with the edge of
-//the paddle to bounce it to the main body of the same paddle and get two
-//hits in one. Kinda weird angles, but not game breaking, so I'll leave it.
-//
-//It's a feature!
-*/
+///////////////////////////////////////////////////////////////////////////
+//                                   AI                                  //
+///////////////////////////////////////////////////////////////////////////
+
+function runAI() {
+		//Periodically check where the ball will go//
+	if(ball.velocity.x > 0 && time % 50 == 0) {
+		projTraj();
+	}
+		//Periodically switch animations//
+	if(time % 737 == 0) {
+		pai.idleNum = Math.floor(Math.random()*4);
+	}
+
+	down2 = false;
+	up2 = false;
+	if(pai.guess) {	//Get ready for the ball//
+		pai.idleRange = null;
+		if(p2.position.y < pai.goalRange.a) {
+			down2 = true;
+			up2 = false;
+		}
+		if(p2.position.y > pai.goalRange.b) {
+			down2 = false;
+			up2 = true;
+		}
+	} else {	//Animate//
+		//Animation target location//
+		if(time % 150 == 0) {
+			var idleTarget = Math.random() * (gHeight - 92) + 92;
+			var mod = Math.random() * 50;
+			pai.idleRange = new Range(idleTarget - mod, idleTarget + mod).limit(92, gHeight);
+		}
+		//Go back and forth across target location//
+		if(pai.idleRange && pai.idleNum == 0) {
+			if(p2.position.y < ((pai.idleDir) ? pai.idleRange.b : pai.idleRange.a)) {
+				down2 = true;
+				up2 = false;
+			}
+			if(p2.position.y > ((pai.idleDir) ? pai.idleRange.b : pai.idleRange.a)) {
+				down2 = false;
+				up2 = true;
+			}
+			if(p2.position.y < ((pai.idleDir) ? pai.idleRange.b : pai.idleRange.a)+10 && p2.position.y > ((pai.idleDir) ? pai.idleRange.b : pai.idleRange.a)-10) {
+				pai.idleDir = !pai.idleDir;
+			}
+		}
+		//Nudge back and forth across target location//
+		if(pai.idleRange && pai.idleNum == 1) {
+			if(p2.position.y < ((pai.idleDir) ? pai.idleRange.b : pai.idleRange.a)) {
+				if(time % 150 < 20) {
+					down2 = true;
+					up2 = false;
+				}
+			}
+			if(p2.position.y > ((pai.idleDir) ? pai.idleRange.b : pai.idleRange.a)) {
+				if(time % 150 < 20) {
+					down2 = false;
+					up2 = true;
+				}
+			}
+			if(p2.position.y < ((pai.idleDir) ? pai.idleRange.b : pai.idleRange.a)+10 && p2.position.y > ((pai.idleDir) ? pai.idleRange.b : pai.idleRange.a)-10) {
+				pai.idleDir = !pai.idleDir;
+			}
+		}
+		//Track ball//
+		if(pai.idleNum == 2) {
+			if(p2.position.y < ball.position.y) {
+				down2 = true;
+				up2 = false;
+			}
+			if(p2.position.y > ball.position.y) {
+				down2 = false;
+				up2 = true;
+			}
+		}
+		//Track opponent//
+		if(pai.idleNum == 3) {
+			if(p2.position.y < p1.position.y - 25) {
+				down2 = true;
+				up2 = false;
+			}
+			if(p2.position.y > p1.position.y + 25) {
+				down2 = false;
+				up2 = true;
+			}
+		}
+	}
+}
+
+function projTraj() {
+	if(ai) pai.guess = null;
+	goal = null;
+
+	var tl = new Vector2(p1.position.x+5, 92);
+	var tr = new Vector2(p2.position.x-5, 92);
+	var br = new Vector2(p2.position.x-5, gHeight);
+	var bl = new Vector2(p1.position.x+5, gHeight);
+	var top = new Line(tl, tr);
+	var right = new Line(tr, br);
+	var bottom = new Line(br, bl);
+	var left = new Line(bl, tl);
+
+	hitPoints = [];
+	var traj = new Line(ball.position, ball.position.add(ball.velocity));
+	var trajVel = new Vector2(ball.velocity.x, ball.velocity.y);
+		//Collect the points where the ball should hit the wall sequentially//
+	for(i=0;i<3;i++){
+		if(trajVel.x > 0) {
+			if(traj.intersect(right)){
+				hitPoints[hitPoints.length]=traj.intersect(right);
+				trajVel = trajVel.hadamard(new Vector2(-1,1));
+				if(!goal) goal = hitPoints[hitPoints.length-1];
+				
+				let index = i;
+				if (ai) guessHit(hitPoints[hitPoints.length-1], index);
+			}
+		} else if(trajVel.x < 0) {
+			if(traj.intersect(left)){
+				hitPoints[hitPoints.length]=traj.intersect(left);
+				trajVel = trajVel.hadamard(new Vector2(-1,1));
+				if(!goal) goal = hitPoints[hitPoints.length-1];
+			}
+		}
+		if(trajVel.y > 0) {
+			if(traj.intersect(bottom)){
+				hitPoints[hitPoints.length]=traj.intersect(bottom);
+				trajVel = trajVel.hadamard(new Vector2(1,-1));
+			}
+		} else if(trajVel.y < 0) {
+			if(traj.intersect(top)){
+				hitPoints[hitPoints.length]=traj.intersect(top);
+				trajVel = trajVel.hadamard(new Vector2(1,-1));
+			}
+		}
+		
+		if(hitPoints.length == 0) return;
+		traj = new Line(hitPoints[hitPoints.length-1], hitPoints[hitPoints.length-1].add(trajVel));
+	}
+}
+
+		//The illusion of human error//
+function guessHit(project, index) {
+	if(!pai.guess) {
+		var distance = (p2.position.x - ball.position.x + ((ball.velocity.x < 0) ? (ball.position.x - p1.position.x) * 2 : 0)) / 20;
+		var mod = (1+index) * distance / pai.accuracy;
+		pai.guessRange = new Range(project.y - mod, project.y + mod).limit(92, gHeight);
+		pai.guess = new Vector2(project.x, pai.guessRange.random());
+		pai.goalRange = new Range(pai.guess.y - (distance / pai.confidence), pai.guess.y + (distance / pai.confidence)).limit(92, gHeight);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////
+//                                Drawing                                //
+///////////////////////////////////////////////////////////////////////////
+
+function drawStuff() {
+	ctx.strokeStyle = "#FFFFFF";
+	ctx.lineWidth = 1;
+	ctx.fillStyle = "#FFFFFF";
+
+	ctx.beginPath();
+	ctx.fillStyle = ballColor;
+	ctx.arc(ball.position.x,ball.position.y,8,0,Math.PI * 2,true);
+	ctx.fill();
+
+	ctx.beginPath();
+	ctx.fillStyle = p1Color;
+	ctx.fillRect(p1.position.x-5,p1.position.y-25,10,50);
+	ctx.beginPath();
+	ctx.fillStyle = p2Color;
+	ctx.fillRect(p2.position.x-5,p2.position.y-25,10,50);
+
+	if(showAI) {
+		if(showBallPath) {
+			ctx.beginPath();
+			ctx.strokeStyle = "#FF0000";
+			ctx.lineWidth = 3;
+			var trajDraw = ball.position;
+			for(i=0;i<hitPoints.length;i++) {
+				ctx.moveTo(trajDraw.x,trajDraw.y);
+				ctx.lineTo(hitPoints[i].x,hitPoints[i].y);
+				ctx.stroke();
+				trajDraw = hitPoints[i];
+			}
+		}
+		if(showGoalHit && goal != null) {
+			ctx.beginPath();
+			ctx.strokeStyle = "#FF0000";
+			ctx.lineWidth = 1;
+			ctx.arc(goal.x,goal.y,8,0,Math.PI*2,true);
+			ctx.stroke();
+		}
+		if(ai && showGoalGuess && pai.guess !=null) {
+			ctx.beginPath();
+			ctx.strokeStyle = "#0000FF";
+			ctx.lineWidth = 1;
+			ctx.arc(pai.guess.x,pai.guess.y,8,0,Math.PI*2,true);
+			ctx.stroke();
+		}
+		if(ai && showGuessRange && pai.guess != null) {
+			ctx.beginPath();
+			ctx.strokeStyle = "#0000FF";
+			ctx.lineWidth = 2;
+			ctx.moveTo(pai.guess.x-5, pai.guessRange.a);
+			ctx.lineTo(pai.guess.x+5, pai.guessRange.a);
+			ctx.moveTo(pai.guess.x-5, pai.guessRange.b);
+			ctx.lineTo(pai.guess.x+5, pai.guessRange.b);
+			ctx.stroke();
+		}
+		if(ai && showGoalRange && pai.guess) {
+			ctx.beginPath();
+			ctx.strokeStyle = "#FFFF00";
+			ctx.lineWidth = 3;
+			ctx.moveTo(p2.position.x, pai.goalRange.a);
+			ctx.lineTo(p2.position.x, pai.goalRange.b);
+			ctx.stroke();
+		}
+	}
+}
+
+function drawVFX() {
+	if(ball.glow > 0) {
+		ctx.beginPath();
+		gradient = ctx.createRadialGradient(ball.position.x, ball.position.y, 5, ball.position.x, ball.position.y, 5+(ball.glow*4));
+		gradient.addColorStop(0.1,`rgba(${ballColor2.join(",")},1)`);
+		gradient.addColorStop(0.8,`rgba(${ballColor2.join(",")},0.3)`);
+		//gradient.addColorStop(0.9,`rgba(${ballColor2.join(",")},0`);
+		ctx.fillStyle = gradient;
+		ctx.arc(ball.position.x,ball.position.y,5+(ball.glow*4),0,Math.PI*2);
+		ctx.fill();
+		ball.glow -= 0.1;
+		if(ball.glow < 0) ball.glow = 0;
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //                                Utility                                //
@@ -518,15 +975,82 @@ function sign(value) {
 	return value / Math.abs(value)
 }
 
+function checkColors() {
+	var s = new Option().style;
+	s.color = p1Color;
+	if(s.color == "") p1Color = "white";
+	s.color = null;
+	s.color = p2Color;
+	if(s.color == "") p2Color = "white";
+}
+
+function colorToRGB(string) {
+	ctx.beginPath();
+	ctx.fillStyle = string;
+	ctx.fillRect(0,0,1,1);
+	var pixel = ctx.getImageData(0,0,1,1).data;
+	return [pixel[0],pixel[1],pixel[2]];
+}
+
 //-----------------------------------------------------------------------//
 		</script>
 	</head>
-	<body onload="loadStuff()" onkeydown="keyDown(event)" onkeyup="keyUp(event)">
-		<div id="playground">
-			<div id="player1"></div>
-			<div id="player2"></div>
-			<div id="ball"></div>
-			<div id="bounds"></div>
+	<body onload="loadStuff()" onkeydown="kDown(event)" onkeyup="kUp(event)">
+		<h1>Pung</h1>
+		<canvas id="playground"></canvas>
+		<div id="status">
+			<div id="scorediv" style="margin-left: 1px">
+				<span id="p1">Player 1</span>: <span id="p1score"></span><br />
+				<span id="p2">CPU</span>: <span id="p2score"></span>
+			</div>
+			<div id="hitsdiv">
+				Hits this round: <span id="hits"></span><br>
+				Most hits: <span id="hitsmax"></span>
+			</div>
+			<div id="ballspeeddiv">
+				Ball speed: <span id="speed"></span><br>
+				Highest speed: <span id="speedmax"></span>
+			</div>
+			<div id="testdiv">
+
+			</div>
 		</div>
+		<div id="menu">
+			<h2>Menu</h2>
+			<div class="half">
+				<h3>Game Settings</h3>
+				<div class="margin">
+					<hr /><br />
+					Player 1 Name: <input id="name-p1" type="text" value="Player 1" />
+					Color: <input id="color-p1" type="text" value="white" /><br /><br /><br />
+					<hr /><br />
+					<strong>Win by:</strong> <br />
+					<label for="win-rounds">Rounds? <input id="win-rounds" type="radio" name="win" value="rounds" /></label>
+					Number: <input id="count-rounds" type="number" value=20 /><br />
+					<label for="win-points">Points? <input id="win-points" type="radio" name="win" value="points" checked /></label>
+					Number: <input id="count-points" type="number" value=10 /><br />
+					<label for="win-bounces">Bounces? <input id="win-bounces" type="radio" name="win" value="bounces" /></label>
+					Number: <input id="count-bounces" type="number" value=50 /><br />
+					<label for="win-never">Never? <input id="win-never" type="radio" name="win" value="never" /></label>
+				</div>
+			</div>
+			<div class="half">
+				<h3>Player 2</h3>
+				<div class="margin">
+					<hr /><br />
+					<label for="player-human">Human? <input id="player-human" type="radio" name="player" value="human" /></label>
+					Name: <input id="name-p2" type="text" value="Player 2" /> 
+					Color: <input id="color-p2" type="text" value="white" /><br />
+					<label for="player-ai">AI? <input id="player-ai" type="radio" name="player" value="ai" checked /></label>
+					Model: <select id="name-ai">
+						<option value="Morgan">Hi</option>
+					</select><br /><br />
+					<hr /><br />
+					<button>Add AI Model</button>
+				</div>
+			</div>
+			<button onclick="newGame()">New Game</button>
+		</div>
+		<div id="splash"></div>
 	</body>
 </html>
