@@ -58,8 +58,15 @@ canvas {
 	background-color: #676778;
 }
 
+#newgame {
+	position: absolute;
+	bottom: 20px;
+	left: 50%;
+	transform: translate(-50%,0);
+}
+
 .half {
-	display: inline-block;
+	position: absolute;
 	border: 1px solid #000000;
 	overflow-y: scroll;
 }
@@ -99,13 +106,13 @@ input[type="number"] {
 	display: none;
 }
 
-.half::-webkit-scrollbar {
+::-webkit-scrollbar {
 	width: 10px;
 }
 
 
 
-.half::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
 	background: #121223;
 	border-radius: 5px;
 }
@@ -235,6 +242,7 @@ function layout(){
 			document.getElementsByClassName("half")[div].style.height = gHeight - 120 + "px";
 		}
 	}
+	document.getElementById("right").style.right = "0px";
 
 	p2.position.x = gWidth-80;
 }
@@ -594,7 +602,7 @@ function kUp(event) {
 ///////////////////////////////////////////////////////////////////////////
 //                               Intervals                               //
 ///////////////////////////////////////////////////////////////////////////
-
+		//TODO use delta time//
 function update() {
 	ctx.clearRect(0,0,gWidth,gHeight);
 	if(game && !pause) pausable();
@@ -646,6 +654,7 @@ function pausable() {
 //                               Collisions                              //
 ///////////////////////////////////////////////////////////////////////////
 
+		//TODO: SFX//
 function checkCollisions() {
 		//Check paddle collisions//
 		//TODO: When ball is angled just right, the rotator rotates the ball towards the wall after bouncing.//
@@ -1044,7 +1053,7 @@ function colorToRGB(string) {
 		</div>
 		<div id="menu">
 			<h2>Menu</h2>
-			<div class="half">
+			<div id="left" class="half">
 				<h3>Game Settings</h3>
 				<div class="margin">
 					<hr /><br />
@@ -1061,7 +1070,7 @@ function colorToRGB(string) {
 					<label for="win-never">Never? <input id="win-never" type="radio" name="win" value="never" /></label>
 				</div>
 			</div>
-			<div class="half">
+			<div id="right" class="half">
 				<h3>Player 2</h3>
 				<div class="margin">
 					<hr /><br />
@@ -1074,10 +1083,12 @@ function colorToRGB(string) {
 						<option value=1>Martha</option>
 					</select><br /><br />
 					<hr /><br />
+		<!--TODO: Add model builder functionality-->
+		<!--TODO: Add the ability to toggle AI visualizations-->
 					<button>Add AI Model</button>
 				</div>
 			</div>
-			<button onclick="newGame()">New Game</button>
+			<button id="newgame" onclick="newGame()">New Game</button>
 		</div>
 		<div id="splash"></div>
 	</body>
