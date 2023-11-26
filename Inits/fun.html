@@ -53,7 +53,8 @@ function func(){
 }
 
 function help() {
-document.body.addEventListener("touchmove",function(){document.body.style.backgroundColor="red"});
+document.body.style.backgroundColor="green");
+document.body.addEventListener("touchmove",function(y){y.preventDefault();document.body.style.backgroundColor="red"});
 }
 		</script>
 	</head>
