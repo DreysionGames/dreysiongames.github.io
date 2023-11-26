@@ -7,6 +7,9 @@ var x = 0;
 
 function func(){
 	//var x = 0;
+	document.children[0].addEventListener("gesturestart",function(aa){aa.preventDefault()});
+	document.children[0].addEventListener("gesturechange",function(ab){ab.preventDefault()});
+	document.children[0].addEventListener("gestureend",function(ac){ac.preventDefault()});
 	var a=document.body;
 	a.style.touchAction="none";
 	for(var b in a.children){!isNaN(b)?a.removeChild(a.children[b]):null;}
@@ -35,7 +38,7 @@ function func(){
 	f.b>500?f.d=Math.abs(f.d)*-1:null;
 	f.c*=0.995;
 	f.d*=0.995;
-	typeof h=="undefined"?(h=1,a.addEventListener("mousemove",function(i){Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+((f.b-(i.clientY-((d-500)/2)))*(f.b-(i.clientY-((d-500)/2)))))<10?(f.c+=(f.a-(i.clientX-((c-500)/2)))/Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+(((f.b-(i.clientY-((d-500)/2))))*((f.b-(i.clientY-((d-500)/2))))))*0.3,f.d+=(f.b-(i.clientY-((d-500)/2)))/Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+(((f.b-(i.clientY-((d-500)/2))))*((f.b-(i.clientY-((d-500)/2))))))*0.3):null;})/*,a.addEventListener("touchmove",function(j){a.style.backgroundColor="red";x=j.touches[0].clientX;Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+((f.b-(j.touches[0].clientY-((d-500)/2)))*(f.b-(j.touches[0].clientY-((d-500)/2)))))<10?(f.c+=(f.a-(j.touches[0].clientX-((c-500)/2)))/Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+(((f.b-(j.touches[0].clientY-((d-500)/2))))*((f.b-(j.touches[0].clientY-((d-500)/2))))))*0.3,f.d+=(f.b-(j.touches[0].clientY-((d-500)/2)))/Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+(((f.b-(j.touches[0].clientY-((d-500)/2))))*((f.b-(j.touches[0].clientY-((d-500)/2))))))*0.3):null;})*/):null;
+	typeof h=="undefined"?(h=1,document.children[0].addEventListener("mousemove",function(i){Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+((f.b-(i.clientY-((d-500)/2)))*(f.b-(i.clientY-((d-500)/2)))))<10?(f.c+=(f.a-(i.clientX-((c-500)/2)))/Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+(((f.b-(i.clientY-((d-500)/2))))*((f.b-(i.clientY-((d-500)/2))))))*0.3,f.d+=(f.b-(i.clientY-((d-500)/2)))/Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+(((f.b-(i.clientY-((d-500)/2))))*((f.b-(i.clientY-((d-500)/2))))))*0.3):null;})/*,document.children[0].addEventListener("touchmove",function(j){a.style.backgroundColor="red";x=j.touches[0].clientX;Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+((f.b-(j.touches[0].clientY-((d-500)/2)))*(f.b-(j.touches[0].clientY-((d-500)/2)))))<10?(f.c+=(f.a-(j.touches[0].clientX-((c-500)/2)))/Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+(((f.b-(j.touches[0].clientY-((d-500)/2))))*((f.b-(j.touches[0].clientY-((d-500)/2))))))*0.3,f.d+=(f.b-(j.touches[0].clientY-((d-500)/2)))/Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+(((f.b-(j.touches[0].clientY-((d-500)/2))))*((f.b-(j.touches[0].clientY-((d-500)/2))))))*0.3):null;})*/):null;
 	g.style.left=f.a-5+"px";
 	g.style.top=f.b-5+"px";
 	g.style.borderRadius="5px";
@@ -54,7 +57,7 @@ function func(){
 }
 
 function help() {
-typeof test == "undefined" ? (document.body.addEventListener("touchmove",function(y){y.preventDefault();y.stopPropagation();document.body.style.backgroundColor="red";x=y.touches[0].clientX}),me=1):null;
+typeof test == "undefined" ? (document.children[0].addEventListener("touchmove",function(y){y.preventDefault();document.body.style.backgroundColor="red";x=y.touches[0].clientX}),me=1):null;
 document.body.style.backgroundColor="green";
 document.body.addEventListener("touchmove",function(y){y.preventDefault();y.stopPropagation();document.body.style.backgroundColor="red"});
 }
