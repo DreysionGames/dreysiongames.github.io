@@ -2,8 +2,9 @@
 <html>
 	<head>
 		<title>Hit the Ball</title>
-		<script>
+		<script defer>
 var x = 0;
+
 function func(){
 	//var x = 0;
 	var a=document.body;
@@ -50,9 +51,13 @@ function func(){
 	console.log(x);
 	window.requestAnimationFrame(func);
 }
+
+function help() {
+document.body.addEventListener("touchmove",function(j){a.style.backgroundColor="red";x=j.touches[0].clientX;Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+((f.b-(j.touches[0].clientY-((d-500)/2)))*(f.b-(j.touches[0].clientY-((d-500)/2)))))<10?(f.c+=(f.a-(j.touches[0].clientX-((c-500)/2)))/Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+(((f.b-(j.touches[0].clientY-((d-500)/2))))*((f.b-(j.touches[0].clientY-((d-500)/2))))))*0.3,f.d+=(f.b-(j.touches[0].clientY-((d-500)/2)))/Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+(((f.b-(j.touches[0].clientY-((d-500)/2))))*((f.b-(j.touches[0].clientY-((d-500)/2))))))*0.3):null;});
+}
 		</script>
 	</head>
 
-	<body onload="func()">
+	<body onload="func()" onclick="help()">
 	</body>
 </html>
