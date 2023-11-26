@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		<meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=no">
 		<title>Hit the Ball</title>
 		<script defer>
 var x = 0;
@@ -39,7 +39,7 @@ function func(){
 	f.b>500?f.d=Math.abs(f.d)*-1:null;
 	f.c*=0.995;
 	f.d*=0.995;
-	typeof h=="undefined"?(h=1,document.children[0].addEventListener("mousemove",function(i){Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+((f.b-(i.clientY-((d-500)/2)))*(f.b-(i.clientY-((d-500)/2)))))<10?(f.c+=(f.a-(i.clientX-((c-500)/2)))/Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+(((f.b-(i.clientY-((d-500)/2))))*((f.b-(i.clientY-((d-500)/2))))))*0.3,f.d+=(f.b-(i.clientY-((d-500)/2)))/Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+(((f.b-(i.clientY-((d-500)/2))))*((f.b-(i.clientY-((d-500)/2))))))*0.3):null;})/*,document.children[0].addEventListener("touchmove",function(j){a.style.backgroundColor="red";x=j.touches[0].clientX;Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+((f.b-(j.touches[0].clientY-((d-500)/2)))*(f.b-(j.touches[0].clientY-((d-500)/2)))))<10?(f.c+=(f.a-(j.touches[0].clientX-((c-500)/2)))/Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+(((f.b-(j.touches[0].clientY-((d-500)/2))))*((f.b-(j.touches[0].clientY-((d-500)/2))))))*0.3,f.d+=(f.b-(j.touches[0].clientY-((d-500)/2)))/Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+(((f.b-(j.touches[0].clientY-((d-500)/2))))*((f.b-(j.touches[0].clientY-((d-500)/2))))))*0.3):null;})*/):null;
+	typeof h=="undefined"?(h=1,document.children[0].addEventListener("mousemove",function(i){Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+((f.b-(i.clientY-((d-500)/2)))*(f.b-(i.clientY-((d-500)/2)))))<10?(f.c+=(f.a-(i.clientX-((c-500)/2)))/Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+(((f.b-(i.clientY-((d-500)/2))))*((f.b-(i.clientY-((d-500)/2))))))*0.3,f.d+=(f.b-(i.clientY-((d-500)/2)))/Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+(((f.b-(i.clientY-((d-500)/2))))*((f.b-(i.clientY-((d-500)/2))))))*0.3):null;}),e.addEventListener("touchmove",function(j){j.preventDefault();a.style.backgroundColor="red";x=j.touches[0].clientX;Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+((f.b-(j.touches[0].clientY-((d-500)/2)))*(f.b-(j.touches[0].clientY-((d-500)/2)))))<10?(f.c+=(f.a-(j.touches[0].clientX-((c-500)/2)))/Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+(((f.b-(j.touches[0].clientY-((d-500)/2))))*((f.b-(j.touches[0].clientY-((d-500)/2))))))*0.3,f.d+=(f.b-(j.touches[0].clientY-((d-500)/2)))/Math.sqrt(((f.a-(j.touches[0].clientX-((c-500)/2)))*(f.a-(j.touches[0].clientX-((c-500)/2))))+(((f.b-(j.touches[0].clientY-((d-500)/2))))*((f.b-(j.touches[0].clientY-((d-500)/2))))))*0.3):null;})):null;
 	g.style.left=f.a-5+"px";
 	g.style.top=f.b-5+"px";
 	g.style.borderRadius="5px";
@@ -56,15 +56,9 @@ function func(){
 	console.log(x);
 	window.requestAnimationFrame(func);
 }
-
-function help() {
-typeof test == "undefined" ? (document.children[0].addEventListener("touchmove",function(y){y.preventDefault();document.body.style.backgroundColor="red";x=y.touches[0].clientX}),me=1):null;
-document.body.style.backgroundColor="green";
-document.body.addEventListener("touchmove",function(y){y.preventDefault();y.stopPropagation();document.body.style.backgroundColor="red"});
-}
 		</script>
 	</head>
 
-	<body onload="func()" ontouchstart="help()">
+	<body onload="func()">
 	</body>
 </html>
