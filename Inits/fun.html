@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Hit the Ball</title>
+		<script>
+function func(){
+	var a=document.body;
+	for(var b in a.children){!isNaN(b)?a.removeChild(a.children[b]):null;}
+	var c=window.innerWidth;
+	var d=window.innerHeight;
+	var e=document.createElement("div");
+	e.style.position="absolute";
+	e.style.height="500px";
+	e.style.width="500px";
+	e.style.left=c/2-250+"px";
+	e.style.top=d/2-250+"px";
+	e.style.border="1px solid black";
+	e.style.overflow="hidden";
+	a.appendChild(e);
+	typeof f=="undefined"?(f=new Object(),f.a=250,f.b=250,f.c=Math.random()*5-2.5,f.d=Math.random()*5-2.5):null;
+	typeof g=="undefined"?g=document.createElement("div"):null;
+	g.style.position="absolute";
+	g.style.height="10px";
+	g.style.width="10px";
+	g.style.backgroundColor="black";
+	f.a+=f.c;
+	f.a<0?f.c=Math.abs(f.c):null;
+	f.a>500?f.c=Math.abs(f.c)*-1:null
+	f.b+=f.d;
+	f.b<0?f.d=Math.abs(f.d):null;
+	f.b>500?f.d=Math.abs(f.d)*-1:null;
+	f.c*=0.995;
+	f.d*=0.995;
+	typeof h=="undefined"?(h=1,a.addEventListener("mousemove",function(i){Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+((f.b-(i.clientY-((d-500)/2)))*(f.b-(i.clientY-((d-500)/2)))))<10?(f.c+=(f.a-(i.clientX-((c-500)/2)))/Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+(((f.b-(i.clientY-((d-500)/2))))*((f.b-(i.clientY-((d-500)/2))))))*0.3,f.d+=(f.b-(i.clientY-((d-500)/2)))/Math.sqrt(((f.a-(i.clientX-((c-500)/2)))*(f.a-(i.clientX-((c-500)/2))))+(((f.b-(i.clientY-((d-500)/2))))*((f.b-(i.clientY-((d-500)/2))))))*0.3):null;})):null;
+	g.style.left=f.a-5+"px";
+	g.style.top=f.b-5+"px";
+	g.style.borderRadius="5px";
+	e.appendChild(g);
+	window.requestAnimationFrame(func);
+}
+		</script>
+	</head>
+
+	<body onload="func()">
+	</body>
+</html>
