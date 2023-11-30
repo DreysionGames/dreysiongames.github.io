@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>SlapBall</title>
+		<script>
+function func() {
+	var a = document.body;
+	for(var b in a.children){!isNaN(b)?a.removeChild(a.children[b]):null;}
+	var c = window.innerWidth, d=window.innerHeight;
+	var e = document.createElement("div");
+	e.style.position="absolute", e.style.width="500px", e.style.height="500px", e.style.left=c/2-250+"px", e.style.top=d/2-250+"px", e.style.border="1px solid #000000", e.style.overflow="hidden";
+	a.appendChild(e);
+	typeof f == "undefined" ?(f=new Object(), f.a=250, f.b=250, f.c=Math.random()*5-2.5, f.d=Math.random()*5-2.5):null;
+	var g = document.createElement("div");
+	g.style.position="absolute", g.style.width="10px", g.style.height = "10px", g.style.backgroundColor="#000000", g.style.borderRadius="5px";
+	f.a+=f.c, f.b+=f.d;
+	f.a<0?f.c=Math.abs(f.c):null;
+	f.a >500?f.c=Math.abs(f.c)*-1:null;
+	f.b<0? f.d=Math.abs(f.d):null;
+	f.b>500 ? f.d=Math.abs(f.d)*-1:null;
+	f.c*=0.995;
+	f.d*=0.995;
+	typeof h == "undefined" ? (h=new Object(), h.a=0, h.b=0, document.children[0].addEventListener("mousemove", function(i){h.a=i.clientX-((c-500)/2);h.b=i.clientY-((d-500)/2)})):null;
+	Math.sqrt(((f.a-h.a)*(f.a-h.a))+((f.b-h.b)*(f.b-h.b))) < 10 ? (f.c+=(f.a-h.a)/Math.sqrt(((f.a-h.a)*(f.a-h.a))+((f.b-h.b)*(f.b-h.b))), f.d+=(f.b-h.b)/Math.sqrt(((f.a-h.a)*(f.a-h.a))+((f.b-h.b)*(f.b-h.b)))): null;
+	g.style.left=f.a+"px", g.style.top=f.b+"px";
+	e.appendChild(g);
+	
+	window.requestAnimationFrame(func);
+}
+		</script>
+	</head>
+	<body onload="func()">
+	</body>
+</html>
