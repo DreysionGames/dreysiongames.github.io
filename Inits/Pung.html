@@ -13,9 +13,9 @@ I'm a bit proud
 	margin: 0;
 	padding: 0;
 
-	overscroll-behavior: contain;	//prevent touch refresh
-	touch-action: manipulation;	//prevent touch zoom
-	user-select: none;		//prevent touch text select
+	overscroll-behavior: contain;	/*prevent touch refresh*/
+	touch-action: manipulation;	/*prevent touch zoom*/
+	user-select: none;		/*prevent touch text select*/
 }
 
 h1 {
@@ -85,10 +85,39 @@ canvas {
 	margin-right: 40px;
 }
 
+.tab {
+	display: inline-block;
+	width: 47%;
+	padding: 5px;
+	background-color: #565667;
+	border: 1px solid #000000;
+	text-align: center;
+}
+
+.selected {
+	background-color: #454556;
+}
+
+.tab-content {
+	width: 100%;
+	height: 100%;
+	padding: 10px;
+	border: 1px solid #000000;
+}
+
+.tab-content label {
+	margin-left: 50px;
+	text-align: left;
+}
+
 label {
 	display: inline-block;
 	min-width: 100px;
 	text-align: right;
+}
+
+.disabled {
+	opacity: 0.7;
 }
 
 input[type="text"] {
@@ -168,10 +197,6 @@ var AIModels = [	//name,color,attention,accuracy,confidence,animation//
 var showAI = false;
 var showBallPath = true;
 var showGoalHit = true;
-var goal;
-var goalTarg;
-var goalColor = "white";
-var goalGlow = 0;
 var showGuessRange = true;
 var showGoalGuess = true;
 var showGoalRange = true;
@@ -205,6 +230,11 @@ var time = 0;
 var lastTick = Date.now()
 var game = false;
 var pause = true;
+
+var goal;
+var goalTarg;
+var goalColor = "white";
+var goalGlow = 0;
 
 function loadStuff(){
 	var w = window.innerWidth - 40;
@@ -300,6 +330,13 @@ function newGame() {
 	else if(document.getElementById("win-bounces").checked) win = "bounces";
 	else win = "never";
 
+	showAI = document.getElementById("ai-visuals").checked;
+	showBallPath = document.getElementById("ai-ball-path").checked;
+	showGoalHit = document.getElementById("ai-goal-hit").checked;
+	showGuessRange = document.getElementById("ai-guess-range").checked;
+	showGoalGuess = document.getElementById("ai-goal-guess").checked;
+	showGoalRange = document.getElementById("ai-goal-range").checked;
+
 	if(win == "rounds") {
 		winCount = document.getElementById("count-rounds").value;
 	} else if(win == "points") {
@@ -373,6 +410,30 @@ function menu() {
 		sp.style.display = "none";
 		mn.style.visibility = "visible";
 		pause = true;
+	}
+}
+
+function toggleTab(which) {
+	document.getElementById("mod-tab").classList.remove("selected");
+	document.getElementById("vis-tab").classList.remove("selected");
+	document.getElementById("mod-div").style.display = "none";
+	document.getElementById("vis-div").style.display = "none";
+
+	document.getElementById(which+"-tab").classList.add("selected");
+	document.getElementById(which+"-div").style.display = "block";
+}
+
+function checkVis() {
+	visChecked = document.getElementById("ai-visuals").checked;
+
+	labels = document.getElementsByTagName('label');
+	for(var c in document.getElementsByClassName("vis-check")) {
+		for(i=0; i<labels.length; i++) {
+			if(labels[i].htmlFor == document.getElementsByClassName("vis-check")[c].id) {
+				visChecked ? labels[i].classList.remove("disabled") : labels[i].classList.add("disabled");
+			}
+		}
+		document.getElementsByClassName("vis-check")[c].disabled = !visChecked;
 	}
 }
 
@@ -1170,9 +1231,20 @@ function colorToRGB(string) {
 						<option value=1>Martha</option>
 					</select><br /><br />
 					<hr /><br />
-		<!--TODO: Add model builder functionality-->
-		<!--TODO: Add the ability to toggle AI visualizations-->
-					<button>Add AI Model</button>
+					<div id="mod-tab" class="tab" onclick="toggleTab('mod')">AI Models</div>
+					<div id="vis-tab" class="tab" onclick="toggleTab('vis')">AI Visuals</div>
+					<div id="mod-div" class="tab-content" style="display:none">
+						<!--TODO: Add model builder functionality-->
+						<button>Add AI Model</button>
+					</div>
+					<div id="vis-div" class="tab-content" style="display:none">
+						<label for="ai-visuals">AI Visuals: <input id="ai-visuals" type="checkbox" onclick="checkVis()" /></label><br />
+						<label for="ai-ball-path">Ball Path: <input id="ai-ball-path" class="vis-check" type="checkbox" checked disabled /></label><br />
+						<label for="ai-goal-hit">Goal Hit: <input id="ai-goal-hit" class="vis-check" type="checkbox" checked disabled /></label><br />
+						<label for="ai-guess-range">AI Guess Range: <input id="ai-guess-range" class="vis-check" type="checkbox" disabled /></label><br />
+						<label for="ai-goal-guess">AI Goal Guess: <input id="ai-goal-guess" class="vis-check" type="checkbox" disabled /></label><br />
+						<label for="ai-goal-range">AI Goal Zone: <input id="ai-goal-range" class="vis-check" type="checkbox" disabled /></label><br />
+					</div>
 				</div>
 			</div>
 			<button id="newgame" onclick="newGame()">New Game</button>
