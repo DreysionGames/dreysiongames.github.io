@@ -164,7 +164,7 @@ var AIModels = [	//name,color,attention,accuracy,confidence,animation//
 ];
 
 //helpful visualizations
-var showAI = false;
+var showAI = true;
 var showBallPath = true;
 var showGoalHit = true;
 var goal;
@@ -663,7 +663,7 @@ function touchHandle(event) {
 ///////////////////////////////////////////////////////////////////////////
 //                               Intervals                               //
 ///////////////////////////////////////////////////////////////////////////
-		//TODO use delta time//
+
 function update() {
 	ctx.clearRect(0,0,gWidth,gHeight);
 	var curTick = Date.now();
@@ -702,7 +702,7 @@ function pausable(dt) {
 		p1.velocity = p1.velocity.add(new Vector2(0,0.03)).limit(0.8);
 	}
 	if(!up && !down) {
-		p1.velocity = p1.velocity.multiply(0.95);
+		p1.velocity = p1.velocity.multiply(0.93);
 		if(p1.velocity.magnitude() < 0.05) p1.velocity = new Vector2(0,0);
 	}
 	
@@ -713,7 +713,7 @@ function pausable(dt) {
 		p2.velocity = p2.velocity.add(new Vector2(0,0.03)).limit(0.8);
 	}
 	if(!up2 && !down2) {
-		p2.velocity = p2.velocity.multiply(0.95);
+		p2.velocity = p2.velocity.multiply(0.93);
 		if(p2.velocity.magnitude() < 0.05) p2.velocity = new Vector2(0,0);
 	}
 
@@ -996,7 +996,7 @@ function drawStuff() {
 	ctx.fillStyle = p2Color;
 	ctx.fillRect(p2.position.x-5,p2.position.y-25,10,50);
 
-	if(showAI) {
+	if(showAI && pai) {
 		if(showBallPath) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#FF0000";
