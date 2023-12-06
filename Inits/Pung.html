@@ -454,6 +454,12 @@ function Vector2(x, y) {
 		var unit = this.divide(this.magnitude());
 		return unit.multiply(magnitude);
 	}
+	this.clamp = function(minMag, maxMag) {
+		if(this.magnitude() <= maxMag && this.magnitude() >= minMag) return this;
+		var unit = this.divide(this.magnitude());
+		if(this.magnitude() < minMag) return unit.multiply(minMag);
+		if(this.magnitude() > maxMag) return unit.multiply(maxMag);
+	}
 	this.rotate = function(angle) {
 		newAngle = this.angle() + angle;
 		return new Vector2(this.magnitude() * Math.cos(newAngle), this.magnitude() * Math.sin(newAngle));
@@ -521,7 +527,7 @@ function Line(pointA, pointB) { //pointB must be vertical or horizontal
 
 function Ball() {
 	this.position = new Vector2(gWidth/2, gHeight/2);
-	this.velocity = new Vector2(Math.random()*4-2,Math.random()*4-2).addMag(1);
+	this.velocity = new Vector2(Math.random()*0.5-0.25,Math.random()*0.5-0.25).addMag(0.25);
 
 	this.glow = 0;
 }
@@ -551,6 +557,7 @@ function AI(name,color,attention,accuracy,confidence,animation) {
 ///////////////////////////////////////////////////////////////////////////
 
 function kDown(event) {
+	if(event.repeat) return;
 	if(event.target.nodeName == "INPUT") return;
 	if(!ai && event.key == "ArrowLeft") {
 		left2 = true;
@@ -689,10 +696,10 @@ function pausable(dt) {
 	}
 
 	if(up) {
-		p1.velocity = p1.velocity.add(new Vector2(0,-0.15)).limit(3.5);
+		p1.velocity = p1.velocity.add(new Vector2(0,-0.03)).limit(0.8);
 	}
 	if(down) {
-		p1.velocity = p1.velocity.add(new Vector2(0,0.15)).limit(3.5);
+		p1.velocity = p1.velocity.add(new Vector2(0,0.03)).limit(0.8);
 	}
 	if(!up && !down) {
 		p1.velocity = p1.velocity.multiply(0.95);
@@ -700,10 +707,10 @@ function pausable(dt) {
 	}
 	
 	if(up2) {
-		p2.velocity = p2.velocity.add(new Vector2(0,-0.15)).limit(3.5);
+		p2.velocity = p2.velocity.add(new Vector2(0,-0.03)).limit(0.8);
 	}
 	if(down2) {
-		p2.velocity = p2.velocity.add(new Vector2(0,0.15)).limit(3.5);
+		p2.velocity = p2.velocity.add(new Vector2(0,0.03)).limit(0.8);
 	}
 	if(!up2 && !down2) {
 		p2.velocity = p2.velocity.multiply(0.95);
@@ -712,11 +719,11 @@ function pausable(dt) {
 
 	checkCollisions();
 
-	p1.position = p1.position.add(p1.velocity);
+	p1.position = p1.position.add(p1.velocity.multiply(dt));
 	p1.position.y = clamp(p1.position.y,112,gHeight-25);
-	p2.position = p2.position.add(p2.velocity);
+	p2.position = p2.position.add(p2.velocity.multiply(dt));
 	p2.position.y = clamp(p2.position.y,112,gHeight-25);
-	ball.position = ball.position.add(ball.velocity);
+	ball.position = ball.position.add(ball.velocity.multiply(dt));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -734,13 +741,13 @@ function checkCollisions() {
 		if(ball.velocity.x > 0) {
 			var slope = -(ball.position.y - p1.position.y) / 5;
 			ball.velocity = ball.velocity.rotate(Math.atan(slope ** -1)/2);
-			if(right) ball.velocity = ball.velocity.add(new Vector2(0.5,0));
+			if(right) ball.velocity = ball.velocity.add(new Vector2(0.05,0));
 			ballColor = p1Color;
 		}
 		if(ball.velocity.x < 0) {
 			var slope = (ball.position.y - p2.position.y) / 5;
 			ball.velocity = ball.velocity.rotate(Math.atan(slope ** -1)/2);
-			if(left2) ball.velocity = ball.velocity.add(new Vector2(-0.5,0));
+			if(left2) ball.velocity = ball.velocity.add(new Vector2(-0.05,0));
 			ballColor = p2Color;
 		}
 		ballColor2 = colorToRGB(ballColor);
