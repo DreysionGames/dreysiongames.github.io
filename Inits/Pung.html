@@ -272,6 +272,8 @@ function loadStuff(){
 }
 
 function layout(){
+		//TODO Set a scale variable that also works with drawing
+		//TODO Figure out how phones' screen rotations affect things
 	var w = window.innerWidth - 40;
 	var h = window.innerHeight - 240;
 	gWidth = (w > h * 5/3) ? h * 5/3 : w;
@@ -916,7 +918,7 @@ function checkCollisions() {
 ///////////////////////////////////////////////////////////////////////////
 //                                   AI                                  //
 ///////////////////////////////////////////////////////////////////////////
-
+		//TODO tweak ai variables
 function runAI() {
 		//Periodically check where the ball will go//
 	if(ball.velocity.x > 0 && time % 50 == 0) {
@@ -1267,7 +1269,6 @@ function colorToRGB(string) {
 						<label for="ai-confidence">Confidence: <input id="ai-confidence" class="slider" type="range" min=0 max=1 step=0.01></label><br />
 						<label for="ai-aggression">Aggression: <input id="ai-aggression" class="slider" type="range" min=0 max=1 step=0.01></label><br />
 						<label for="ai-animation">Animation: <input id="ai-animation" class="slider" type="range" min=0 max=1 step=0.01></label><br />
-						<!--TODO: Add model builder functionality-->
 						<button onclick="addModel()">Add AI Model</button>
 					</div>
 					<div id="vis-div" class="tab-content" style="display:none">
