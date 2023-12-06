@@ -164,7 +164,7 @@ var AIModels = [	//name,color,attention,accuracy,confidence,animation//
 ];
 
 //helpful visualizations
-var showAI = true;
+var showAI = false;
 var showBallPath = true;
 var showGoalHit = true;
 var goal;
@@ -734,26 +734,33 @@ function pausable(dt) {
 function checkCollisions() {
 		//Check paddle collisions//
 		//TODO: When ball is angled just right, the rotator rotates the ball towards the wall after bouncing.//
-		//Game breaking for win="bounces"//
+			//Game breaking for win="bounces"//
+		//TODO: Check for collisions between ball position and next position, can currently skip over paddle around .9 speed
 	if((ball.position.x <= p1.position.x + 5 && ball.position.x > p1.position.x && ball.position.y < p1.position.y + 25 && ball.position.y > p1.position.y -25) || 
 	   (ball.position.x >= p2.position.x - 5 && ball.position.x < p2.position.x && ball.position.y < p2.position.y + 25 && ball.position.y > p2.position.y -25)) {
 		ball.velocity = ball.velocity.hadamard(new Vector2(-1,1));
+		ball.glow = ball.velocity.magnitude() * 5;
 		if(ball.velocity.x > 0) {
 			var slope = -(ball.position.y - p1.position.y) / 5;
 			ball.velocity = ball.velocity.rotate(Math.atan(slope ** -1)/2);
-			if(right) ball.velocity = ball.velocity.add(new Vector2(0.05,0));
+			if(right) {
+				ball.velocity = ball.velocity.add(new Vector2(0.05,0));
+				ball.glow += 2;
+			}
 			ballColor = p1Color;
 		}
 		if(ball.velocity.x < 0) {
 			var slope = (ball.position.y - p2.position.y) / 5;
 			ball.velocity = ball.velocity.rotate(Math.atan(slope ** -1)/2);
-			if(left2) ball.velocity = ball.velocity.add(new Vector2(-0.05,0));
+			if(left2) {
+				ball.velocity = ball.velocity.add(new Vector2(-0.05,0));
+				ball.glow += 2;
+			}
 			ballColor = p2Color;
 		}
-		ballColor2 = colorToRGB(ballColor);
 		ball.position.x = clamp(ball.position.x, p1.position.x + 5, p2.position.x - 5);
-
-		ball.glow = ball.velocity.magnitude();
+		ballColor2 = colorToRGB(ballColor);
+		
 		hits++;
 		hit();
 		speed();
