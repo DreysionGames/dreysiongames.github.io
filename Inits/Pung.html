@@ -607,7 +607,7 @@ function kUp(event) {
 }
 
 function touchHandle(event, msg) {
-	test.innerHTML = msg+event.touches[0];
+	test.innerHTML = msg+": "+event.touches[0].clientX+", "+event.touches[0].clientY;
 }
 
 ///////////////////////////////////////////////////////////////////////////
