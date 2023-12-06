@@ -12,6 +12,10 @@ I'm a bit proud
 * {
 	margin: 0;
 	padding: 0;
+
+	overscroll-behavior: contain;
+	touch-action: manipulation;
+	user-select: none;
 }
 
 h1 {
@@ -30,9 +34,6 @@ h3 {
 
 body {
 	background-color: #454556;
-	overscroll-behavior: contain;
-	touch-action: manipulation;
-	user-select: none;
 }
 
 canvas {
@@ -647,7 +648,7 @@ function touchHandle(event) {
 	touch.x = event.touches[0].clientX - pgPos.x
 	touch.y = event.touches[0].clientY - pgPos.y;
 
-	if(event.type == "touchstart") {
+	if(event.type == "touchstart" && event.touches.length == 1) {
 		right = true;
 		if(dblTap) {
 			pause = !pause;
