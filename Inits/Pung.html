@@ -13,9 +13,9 @@ I'm a bit proud
 	margin: 0;
 	padding: 0;
 
-	overscroll-behavior: contain;
-	touch-action: manipulation;
-	user-select: none;
+	overscroll-behavior: contain;	//prevent touch refresh
+	touch-action: manipulation;	//prevent touch zoom
+	user-select: none;		//prevent touch text select
 }
 
 h1 {
@@ -237,9 +237,8 @@ function loadStuff(){
 			down = false;
 		}
 	});
-	window.requestAnimationFrame(update);
 
-	//newGame();
+	window.requestAnimationFrame(update);
 }
 
 function layout(){
@@ -500,9 +499,6 @@ function Line(pointA, pointB) { //pointB must be vertical or horizontal
 		if(vec3.z == 0) return false;
 		
 		iPoint = new Vector2(vec3.x/vec3.z, vec3.y/vec3.z);
-		//console.log("intersect: "+iPoint.log()+" on "+LineB.log());
-		//console.log("In x: "+((iPoint.x < LineB.pointA.x) != (iPoint.x < LineB.pointB.x)));
-		//console.log("In y: "+((iPoint.y < LineB.pointA.y) != (iPoint.y < LineB.pointB.y)));
 
 		if(LineB.pointA.x == LineB.pointB.x){
 			if(!((iPoint.y < LineB.pointA.y) != (iPoint.y < LineB.pointB.y))){
@@ -514,9 +510,6 @@ function Line(pointA, pointB) { //pointB must be vertical or horizontal
 				return false;
 			}
 		}
-		/*if(!((iPoint.x < LineB.pointA.x) != (iPoint.x < LineB.pointB.x) && (iPoint.y < LineB.pointA.y) != (iPoint.y < LineB.pointB.y))){
-			return false;																//does not work for vert/horiz lines
-		}*/
 		
 		return iPoint;
 	}
@@ -649,7 +642,6 @@ function touchHandle(event) {
 	touch.y = event.touches[0].clientY - pgPos.y;
 
 	if(event.type == "touchstart" && event.touches.length == 1) {
-		right = true;
 		if(dblTap) {
 			pause = !pause;
 			if(pause) splash("Paused");
@@ -658,6 +650,9 @@ function touchHandle(event) {
 		dblTap = true;
 		setTimeout(function() {dblTap = false;}, 300);
 		setTimeout(function() {right = false;}, 500);
+	}
+	if(event.type == "touchstart" && event.touches.length > 1) {
+		right = true;
 	}
 }
 
@@ -992,11 +987,13 @@ function drawStuff() {
 	ctx.lineWidth = 1;
 	ctx.fillStyle = "#FFFFFF";
 
+		//draw ball//
 	ctx.beginPath();
 	ctx.fillStyle = ballColor;
 	ctx.arc(ball.position.x,ball.position.y,8,0,Math.PI * 2,true);
 	ctx.fill();
 
+		//draw paddles//
 	ctx.beginPath();
 	ctx.fillStyle = p1Color;
 	ctx.fillRect(p1.position.x-5,p1.position.y-25,10,50);
@@ -1005,6 +1002,7 @@ function drawStuff() {
 	ctx.fillRect(p2.position.x-5,p2.position.y-25,10,50);
 
 	if(showAI && pai) {
+		//draw ball's trajectory//
 		if(showBallPath) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#FF0000";
@@ -1017,6 +1015,7 @@ function drawStuff() {
 				trajDraw = hitPoints[i];
 			}
 		}
+		//draw next goal mark//
 		if(showGoalHit && goal != null) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#FF0000";
@@ -1024,6 +1023,7 @@ function drawStuff() {
 			ctx.arc(goal.x,goal.y,8,0,Math.PI*2,true);
 			ctx.stroke();
 		}
+		//draw where ai guesses the goal will be//
 		if(ai && showGoalGuess && pai.guess !=null) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#0000FF";
@@ -1031,6 +1031,7 @@ function drawStuff() {
 			ctx.arc(pai.guess.x,pai.guess.y,8,0,Math.PI*2,true);
 			ctx.stroke();
 		}
+		//draw range where ai might guess goal will be//
 		if(ai && showGuessRange && pai.guess != null) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#0000FF";
@@ -1041,6 +1042,7 @@ function drawStuff() {
 			ctx.lineTo(pai.guess.x+5, pai.guessRange.b);
 			ctx.stroke();
 		}
+		//draw how far from goal guess ai is comfortable staying//
 		if(ai && showGoalRange && pai.guess) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#FFFF00";
@@ -1053,18 +1055,19 @@ function drawStuff() {
 }
 
 function drawVFX() {
+		//draw impact glow around ball//
 	if(ball.glow > 0) {
 		ctx.beginPath();
 		gradient = ctx.createRadialGradient(ball.position.x, ball.position.y, 5, ball.position.x, ball.position.y, 5+(ball.glow*4));
 		gradient.addColorStop(0.1,`rgba(${ballColor2.join(",")},1)`);
 		gradient.addColorStop(0.8,`rgba(${ballColor2.join(",")},0.3)`);
-		//gradient.addColorStop(0.9,`rgba(${ballColor2.join(",")},0`);
 		ctx.fillStyle = gradient;
 		ctx.arc(ball.position.x,ball.position.y,5+(ball.glow*4),0,Math.PI*2);
 		ctx.fill();
 		ball.glow -= 0.1;
 		if(ball.glow < 0) ball.glow = 0;
 	}
+		//draw goal glow//
 	if(goalTarg) {
 		ctx.beginPath();
 		gradient = ctx.createRadialGradient(goalTarg.x, goalTarg.y, 1, goalTarg.x, goalTarg.y, goalGlow);
