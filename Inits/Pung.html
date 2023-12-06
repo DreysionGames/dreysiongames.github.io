@@ -9,6 +9,11 @@ I'm a bit proud
 	<head>
 		<title>Pung</title>
 		<style>
+* {
+	margin: 0;
+	padding: 0;
+}
+
 h1 {
 	margin-top: 75px;
 	text-align: center;
@@ -207,6 +212,7 @@ function loadStuff(){
 	layout();
 
 	window.addEventListener('resize', layout);
+	window.addEventListener('touchmove', (e) => touchHandle);
 	window.requestAnimationFrame(update);
 
 	//newGame();
@@ -597,6 +603,10 @@ function kUp(event) {
 		down = false;
 		return
 	}
+}
+
+function touchHandle(event) {
+	test.innerHTML = event.clientX+", "+event.clientY;
 }
 
 ///////////////////////////////////////////////////////////////////////////
