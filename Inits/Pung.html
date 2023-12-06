@@ -101,17 +101,22 @@ input[type="number"] {
 #splash {
 	position: absolute;
 	left: 0px;
+	width: 100%;
+	text-align: center;
+	display: none;
+}
+
+#splash-title {
+	display: block;
 	padding-top: 40px;
 	padding-bottom: 40px;
 	width: 100%;
+	font-size: 60px;
 	background-color: #686868;
 	color: #FFFFFF;
 	border-top: 5px solid #FFFFFF;
 	border-bottom: 5px solid #FFFFFF;
-	text-align: center;
-	font-size: 60px;
 	opacity: 0.4;
-	display: none;
 }
 
 ::-webkit-scrollbar {
@@ -138,6 +143,7 @@ var st;
 var test;
 var mn;
 var sp;
+var sptit;
 var ctx;
 var gWidth = 0;
 var gHeight = 0;
@@ -209,6 +215,7 @@ function loadStuff(){
 	test = document.getElementById("testdiv");
 	mn = document.getElementById("menu");
 	sp = document.getElementById("splash");
+	sptit = document.getElementById("splash-title");
 
 	ctx = pg.getContext("2d", {willReadFrequently: true});
 
@@ -353,9 +360,19 @@ function speed() {
 }
 
 function splash(text) {
-	var s = document.getElementById("splash");
-	s.innerHTML = text;
-	s.style.display = "block";
+	sptit.innerHTML = text;
+	sp.style.display = "block";
+}
+
+function menu() {
+	if(mn.style.visibility == "visible") {
+		mn.style.visibility = "hidden";
+		pause = false;
+	} else {
+		sp.style.display = "none";
+		mn.style.visibility = "visible";
+		pause = true;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -533,6 +550,7 @@ function AI(name,color,attention,accuracy,confidence,animation) {
 ///////////////////////////////////////////////////////////////////////////
 
 function kDown(event) {
+	if(event.target.nodeName == "INPUT") return;
 	if(!ai && event.key == "ArrowLeft") {
 		left2 = true;
 		return
@@ -571,15 +589,7 @@ function kDown(event) {
 		else sp.style.display = "none";
 	}
 	if(game && event.key == "m" || event.key == "M") {
-		if(mn.style.visibility == "visible") {
-		//TODO: make this happen only when not typing in input//
-			//mn.style.visibility = "hidden";
-			//pause = false;
-		} else {
-			sp.style.display = "none";
-			mn.style.visibility = "visible";
-			pause = true;
-		}
+		menu();
 	}
 	if(!game && (event.key == "m" || event.key == "M" || event.key == " ")) {
 		sp.style.display = "none";
@@ -1140,6 +1150,9 @@ function colorToRGB(string) {
 			</div>
 			<button id="newgame" onclick="newGame()">New Game</button>
 		</div>
-		<div id="splash"></div>
+		<div id="splash">
+			<span id="splash-title"></span><br />
+			<button onclick="menu()">Menu</button>
+		</div>
 	</body>
 </html>
