@@ -438,6 +438,14 @@ function addModel() {
 	opt.value = AIModels.length - 1;
 	opt.innerHTML = AIModels[AIModels.length - 1].name;
 	document.getElementById("name-ai").appendChild(opt);
+
+	document.getElementById("ai-name").value="";
+	document.getElementById("ai-color").value="";
+	document.getElementById("ai-attention").value="";
+	document.getElementById("ai-accuracy").value="";
+	document.getElementById("ai-confidence").value="";
+	document.getElementById("ai-aggression").value="";
+	document.getElementById("ai-animation").value="";
 }
 
 function checkVis() {
