@@ -180,6 +180,8 @@ var velocity = 0;
 var velMax = 0;
 
 var touch = new Vector2(0,0);
+var dblTap = false;
+
 var left = false;
 var up = false;
 var right = false;
@@ -616,9 +618,15 @@ function kUp(event) {
 }
 
 function touchHandle(event) {
+	event.preventDefault();
+
 	touch.x = event.touches[0].clientX - pgPos.x
 	touch.y = event.touches[0].clientY - pgPos.y;
 	test.innerHTML = touch.x+", "+touch.y;
+
+	if(dblTap) pause = !pause;
+	dblTap = true;
+	setTimeout(function() {dblTap = false;}, 500);
 }
 
 ///////////////////////////////////////////////////////////////////////////
