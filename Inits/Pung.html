@@ -212,8 +212,8 @@ function loadStuff(){
 	layout();
 
 	window.addEventListener('resize', layout);
-	window.addEventListener('touchmove', (e) => touchHandle);
-	window.addEventListener('touchstart', (e) => touchHandle);
+	window.addEventListener('touchmove', (e) => {touchHandle(e)});
+	window.addEventListener('touchstart', (e) => {touchHandle(e)});
 	window.requestAnimationFrame(update);
 
 	//newGame();
