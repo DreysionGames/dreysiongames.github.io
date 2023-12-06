@@ -201,6 +201,7 @@ var right2 = false;
 var down2 = false;
 
 var time = 0;
+var lastTick = Date.now()
 var game = false;
 var pause = true;
 
@@ -577,6 +578,7 @@ function kDown(event) {
 	}
 	if(event.key == "ArrowRight" || event.key == "d" || event.key == "D") {
 		right = true;
+		setTimeout(function() {right = false;}, 500);
 		return
 	}
 	if(event.key == "ArrowDown" || event.key == "s" || event.key == "S") {
@@ -639,6 +641,7 @@ function touchHandle(event) {
 	touch.y = event.touches[0].clientY - pgPos.y;
 
 	if(event.type == "touchstart") {
+		right = true;
 		if(dblTap) {
 			pause = !pause;
 			if(pause) splash("Paused");
@@ -646,6 +649,7 @@ function touchHandle(event) {
 		}
 		dblTap = true;
 		setTimeout(function() {dblTap = false;}, 300);
+		setTimeout(function() {right = false;}, 500);
 	}
 }
 
@@ -655,18 +659,23 @@ function touchHandle(event) {
 		//TODO use delta time//
 function update() {
 	ctx.clearRect(0,0,gWidth,gHeight);
-	if(game && !pause) pausable();
+	var curTick = Date.now();
+	var dt = curTick - lastTick;
+
+	if(game && !pause) pausable(dt);
 
 		//VFX on top because I needed ball glow behind ball. Might add second VFX function on top later//
 	drawVFX();
 	drawStuff();
 
+	lastTick = curTick;
+
 	window.requestAnimationFrame(update);
 }
 
-function pausable() {
+function pausable(dt) {
 	time++;
-
+	
 	if(ai && game) runAI();
 	if(touch.x != 0 && touch.y != 0){
 		if(touch.y > p1.position.y) {
