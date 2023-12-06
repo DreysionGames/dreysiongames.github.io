@@ -629,7 +629,11 @@ function touchHandle(event) {
 	touch.y = event.touches[0].clientY - pgPos.y;
 
 	if(event.type == "touchstart") {
-		if(dblTap) pause = !pause;
+		if(dblTap) {
+			pause = !pause;
+			if(pause) splash("Paused");
+			else sp.style.display = "none";
+		}
 		dblTap = true;
 		setTimeout(function() {dblTap = false;}, 500);
 	}
