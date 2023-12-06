@@ -624,9 +624,11 @@ function touchHandle(event) {
 	touch.y = event.touches[0].clientY - pgPos.y;
 	test.innerHTML = touch.x+", "+touch.y;
 
-	if(dblTap) pause = !pause;
-	dblTap = true;
-	setTimeout(function() {dblTap = false;}, 500);
+	if(event.type == "touchstart") {
+		if(dblTap) pause = !pause;
+		dblTap = true;
+		setTimeout(function() {dblTap = false;}, 500);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////
