@@ -221,6 +221,8 @@ function loadStuff(){
 		if(e.touches.length == 0) {
 			touch.x = 0;
 			touch.y = 0;
+			up = false;
+			down = false;
 		}
 	});
 	window.requestAnimationFrame(update);
@@ -622,7 +624,6 @@ function touchHandle(event) {
 
 	touch.x = event.touches[0].clientX - pgPos.x
 	touch.y = event.touches[0].clientY - pgPos.y;
-	test.innerHTML = touch.x+", "+touch.y;
 
 	if(event.type == "touchstart") {
 		if(dblTap) pause = !pause;
