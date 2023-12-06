@@ -212,8 +212,8 @@ function loadStuff(){
 	layout();
 
 	window.addEventListener('resize', layout);
-	window.addEventListener('touchmove', (e) => {touchHandle(e)});
-	window.addEventListener('touchstart', (e) => {touchHandle(e)});
+	window.addEventListener('touchmove', (e) => {touchHandle(e,"move")});
+	window.addEventListener('touchstart', (e) => {touchHandle(e,"start")});
 	window.requestAnimationFrame(update);
 
 	//newGame();
@@ -606,8 +606,8 @@ function kUp(event) {
 	}
 }
 
-function touchHandle(event) {
-	test.innerHTML = event.clientX+", "+event.clientY;
+function touchHandle(event, msg) {
+	test.innerHTML = msg+event.touches[0];
 }
 
 ///////////////////////////////////////////////////////////////////////////
