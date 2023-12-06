@@ -213,6 +213,7 @@ function loadStuff(){
 
 	window.addEventListener('resize', layout);
 	window.addEventListener('touchmove', (e) => touchHandle);
+	window.addEventListener('touchstart', (e) => touchHandle);
 	window.requestAnimationFrame(update);
 
 	//newGame();
