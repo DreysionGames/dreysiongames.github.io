@@ -188,9 +188,9 @@ var pai;
 var ball;
 
 var hitPoints = [];
-var AIModels = [	//name,color,attention,accuracy,confidence,animation//
-	new AI("Lenny","yellow",0.7,0.9,1,0.2),
-	new AI("Martha","magenta",0.9,0.6,0.2,1)
+var AIModels = [	//name,color,attention,accuracy,confidence,aggression,animation//
+	new AI("Lenny","yellow",0.7,0.9,1,1,0.2),
+	new AI("Martha","magenta",0.9,0.6,0.2,0,1)
 ];
 
 //helpful visualizations
@@ -423,6 +423,23 @@ function toggleTab(which) {
 	document.getElementById(which+"-div").style.display = "block";
 }
 
+function addModel() {
+	AIModels[AIModels.length] = new AI(
+		document.getElementById("ai-name").value,
+		document.getElementById("ai-color").value,
+		document.getElementById("ai-attention").value,
+		document.getElementById("ai-accuracy").value,
+		document.getElementById("ai-confidence").value,
+		document.getElementById("ai-aggression").value,
+		document.getElementById("ai-animation").value
+	);
+
+	var opt = document.createElement("option");
+	opt.value = AIModels.length - 1;
+	opt.innerHTML = AIModels[AIModels.length - 1].name;
+	document.getElementById("name-ai").appendChild(opt);
+}
+
 function checkVis() {
 	visChecked = document.getElementById("ai-visuals").checked;
 
@@ -592,12 +609,13 @@ function Paddle() {
 	this.velocity = new Vector2(0,0);
 }
 
-function AI(name,color,attention,accuracy,confidence,animation) {
+function AI(name,color,attention,accuracy,confidence,aggression,animation) {
 	this.name = name;
 	this.color = color;
 	this.attention = attention;	//How soon the AI starts predicting the path
 	this.accuracy = accuracy;	//After calculating path, the range the AI might guess the path will go
 	this.confidence = confidence;	//How far from the guessed point the AI wants to be
+	this.aggression = aggression;	//How often AI power shoots
 	this.animation = animation;	//How much the AI tends to move
 
 	this.idleRange = null;
@@ -1233,9 +1251,16 @@ function colorToRGB(string) {
 					<hr /><br />
 					<div id="mod-tab" class="tab" onclick="toggleTab('mod')">AI Models</div>
 					<div id="vis-tab" class="tab" onclick="toggleTab('vis')">AI Visuals</div>
-					<div id="mod-div" class="tab-content" style="display:none">
+					<div id="mod-div" class="tab-content" style="display:none"> <!--name,color,attention,accuracy,confidence,animation-->
+						<label for="ai-name">Name: <input id="ai-name" type="text"></label><br />
+						<label for="ai-color">Color: <input id="ai-color" type="text"></label><br />
+						<label for="ai-attention">Attention: <input id="ai-attention" class="slider" type="range" min=0 max=1 step=0.01></label><br />
+						<label for="ai-accuracy">Accuracy: <input id="ai-accuracy" class="slider" type="range" min=0 max=1 step=0.01></label><br />
+						<label for="ai-confidence">Confidence: <input id="ai-confidence" class="slider" type="range" min=0 max=1 step=0.01></label><br />
+						<label for="ai-aggression">Aggression: <input id="ai-aggression" class="slider" type="range" min=0 max=1 step=0.01></label><br />
+						<label for="ai-animation">Animation: <input id="ai-animation" class="slider" type="range" min=0 max=1 step=0.01></label><br />
 						<!--TODO: Add model builder functionality-->
-						<button>Add AI Model</button>
+						<button onclick="addModel()">Add AI Model</button>
 					</div>
 					<div id="vis-div" class="tab-content" style="display:none">
 						<label for="ai-visuals">AI Visuals: <input id="ai-visuals" type="checkbox" onclick="checkVis()" /></label><br />
