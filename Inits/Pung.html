@@ -214,7 +214,12 @@ function loadStuff(){
 	window.addEventListener('resize', layout);
 	window.addEventListener('touchmove', (e) => {touchHandle(e,"move")});
 	window.addEventListener('touchstart', (e) => {touchHandle(e,"start")});
-	window.addEventListener('touchend', (e) => {if(e.touches.length == 1)test.innerHTML = "1"});
+	window.addEventListener('touchend', (e) => {
+		if(e.touches.length == 0) {
+			up = false;
+			down = false;
+		}
+	});
 	window.requestAnimationFrame(update);
 
 	//newGame();
@@ -619,6 +624,7 @@ function touchHandle(event, msg) {
 		up = true;
 		down = false;
 	}
+	test.innerHTML = touch.x+", "+touch.y;
 }
 
 ///////////////////////////////////////////////////////////////////////////
