@@ -212,8 +212,8 @@ function loadStuff(){
 	layout();
 
 	window.addEventListener('resize', layout);
-	window.addEventListener('touchmove', (e) => {touchHandle(e,"move")});
-	window.addEventListener('touchstart', (e) => {touchHandle(e,"start")});
+	window.addEventListener('touchmove', (e) => {touchHandle(e)});
+	window.addEventListener('touchstart', (e) => {touchHandle(e)});
 	window.addEventListener('touchend', (e) => {
 		if(e.touches.length == 0) {
 			up = false;
@@ -614,8 +614,8 @@ function kUp(event) {
 	}
 }
 
-function touchHandle(event, msg) {
-	var touch = new Vector2(event.touches[0].clientX - pgPos.x, event.touches[o].clientY - pgPos.y);
+function touchHandle(event) {
+	var touch = new Vector2(event.touches[0].clientX - pgPos.x, event.touches[0].clientY - pgPos.y);
 	if(touch.y > p1.position.y) {
 		up = false;
 		down = true;
