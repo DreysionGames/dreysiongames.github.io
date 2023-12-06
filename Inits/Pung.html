@@ -214,6 +214,7 @@ function loadStuff(){
 	window.addEventListener('resize', layout);
 	window.addEventListener('touchmove', (e) => {touchHandle(e,"move")});
 	window.addEventListener('touchstart', (e) => {touchHandle(e,"start")});
+	window.addEventListener('touchend', (e) => {if(e.touches.length == 1)test.innerHTML = "1"});
 	window.requestAnimationFrame(update);
 
 	//newGame();
@@ -252,6 +253,8 @@ function layout(){
 	document.getElementById("right").style.right = "0px";
 
 	p2.position.x = gWidth-80;
+
+	pgPos = new Vector2(pg.getBoundingClientRect().x, pg.getBoundingClientRect().y);
 }
 
 function newGame() {
@@ -607,7 +610,15 @@ function kUp(event) {
 }
 
 function touchHandle(event, msg) {
-	test.innerHTML = msg+": "+event.touches[0].clientX+", "+event.touches[0].clientY;
+	var touch = new Vector2(event.touches[0].clientX - pgPos.x, event.touches[o].clientY - pgPos.y);
+	if(touch.y > p1.position.y) {
+		up = false;
+		down = true;
+	}
+	if(touch.y < p1.position.y) {
+		up = true;
+		down = false;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////
