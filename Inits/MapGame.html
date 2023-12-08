@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>MapGame</title>
+		<style>
+h1 {
+	margin-top: 50px;
+	text-align: center;
+}
+
+canvas {
+	border: 1px solid #000000;
+}
+		</style>
+	</head>
+	<body>
+		<h1>MapGame</h1>
+		<canvas id="playground" />
+
+		<script>
+///////////////////////////////////////////////////////////////////////////
+//                                 Setup                                 //
+///////////////////////////////////////////////////////////////////////////
+
+var Scale = new Vector2(0,0);
+
+/*
+(w > h * 5/3) ? h * 5/3 : w;
+	gHeight = (w > h * 5/3) ? h : w * 3/5;
+*/
+
+const pg = new Box(document.getElementById("playground"),0,0,1,1);
+
+window.addEventListener("resize", () => {
+	setLayout(window.innerWidth, window.innerHeight);
+});
+setLayout(window.innerWidth, window.innerHeight);
+
+function setLayout(w,h) {
+	Scale.set(((w > (h - 200) * 5/3 + 80) ? (h - 200) * 5/3 : w - 80),
+		  ((w > (h - 200) * 5/3 + 80) ? h - 200 : (w - 80) * 3/5)
+	);
+	pg.setBox(0,0,1,1);
+}
+
+const Player = new Character("Zelda",50,50,60);
+var curMap = new Map();
+startMap();
+
+function startMap() {
+	curMap.turn.findSpeeds();
+}
+
+///////////////////////////////////////////////////////////////////////////
+//                                Objects                                //
+///////////////////////////////////////////////////////////////////////////
+
+	//Game Objects//
+function Character(n,x,y,s) {
+	let name = n;
+	let pos = new Vector2(x,y);
+	let speed = s;
+
+	this.name = function() {
+		return name;
+	};
+	this.getPosition = function() {
+		return new Vector2(pos.x,pos.y);
+	};
+	this.getSpeed = function() {
+		return speed;
+	}
+}
+
+function Map() {
+	let chars = [
+		Player,
+		new Character("Zoey",50,50,50)
+	];
+
+	this.turn = new TurnOrderer();
+
+	this.getChars = function() {
+		return chars;
+	}
+}
+
+function TurnOrderer() {
+	let speeds = [];
+	let turn = -1;
+	let charsTurn = [];
+
+	this.findSpeeds = function() {
+		for(i=0; i<curMap.getChars().length;i++) {
+			speeds[i] = curMap.getChars()[i].getSpeed();
+		}
+		speeds = Array.from(new Set(speeds)).sort((a, b) => a - b);
+	}
+	this.getTurn = function() {
+		return speeds[turn];
+	}
+	this.nextTurn = function() {
+		turn++;
+		if(turn >= speeds.length) {
+			this.endTurn();
+			return;
+		}
+		charsTurn = curMap.getChars().map(c => c.getSpeed() == speeds[turn]);
+		console.log(charsTurn);
+	}
+	this.endTurn = function() {
+		if(turn < speeds.length) return;
+		turn = -1;
+	}
+}
+
+	//Abstract Objects//
+
+function Vector2(x,y) {
+	this.x = x;
+	this.y = y;
+
+	this.set = function(newX, newY) {
+		this.x = newX;
+		this.y = newY;
+	};
+	this.log = function() {
+		return "("+this.x+", "+this.y+")";
+	};
+}
+
+	//DOM Objects//
+function Box(e, l, t, w, h) {
+	let element = e;
+	let left = l;
+	let top = t;
+	let width = w;
+	let height = h;
+
+	this.setBox = function(l,t,w,h) {
+		left = l;
+		top = t;
+		width = w;
+		height = h;
+
+		this.setElement();
+	};
+	this.setElement = function() {
+		element.style.left = (left * Scale.x) + ((window.innerWidth - 80 - Scale.x)/2) + 40 + "px";
+		element.style.top = (top * Scale.y) + 160 + "px";
+		element.style.width = (width * Scale.x) + "px";
+		element.style.height = (height * Scale.y) + "px";
+	};
+	this.getSize = function() {
+		return new Vector2(width, height);
+	};
+
+	element.style.display = "block";
+	element.style.position = "absolute";
+	this.setElement();
+}
+		</script>
+	</body>
+</html>
