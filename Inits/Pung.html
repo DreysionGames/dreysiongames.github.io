@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <!--
-Code by Dreysion
-Done on basic Notepad to prove I can
-First time implementing my own Vector math, not built into a game engine
-I'm a bit proud
+Code by Dreysion, with some help from StackOverflow and ChatGPT of course
+Done on basic Notepad to prove I can :p
+First time implementing my own Vector math, not built into a game engine!
+My coding practices have improved since I started working on this, so some updates might have different styles.
 -->
 	<head>
 		<title>Pung</title>
@@ -12,6 +12,7 @@ I'm a bit proud
 * {
 	margin: 0;
 	padding: 0;
+	box-sizing: border-box;
 
 	overscroll-behavior: contain;	/*prevent touch refresh*/
 	touch-action: manipulation;	/*prevent touch zoom*/
@@ -37,7 +38,7 @@ body {
 }
 
 canvas {
-	margin-top: 50px;
+	/*margin-top: 50px;*/
 	border: 1px solid #000000;
 	background-color: #000000;
 } 
@@ -54,11 +55,16 @@ canvas {
 
 #status div {
 	position: absolute;
-	height: 40px;
+	min-height: 80px;
 	border: 1px solid #FFFFFF;
 	padding: 20px;
 	color: #FFFFFF;
 	overflow: hidden;
+	white-space: nowrap;
+}
+
+#status div span::before {
+	content: var(--prefix);
 }
 
 #menu {
@@ -168,6 +174,7 @@ input[type="number"] {
 //                                 Setup                                 //
 ///////////////////////////////////////////////////////////////////////////
 
+var Scale = new Vector2(0,0);
 var pg;
 var st;
 var test;
@@ -188,9 +195,12 @@ var pai;
 var ball;
 
 var hitPoints = [];
-var AIModels = [	//name,color,attention,accuracy,confidence,aggression,animation//
+var AIModels = [	//name,color,attention,accuracy,urgency,aggression,animation//
 	new AI("Lenny","yellow",0.7,0.9,1,1,0.2),
-	new AI("Martha","magenta",0.9,0.6,0.2,0,1)
+	new AI("Martha","magenta",0.9,0.6,0.2,0,1),
+	new AI("Barry","indigo",0.3,0.5,0.6,0.6,0.7),
+	new AI("Helga","brown",0.8,0.4,0.6,1,0.4),
+	new AI("Sam","orange",0.5,0.7,0.3,0.7,0.8)
 ];
 
 //helpful visualizations
@@ -242,14 +252,15 @@ function loadStuff(){
 	gWidth = (w > h * 5/3) ? h * 5/3 : w;
 	gHeight = (w > h * 5/3) ? h : w * 3/5;
 
-	pg = document.getElementById("playground");
-	st = document.getElementById("status");
+	
+	pg = new Box(document.getElementById("playground"), 0, 0, 1, 1);
+	mn = new Box(document.getElementById("menu"), 0, 0, 1, 1);
+	st = new Box(document.getElementById("status"), 0, 0, 1, 0.1);
 	test = document.getElementById("testdiv");
-	mn = document.getElementById("menu");
 	sp = document.getElementById("splash");
 	sptit = document.getElementById("splash-title");
 
-	ctx = pg.getContext("2d", {willReadFrequently: true});
+	ctx = pg.element.getContext("2d", {willReadFrequently: true});
 
 	p1 = new Paddle();
 	p2 = new Paddle();
@@ -274,27 +285,37 @@ function loadStuff(){
 function layout(){
 		//TODO Set a scale variable that also works with drawing
 		//TODO Figure out how phones' screen rotations affect things
-	var w = window.innerWidth - 40;
-	var h = window.innerHeight - 240;
-	gWidth = (w > h * 5/3) ? h * 5/3 : w;
-	gHeight = (w > h * 5/3) ? h : w * 3/5;
+	Scale.x = ((window.innerWidth > (window.innerHeight - 240) * 5/3 + 80) ? (window.innerHeight - 240) * 5/3 : window.innerWidth - 80);
+	Scale.y = ((window.innerWidth > (window.innerHeight - 240) * 5/3 + 80) ? window.innerHeight - 240 : (window.innerWidth - 80) * 3/5);
+	gWidth = Scale.x;
+	gHeight = Scale.y;
 
-	pg.width = gWidth;
-	pg.height = gHeight;
-	pg.style.marginLeft = (window.innerWidth - gWidth) / 2 + "px";
-	st.style.width = gWidth + "px";
-	st.style.marginTop = -gHeight + "px";
-	st.style.marginLeft = (window.innerWidth - gWidth) / 2 + "px";
-	for (var n in st.children) {
-		if(!isNaN(n)){
-			st.children[n].style.width = gWidth / 4 - 42 + "px";
-			st.children[n].style.left = gWidth / 4 * n + "px";
-		}
+	pg.setBox(0,0,1,1);
+	mn.setBox(0,0,1,1);
+	st.setBox(0,0,1,0.1);
+	for (i=0; i<st.element.children.length; i++) {
+		st.element.children[i].style.left = i * Scale.x / 4 + "px";
+		st.element.children[i].style.width = Scale.x / 4 + "px";
+		st.element.children[i].style.height = Scale.y / 9 + "px";
 	}
-	mn.style.width = gWidth + "px";
-	mn.style.height = gHeight + "px";
-	mn.style.left = (window.innerWidth - gWidth) / 2 + 8 + "px";
-	mn.style.top = "212px";
+	if(st.element.children[0].clientWidth > 85) {
+		document.getElementById("p1score").style.setProperty('--prefix', "'" + p1Name + ": '");
+		document.getElementById("p2score").style.setProperty('--prefix', "'" + p2Name + ": '");
+	} else {
+		document.getElementById("p1score").style.setProperty('--prefix', "''");
+		document.getElementById("p2score").style.setProperty('--prefix', "''");
+	}
+	if(st.element.children[0].clientWidth > 150) {
+		document.getElementById("hits").style.setProperty('--prefix', "'Hits this round: '");
+		document.getElementById("hitsmax").style.setProperty('--prefix', "'Most hits: '");
+		document.getElementById("speed").style.setProperty('--prefix', "'Speed this round: '");
+		document.getElementById("speedmax").style.setProperty('--prefix', "'Highest speed: '");
+	} else {
+		document.getElementById("hits").style.setProperty('--prefix', "''");
+		document.getElementById("hitsmax").style.setProperty('--prefix', "''");
+		document.getElementById("speed").style.setProperty('--prefix', "''");
+		document.getElementById("speedmax").style.setProperty('--prefix', "''");
+	}
 	sp.style.top = window.innerHeight / 2 - 75 + "px";
 
 	for(var div in document.getElementsByClassName("half")) {
@@ -307,13 +328,12 @@ function layout(){
 
 	p2.position.x = gWidth-80;
 
-	pgPos = new Vector2(pg.getBoundingClientRect().x, pg.getBoundingClientRect().y);
+	pgPos = new Vector2(pg.element.getBoundingClientRect().x, pg.element.getBoundingClientRect().y);
 }
 
 function newGame() {
 	ai = document.getElementById("player-ai").checked;
 	p1Name = document.getElementById("name-p1").value;
-	document.getElementById("p1").innerHTML = p1Name;
 	p1Color = document.getElementById("color-p1").value;
 	if(ai) {
 		pai = AIModels[document.getElementById("name-ai").value];
@@ -325,8 +345,8 @@ function newGame() {
 		p2Color = document.getElementById("color-p2").value;
 	}
 	checkColors();
-	document.getElementById("p2").innerHTML = p2Name;
-
+	document.getElementById("p1score").style.setProperty('--prefix', "'" + p1Name + ": '");
+	document.getElementById("p2score").style.setProperty('--prefix', "'" + p2Name + ": '");
 	if(document.getElementById("win-rounds").checked) win = "rounds";
 	else if(document.getElementById("win-points").checked) win = "points";
 	else if(document.getElementById("win-bounces").checked) win = "bounces";
@@ -358,7 +378,7 @@ function newGame() {
 	ball = new Ball();
 	ball.color = "white";
 
-	mn.style.visibility = "hidden";
+	mn.element.style.visibility = "hidden";
 	pause = false;
 
 	score();
@@ -405,12 +425,12 @@ function splash(text) {
 }
 
 function menu() {
-	if(mn.style.visibility == "visible") {
-		mn.style.visibility = "hidden";
+	if(mn.element.style.visibility == "visible") {
+		mn.element.style.visibility = "hidden";
 		pause = false;
 	} else {
 		sp.style.display = "none";
-		mn.style.visibility = "visible";
+		mn.element.style.visibility = "visible";
 		pause = true;
 	}
 }
@@ -431,7 +451,7 @@ function addModel() {
 		document.getElementById("ai-color").value,
 		document.getElementById("ai-attention").value,
 		document.getElementById("ai-accuracy").value,
-		document.getElementById("ai-confidence").value,
+		document.getElementById("ai-urgency").value,
 		document.getElementById("ai-aggression").value,
 		document.getElementById("ai-animation").value
 	);
@@ -445,7 +465,7 @@ function addModel() {
 	document.getElementById("ai-color").value="";
 	document.getElementById("ai-attention").value="";
 	document.getElementById("ai-accuracy").value="";
-	document.getElementById("ai-confidence").value="";
+	document.getElementById("ai-urgency").value="";
 	document.getElementById("ai-aggression").value="";
 	document.getElementById("ai-animation").value="";
 }
@@ -607,6 +627,42 @@ function Line(pointA, pointB) { //pointB must be vertical or horizontal
 	}
 }
 
+//Was playing with this in another of my projects, let's see if I can incorporate it here
+function Box(e, l, t, w, h) {
+	this.element = e;
+	let left = l;
+	let top = t;
+	let width = w;
+	let height = h;
+
+	this.setBox = function(l,t,w,h) {
+		left = l;
+		top = t;
+		width = w;
+		height = h;
+
+		this.setElement();
+	};
+	this.setElement = function() {
+		this.element.style.left = (left * Scale.x) + ((window.innerWidth - 80 - Scale.x)/2) + 40 + "px";
+		this.element.style.top = (top * Scale.y) + 160 + "px";
+		if(this.element.nodeName == "CANVAS") {
+			this.element.width = (width * Scale.x);
+			this.element.height = (height * Scale.y);
+		} else {
+			this.element.style.width = (width * Scale.x) + "px";
+			this.element.style.height = (height * Scale.y) + "px";
+		}
+	};
+	this.getSize = function() {
+		return new Vector2(width, height);
+	};
+
+	this.element.style.display = "block";
+	this.element.style.position = "absolute";
+	this.setElement();
+}
+
 function Ball() {
 	this.position = new Vector2(gWidth/2, gHeight/2);
 	this.velocity = new Vector2(Math.random()*0.5-0.25,Math.random()*0.5-0.25).addMag(0.25);
@@ -619,12 +675,12 @@ function Paddle() {
 	this.velocity = new Vector2(0,0);
 }
 
-function AI(name,color,attention,accuracy,confidence,aggression,animation) {
+function AI(name,color,attention,accuracy,urgency,aggression,animation) {
 	this.name = name;
 	this.color = color;
 	this.attention = attention;	//How soon the AI starts predicting the path
 	this.accuracy = accuracy;	//After calculating path, the range the AI might guess the path will go
-	this.confidence = confidence;	//How far from the guessed point the AI wants to be
+	this.urgency = urgency;		//How far from the guessed point the AI wants to be
 	this.aggression = aggression;	//How often AI power shoots
 	this.animation = animation;	//How much the AI tends to move
 
@@ -685,7 +741,7 @@ function kDown(event) {
 	}
 	if(!game && (event.key == "m" || event.key == "M" || event.key == " ")) {
 		sp.style.display = "none";
-		mn.style.visibility = "visible";
+		mn.element.style.visibility = "visible";
 	}
 }
 
@@ -768,7 +824,7 @@ function update() {
 function pausable(dt) {
 	time++;
 	
-	if(ai && game) runAI();
+	if(ai && game) runAI(dt);
 	if(touch.x != 0 && touch.y != 0){
 		if(touch.y > p1.position.y) {
 			up = false;
@@ -919,14 +975,15 @@ function checkCollisions() {
 //                                   AI                                  //
 ///////////////////////////////////////////////////////////////////////////
 		//TODO tweak ai variables
-function runAI() {
+function runAI(dt) {
 		//Periodically check where the ball will go//
-	if(ball.velocity.x > 0 && time % 50 == 0) {
+	if(time % 50 == 0) {
 		projTraj();
 	}
 		//Periodically switch animations//
 	if(time % 737 == 0) {
 		pai.idleNum = Math.floor(Math.random()*4);
+		if(time % 10 > pai.animation * 10) pai.idleNum = -1;
 	}
 
 	down2 = false;
@@ -941,11 +998,14 @@ function runAI() {
 			down2 = false;
 			up2 = true;
 		}
+		//power shot//
+		if(ball.position.x > p2.position.x-(2*ball.velocity.x*dt) && time % 10 < pai.aggression * 10) left2 = true;
 	} else {	//Animate//
+		left2=false;
 		//Animation target location//
 		if(time % 150 == 0) {
 			var idleTarget = Math.random() * (gHeight - 92) + 92;
-			var mod = Math.random() * 50;
+			var mod = Math.random() * 50 * pai.animation;
 			pai.idleRange = new Range(idleTarget - mod, idleTarget + mod).limit(92, gHeight);
 		}
 		//Go back and forth across target location//
@@ -1030,7 +1090,12 @@ function projTraj() {
 				if(!goal) goal = hitPoints[hitPoints.length-1];
 				
 				let index = i;
-				if (ai) guessHit(hitPoints[hitPoints.length-1], index);
+				if (ai &&
+				    ball.velocity.x > 0 &&
+				   (hitPoints.length < pai.attention*2+2) && 
+				   (ball.position.x > (gWidth/2)-(gWidth/2*pai.attention))) {
+					guessHit(hitPoints[hitPoints.length-1], index);
+				}
 			}
 		} else if(trajVel.x < 0) {
 			if(traj.intersect(left)){
@@ -1059,11 +1124,12 @@ function projTraj() {
 		//The illusion of human error//
 function guessHit(project, index) {
 	if(!pai.guess) {
-		var distance = (p2.position.x - ball.position.x + ((ball.velocity.x < 0) ? (ball.position.x - p1.position.x) * 2 : 0)) / 20;
-		var mod = (1+index) * distance / pai.accuracy;
+		var distance = (p2.position.x - ball.position.x + ((ball.velocity.x < 0) ? (ball.position.x - p1.position.x) * 2 : 0));
+		var mod = (2+index) * distance / (pai.accuracy*18+2);
 		pai.guessRange = new Range(project.y - mod, project.y + mod).limit(92, gHeight);
 		pai.guess = new Vector2(project.x, pai.guessRange.random());
-		pai.goalRange = new Range(pai.guess.y - (distance / pai.confidence), pai.guess.y + (distance / pai.confidence)).limit(92, gHeight);
+		mod = (2+index) * distance / (pai.urgency*10+10);
+		pai.goalRange = new Range(pai.guess.y - mod, pai.guess.y + mod).limit(92, gHeight);
 	}
 }
 
@@ -1212,16 +1278,16 @@ function colorToRGB(string) {
 		<canvas id="playground"></canvas>
 		<div id="status">
 			<div id="scorediv" style="margin-left: 1px">
-				<span id="p1">Player 1</span>: <span id="p1score"></span><br />
-				<span id="p2">CPU</span>: <span id="p2score"></span>
+				<span id="p1score"></span><br />
+				<span id="p2score"></span>
 			</div>
 			<div id="hitsdiv">
-				Hits this round: <span id="hits"></span><br>
-				Most hits: <span id="hitsmax"></span>
+				<span id="hits"></span><br>
+				<span id="hitsmax"></span>
 			</div>
 			<div id="ballspeeddiv">
-				Ball speed: <span id="speed"></span><br>
-				Highest speed: <span id="speedmax"></span>
+				<span id="speed"></span><br>
+				<span id="speedmax"></span>
 			</div>
 			<div id="testdiv">
 
@@ -1257,16 +1323,19 @@ function colorToRGB(string) {
 					Model: <select id="name-ai">
 						<option value=0>Lenny</option>
 						<option value=1>Martha</option>
+						<option value=2>Barry</option>
+						<option value=3>Helga</option>
+						<option value=4>Sam</option>
 					</select><br /><br />
 					<hr /><br />
 					<div id="mod-tab" class="tab" onclick="toggleTab('mod')">AI Models</div>
 					<div id="vis-tab" class="tab" onclick="toggleTab('vis')">AI Visuals</div>
-					<div id="mod-div" class="tab-content" style="display:none"> <!--name,color,attention,accuracy,confidence,animation-->
+					<div id="mod-div" class="tab-content" style="display:none"> <!--name,color,attention,accuracy,urgency,animation-->
 						<label for="ai-name">Name: <input id="ai-name" type="text"></label><br />
 						<label for="ai-color">Color: <input id="ai-color" type="text"></label><br />
 						<label for="ai-attention">Attention: <input id="ai-attention" class="slider" type="range" min=0 max=1 step=0.01></label><br />
 						<label for="ai-accuracy">Accuracy: <input id="ai-accuracy" class="slider" type="range" min=0 max=1 step=0.01></label><br />
-						<label for="ai-confidence">Confidence: <input id="ai-confidence" class="slider" type="range" min=0 max=1 step=0.01></label><br />
+						<label for="ai-urgency">Urgency: <input id="ai-urgency" class="slider" type="range" min=0 max=1 step=0.01></label><br />
 						<label for="ai-aggression">Aggression: <input id="ai-aggression" class="slider" type="range" min=0 max=1 step=0.01></label><br />
 						<label for="ai-animation">Animation: <input id="ai-animation" class="slider" type="range" min=0 max=1 step=0.01></label><br />
 						<button onclick="addModel()">Add AI Model</button>
