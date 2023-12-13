@@ -194,6 +194,8 @@ var p2;
 var pai;
 var ball;
 
+var playPromise;
+
 var hitPoints = [];
 var AIModels = [	//name,color,attention,accuracy,urgency,aggression,animation//
 	new AI("Lenny","yellow",0.7,0.9,1,1,0.2),
@@ -278,6 +280,10 @@ function loadStuff(){
 			down = false;
 		}
 	});
+
+	Music = new Audio("PungMus.mp3");
+	Music.loop = true;
+	sfxBump = new Audio("pah-various.ogg");
 
 	window.requestAnimationFrame(update);
 }
@@ -386,6 +392,9 @@ function newGame() {
 	speed();
 	projTraj();
 
+	Music.currentTime = 0;
+	Music.play();
+
 	game = true;
 }
 
@@ -428,10 +437,12 @@ function menu() {
 	if(mn.element.style.visibility == "visible") {
 		mn.element.style.visibility = "hidden";
 		pause = false;
+		Music.play();
 	} else {
 		sp.style.display = "none";
 		mn.element.style.visibility = "visible";
 		pause = true;
+		Music.pause();
 	}
 }
 
@@ -482,6 +493,25 @@ function checkVis() {
 		}
 		document.getElementsByClassName("vis-check")[c].disabled = !visChecked;
 	}
+}
+
+function playBump(time) {
+	if(!sfxBump.paused) {
+		if(playPromise !== undefined) {
+			playPromise.then(_ => {
+				
+			})
+			.catch(error => {console.log("error")});
+		}
+		sfxBump.pause();
+	}
+	if(time < 0) var sfxRng = Math.floor(Math.random()*10)/2;
+	else var sfxRng = time;
+	sfxBump.currentTime = sfxRng;
+	playPromise = sfxBump.play();
+	setTimeout(() => {
+		sfxBump.pause();
+	}, 250);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -823,7 +853,7 @@ function update() {
 
 function pausable(dt) {
 	time++;
-	
+
 	if(ai && game) runAI(dt);
 	if(touch.x != 0 && touch.y != 0){
 		if(touch.y > p1.position.y) {
@@ -874,8 +904,6 @@ function pausable(dt) {
 		//TODO: SFX//
 function checkCollisions() {
 		//Check paddle collisions//
-		//TODO: When ball is angled just right, the rotator rotates the ball towards the wall after bouncing.//
-			//Game breaking for win="bounces"//
 		//TODO: Check for collisions between ball position and next position, can currently skip over paddle around .9 speed
 	if((ball.position.x <= p1.position.x + 5 && ball.position.x > p1.position.x && ball.position.y < p1.position.y + 25 && ball.position.y > p1.position.y -25) || 
 	   (ball.position.x >= p2.position.x - 5 && ball.position.x < p2.position.x && ball.position.y < p2.position.y + 25 && ball.position.y > p2.position.y -25)) {
@@ -901,6 +929,8 @@ function checkCollisions() {
 		}
 		ball.position.x = clamp(ball.position.x, p1.position.x + 5, p2.position.x - 5);
 		ballColor2 = colorToRGB(ballColor);
+
+		playBump(-1);
 		
 		hits++;
 		hit();
@@ -911,9 +941,9 @@ function checkCollisions() {
 	if(ball.position.y <= 100 || ball.position.y >= gHeight - 4) {
 		ball.position.y = clamp(ball.position.y, 100, gHeight-4);
 		ball.velocity = ball.velocity.hadamard(new Vector2(1,-1));
-		if((ball.velocity.angle() < Math.PI && ball.velocity.angle() > Math.PI/2) || (ball.velocity.angle() < 0 && ball.velocity.angle() > -Math.PI/2)) {
+		if((ball.velocity.angle() < Math.PI - 0.05 && ball.velocity.angle() > Math.PI/2) || (ball.velocity.angle() < 0.05 && ball.velocity.angle() > -Math.PI/2)) {
 			ball.velocity = ball.velocity.rotate(Math.PI/32);
-		} else {
+		} else if((ball.velocity.angle() > -Math.PI + 0.05 && ball.velocity.angle() < -Math.PI/2) || (ball.velocity.angle() > -0.05 && ball.velocity.angle() < Math.PI/2)) {
 			ball.velocity = ball.velocity.rotate(-Math.PI/32);
 		}
 		if(win == "bounces") {
@@ -925,6 +955,8 @@ function checkCollisions() {
 				score();
 			}
 		}
+
+		playBump(-1);
 
 		ball.glow = ball.velocity.magnitude();
 		projTraj();
@@ -974,7 +1006,7 @@ function checkCollisions() {
 ///////////////////////////////////////////////////////////////////////////
 //                                   AI                                  //
 ///////////////////////////////////////////////////////////////////////////
-		//TODO tweak ai variables
+
 function runAI(dt) {
 		//Periodically check where the ball will go//
 	if(time % 50 == 0) {
