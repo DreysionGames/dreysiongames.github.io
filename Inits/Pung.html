@@ -291,7 +291,7 @@ function loadStuff(){
 }
 
 function layout(){
-		//TODO Set a scale variable that also works with drawing
+	test.innerHTML = "Test:<br/>"+window.innerWidth+", "+window.innerHeight;
 		//TODO Figure out how phones' screen rotations affect things
 	Scale.x = ((window.innerWidth > (window.innerHeight - 240) * 5/3 + 80) ? (window.innerHeight - 240) * 5/3 : window.innerWidth - 80);
 	Scale.y = ((window.innerWidth > (window.innerHeight - 240) * 5/3 + 80) ? window.innerHeight - 240 : (window.innerWidth - 80) * 3/5);
