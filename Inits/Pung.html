@@ -282,6 +282,9 @@ function loadStuff(){
 			down = false;
 		}
 	});
+	screen.addEventListener("orientationchange", () => {
+		layout();
+	});
 
 	Music = new Audio("PungMus.mp3");
 	Music.loop = true;
