@@ -294,7 +294,7 @@ function loadStuff(){
 }
 
 function layout(){
-	test.innerHTML = "Test:<br/>"+window.innerWidth+", "+window.innerHeight+"<br/>"+screen.orientation;
+	test.innerHTML = "Test:<br/>"+window.innerWidth+", "+window.innerHeight+"<br/>"+screen.orientation.type;
 		//TODO Figure out how phones' screen rotations affect things
 	Scale.x = ((window.innerWidth > (window.innerHeight - 240) * 5/3 + 80) ? (window.innerHeight - 240) * 5/3 : window.innerWidth - 80);
 	Scale.y = ((window.innerWidth > (window.innerHeight - 240) * 5/3 + 80) ? window.innerHeight - 240 : (window.innerWidth - 80) * 3/5);
