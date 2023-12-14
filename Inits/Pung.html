@@ -12,7 +12,7 @@ My coding practices have improved since I started working on this, so some updat
 * {
 	margin: 0;
 	padding: 0;
-	box-sizing: border-box;
+	/*box-sizing: border-box;*/
 
 	overscroll-behavior: contain;	/*prevent touch refresh*/
 	touch-action: manipulation;	/*prevent touch zoom*/
@@ -61,6 +61,7 @@ canvas {
 	color: #FFFFFF;
 	overflow: hidden;
 	white-space: nowrap;
+	box-sizing: border-box;
 }
 
 #status div span::before {
@@ -175,6 +176,7 @@ input[type="number"] {
 ///////////////////////////////////////////////////////////////////////////
 
 var Scale = new Vector2(0,0);
+var SMag = 0;
 var pg;
 var st;
 var test;
@@ -247,7 +249,7 @@ var goal;
 var goalTarg;
 var goalColor = "white";
 var goalGlow = 0;
-
+			//TODO: intro/key hints//
 function loadStuff(){
 	var w = window.innerWidth - 40;
 	var h = window.innerHeight - 240;
@@ -293,6 +295,7 @@ function layout(){
 		//TODO Figure out how phones' screen rotations affect things
 	Scale.x = ((window.innerWidth > (window.innerHeight - 240) * 5/3 + 80) ? (window.innerHeight - 240) * 5/3 : window.innerWidth - 80);
 	Scale.y = ((window.innerWidth > (window.innerHeight - 240) * 5/3 + 80) ? window.innerHeight - 240 : (window.innerWidth - 80) * 3/5);
+	SMag = Scale.magnitude() / 1350;
 	gWidth = Scale.x;
 	gHeight = Scale.y;
 
@@ -332,7 +335,16 @@ function layout(){
 	}
 	document.getElementById("right").style.right = "0px";
 
-	p2.position.x = gWidth-80;
+	p1.position.x = 80*SMag;
+	p1.position.y = SMag*p1.position.y/p1.savedScale;
+	p1.savedScale = SMag;
+	p2.position.x = gWidth-(80*SMag);
+	p2.position.y = SMag*p2.position.y/p2.savedScale;
+	p2.savedScale = SMag;
+	ball.position = ball.position.multiply(SMag / ball.savedScale);
+	ball.savedScale = SMag;
+
+	projTraj();
 
 	pgPos = new Vector2(pg.element.getBoundingClientRect().x, pg.element.getBoundingClientRect().y);
 }
@@ -697,12 +709,27 @@ function Ball() {
 	this.position = new Vector2(gWidth/2, gHeight/2);
 	this.velocity = new Vector2(Math.random()*0.5-0.25,Math.random()*0.5-0.25).addMag(0.25);
 
+	this.savedScale = SMag;
+
 	this.glow = 0;
+
+	this.getRadius = function() {
+		return 8 * this.savedScale;
+	}
 }
 
 function Paddle() {
-	this.position = new Vector2(80, gHeight / 2)
+	this.position = new Vector2(80*SMag, gHeight / 2)
 	this.velocity = new Vector2(0,0);
+
+	this.savedScale = SMag;
+
+	this.getWidth = function() {
+		return 10 * this.savedScale;
+	}
+	this.getHeight = function() {
+		return 50 * this.savedScale;
+	}
 }
 
 function AI(name,color,attention,accuracy,urgency,aggression,animation) {
@@ -890,11 +917,11 @@ function pausable(dt) {
 
 	checkCollisions();
 
-	p1.position = p1.position.add(p1.velocity.multiply(dt));
-	p1.position.y = clamp(p1.position.y,112,gHeight-25);
-	p2.position = p2.position.add(p2.velocity.multiply(dt));
-	p2.position.y = clamp(p2.position.y,112,gHeight-25);
-	ball.position = ball.position.add(ball.velocity.multiply(dt));
+	p1.position = p1.position.add(p1.velocity.multiply(dt*SMag));
+	p1.position.y = clamp(p1.position.y,80*SMag+p1.getHeight()/2,gHeight-p1.getHeight()/2);
+	p2.position = p2.position.add(p2.velocity.multiply(dt*SMag));
+	p2.position.y = clamp(p2.position.y,80*SMag+p2.getHeight()/2,gHeight-p2.getHeight()/2);
+	ball.position = ball.position.add(ball.velocity.multiply(dt*SMag));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -905,8 +932,10 @@ function pausable(dt) {
 function checkCollisions() {
 		//Check paddle collisions//
 		//TODO: Check for collisions between ball position and next position, can currently skip over paddle around .9 speed
-	if((ball.position.x <= p1.position.x + 5 && ball.position.x > p1.position.x && ball.position.y < p1.position.y + 25 && ball.position.y > p1.position.y -25) || 
-	   (ball.position.x >= p2.position.x - 5 && ball.position.x < p2.position.x && ball.position.y < p2.position.y + 25 && ball.position.y > p2.position.y -25)) {
+	var pw = p1.getWidth()/2;
+	var ph = p1.getHeight()/2;
+	if((ball.position.x <= p1.position.x + pw && ball.position.x > p1.position.x && ball.position.y < p1.position.y + ph && ball.position.y > p1.position.y - ph) || 
+	   (ball.position.x >= p2.position.x - pw && ball.position.x < p2.position.x && ball.position.y < p2.position.y + ph && ball.position.y > p2.position.y - ph)) {
 		ball.velocity = ball.velocity.hadamard(new Vector2(-1,1));
 		ball.glow = ball.velocity.magnitude() * 5;
 		if(ball.velocity.x > 0) {
@@ -938,8 +967,8 @@ function checkCollisions() {
 		projTraj();
 	}
 		//Check top/bottom collisions//
-	if(ball.position.y <= 100 || ball.position.y >= gHeight - 4) {
-		ball.position.y = clamp(ball.position.y, 100, gHeight-4);
+	if(ball.position.y <= 80*SMag + ball.getRadius() || ball.position.y >= gHeight - 4) {
+		ball.position.y = clamp(ball.position.y, 80*SMag + ball.getRadius(), gHeight-4);
 		ball.velocity = ball.velocity.hadamard(new Vector2(1,-1));
 		if((ball.velocity.angle() < Math.PI - 0.05 && ball.velocity.angle() > Math.PI/2) || (ball.velocity.angle() < 0.05 && ball.velocity.angle() > -Math.PI/2)) {
 			ball.velocity = ball.velocity.rotate(Math.PI/32);
@@ -1098,13 +1127,15 @@ function runAI(dt) {
 }
 
 function projTraj() {
+	if(!game) return;
 	if(ai) pai.guess = null;
 	goal = null;
 
-	var tl = new Vector2(p1.position.x+5, 92);
-	var tr = new Vector2(p2.position.x-5, 92);
-	var br = new Vector2(p2.position.x-5, gHeight);
-	var bl = new Vector2(p1.position.x+5, gHeight);
+	var pw = p1.getWidth()/2;
+	var tl = new Vector2(p1.position.x+pw, 80*SMag);
+	var tr = new Vector2(p2.position.x-pw, 80*SMag);
+	var br = new Vector2(p2.position.x-pw, gHeight);
+	var bl = new Vector2(p1.position.x+pw, gHeight);
 	var top = new Line(tl, tr);
 	var right = new Line(tr, br);
 	var bottom = new Line(br, bl);
@@ -1157,10 +1188,10 @@ function projTraj() {
 function guessHit(project, index) {
 	if(!pai.guess) {
 		var distance = (p2.position.x - ball.position.x + ((ball.velocity.x < 0) ? (ball.position.x - p1.position.x) * 2 : 0));
-		var mod = (2+index) * distance / (pai.accuracy*18+2);
+		var mod = SMag * (2+index) * distance / (pai.accuracy*18+2);
 		pai.guessRange = new Range(project.y - mod, project.y + mod).limit(92, gHeight);
 		pai.guess = new Vector2(project.x, pai.guessRange.random());
-		mod = (2+index) * distance / (pai.urgency*10+10);
+		mod = SMag * (2+index) * distance / (pai.urgency*10+10);
 		pai.goalRange = new Range(pai.guess.y - mod, pai.guess.y + mod).limit(92, gHeight);
 	}
 }
@@ -1175,18 +1206,20 @@ function drawStuff() {
 	ctx.fillStyle = "#FFFFFF";
 
 		//draw ball//
-	ctx.beginPath();
-	ctx.fillStyle = ballColor;
-	ctx.arc(ball.position.x,ball.position.y,8,0,Math.PI * 2,true);
-	ctx.fill();
+	if(game) {
+		ctx.beginPath();
+		ctx.fillStyle = ballColor;
+		ctx.arc(ball.position.x,ball.position.y,ball.getRadius(),0,Math.PI * 2,true);
+		ctx.fill();
+	}
 
 		//draw paddles//
 	ctx.beginPath();
 	ctx.fillStyle = p1Color;
-	ctx.fillRect(p1.position.x-5,p1.position.y-25,10,50);
+	ctx.fillRect(p1.position.x-(p1.getWidth()/2),p1.position.y-(p1.getHeight()/2),p1.getWidth(),p1.getHeight());
 	ctx.beginPath();
 	ctx.fillStyle = p2Color;
-	ctx.fillRect(p2.position.x-5,p2.position.y-25,10,50);
+	ctx.fillRect(p2.position.x-(p2.getWidth()/2),p2.position.y-(p2.getHeight()/2),p2.getWidth(),p2.getHeight());
 
 	if(showAI && pai) {
 		//draw ball's trajectory//
@@ -1245,11 +1278,11 @@ function drawVFX() {
 		//draw impact glow around ball//
 	if(ball.glow > 0) {
 		ctx.beginPath();
-		gradient = ctx.createRadialGradient(ball.position.x, ball.position.y, 5, ball.position.x, ball.position.y, 5+(ball.glow*4));
+		gradient = ctx.createRadialGradient(ball.position.x, ball.position.y, 5*SMag, ball.position.x, ball.position.y, (5+(ball.glow*4))*SMag);
 		gradient.addColorStop(0.1,`rgba(${ballColor2.join(",")},1)`);
 		gradient.addColorStop(0.8,`rgba(${ballColor2.join(",")},0.3)`);
 		ctx.fillStyle = gradient;
-		ctx.arc(ball.position.x,ball.position.y,5+(ball.glow*4),0,Math.PI*2);
+		ctx.arc(ball.position.x,ball.position.y,(5+(ball.glow*4))*SMag,0,Math.PI*2);
 		ctx.fill();
 		ball.glow -= 0.1;
 		if(ball.glow < 0) ball.glow = 0;
@@ -1257,12 +1290,12 @@ function drawVFX() {
 		//draw goal glow//
 	if(goalTarg) {
 		ctx.beginPath();
-		gradient = ctx.createRadialGradient(goalTarg.x, goalTarg.y, 1, goalTarg.x, goalTarg.y, goalGlow);
+		gradient = ctx.createRadialGradient(goalTarg.x, goalTarg.y, SMag, goalTarg.x, goalTarg.y, goalGlow*SMag);
 		var goalColor2 = colorToRGB(goalColor);
 		gradient.addColorStop(0.1,`rgba(${goalColor2.join(",")},0.9)`);
 		gradient.addColorStop(0.9,`rgba(${goalColor2.join(",")},0.2)`);
 		ctx.fillStyle = gradient;
-		ctx.arc(goalTarg.x, goalTarg.y, goalGlow, 0, Math.PI*2);
+		ctx.arc(goalTarg.x, goalTarg.y, goalGlow*SMag, 0, Math.PI*2);
 		ctx.fill();
 		goalGlow+=10;
 		if(goalGlow > 200) {
