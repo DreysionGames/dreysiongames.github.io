@@ -38,7 +38,12 @@ const games = [
 	new GameCard("Dreysion Adventure","DreysianAdventure/index.html",["Broken","Unfinished"])
 ];
 
+const urlParams = new URLSearchParams(window.location.search);
+var filter = urlParams.get("filter");
+if(filter) Filter(filter);
+
 function GameCard(name, link, types) {
+	this.types = types;
 	this.card = document.createElement("div");
 	this.card.classList.add("card");
 	if(types.includes("Inits")) this.card.dataset.link = "Inits/"+link;
@@ -57,6 +62,13 @@ function GameCard(name, link, types) {
 
 function visitGame(link) {
 	window.location.href = link;
+}
+
+function Filter(filter) {
+	for(i=0;i<games.length;i++){
+		if(games[i].types.includes(filter)) games[i].card.style.display = "inline-block";
+		else games[i].card.style.display = "none";
+	}
 }
 		</script>
 	</body>
