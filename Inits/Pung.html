@@ -177,6 +177,7 @@ input[type="number"] {
 
 var Scale = new Vector2(0,0);
 var SMag = 0;
+var orient = false;
 var pg;
 var st;
 var test;
@@ -283,7 +284,7 @@ function loadStuff(){
 		}
 	});
 	screen.addEventListener("orientationchange", () => {
-		layout();
+		flipOrientation();
 	});
 
 	Music = new Audio("PungMus.mp3");
@@ -293,11 +294,18 @@ function loadStuff(){
 	window.requestAnimationFrame(update);
 }
 
+function flipOrientation() {
+	orient = (window.innerHeight > window.innerWidth && screen.orientation.type.includes("landscape"));
+}
+
 function layout(){
-	test.innerHTML = "Test:<br/>"+window.innerWidth+", "+window.innerHeight+"<br/>"+screen.orientation.type;
-		//TODO Figure out how phones' screen rotations affect things
 	Scale.x = ((window.innerWidth > (window.innerHeight - 240) * 5/3 + 80) ? (window.innerHeight - 240) * 5/3 : window.innerWidth - 80);
 	Scale.y = ((window.innerWidth > (window.innerHeight - 240) * 5/3 + 80) ? window.innerHeight - 240 : (window.innerWidth - 80) * 3/5);
+	if(orient) {
+		var tempx = Scale.x;
+		Scale.x = Scale.y;
+		Scale.y = tempx;
+	}
 	SMag = Scale.magnitude() / 1350;
 	gWidth = Scale.x;
 	gHeight = Scale.y;
