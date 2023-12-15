@@ -3,7 +3,6 @@
 	margin:0;
 	padding:0;
 	border:0;
-	font-size:100%;
 	font:inherit;
 	vertical-align:baseline;
 }
@@ -40,6 +39,7 @@ div{
 h1 {
 	display:table-cell;
 	vertical-align:middle;
+	font-size: 36px;
 }
 
 h1, h2 {
