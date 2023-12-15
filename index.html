@@ -4,11 +4,60 @@
 		<title>DreysionGames</title>
 		<link href="dgstyle.css" rel="stylesheet" type="text/css">
 		<link href="favicon.ico" rel="icon" type="image/ico">
+		<style>
+.card {
+	position: relative;
+	display: inline-block;
+	height: 300px;
+	width: 300px;
+	margin: 20px;
+	border: 1px solid #000000;
+	border-radius: 10px;
+}
+
+.card-tag {
+	position: absolute;
+	bottom: 10px;
+	width: 100%;
+	text-align: center;
+}
+		</style>
 	</head>
 	<body>
 		<div id="header">
 			<h1>DreysionGames</h1>
 		</div>
-		<a href="DreysianAdventure/index.html"><button>Dreysian Adventure</button></a>
+		<div id="card-collection"></div>
+
+<!------------------------------------------------------------------------>
+		<script>
+const games = [
+	new GameCard("Popex","Popex.html",["Inits","Unfinished"]),
+	new GameCard("Pung","Pung.html",["Inits","Unfinished"]),
+	new GameCard("SlapBall","slapball.html",["Pokes"]),
+	new GameCard("Dreysion Adventure","DreysianAdventure/index.html",["Broken","Unfinished"])
+];
+
+function GameCard(name, link, types) {
+	this.card = document.createElement("div");
+	this.card.classList.add("card");
+	if(types.includes("Inits")) this.card.dataset.link = "Inits/"+link;
+	else if(types.includes("Pokes")) this.card.dataset.link = "Pokes/"+link;
+	else this.card.dataset.link = link;
+	this.tag = document.createElement("div");
+	this.tag.innerHTML = name;
+	this.tag.classList.add("card-tag");
+	this.card.addEventListener("click",function(){
+		visitGame(this.dataset.link);
+	});
+
+	this.card.appendChild(this.tag);
+	document.getElementById("card-collection").appendChild(this.card);
+}
+
+function visitGame(link) {
+	window.location.href = link;
+}
+		</script>
 	</body>
 </html>
