@@ -300,6 +300,7 @@ function flipOrientation() {
 }
 
 function layout(){
+	test.innerHTML=window.innerWidth;
 	if(orient) {
 		var w = window.innerHeight;
 		var h = window.innerWidth;
@@ -307,6 +308,7 @@ function layout(){
 		var w = window.innerWidth;
 		var h = window.innerHeight;
 	}
+	test.innerHTML += w+", "+h;
 	Scale.x = ((w > (h - 240) * 5/3 + 80) ? (h - 240) * 5/3 : w - 80);
 	Scale.y = ((w > (h - 240) * 5/3 + 80) ? h - 240 : (w - 80) * 3/5);
 	
