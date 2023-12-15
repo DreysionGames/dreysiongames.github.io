@@ -21,9 +21,10 @@ My coding practices have improved since I started working on this, so some updat
 }
 
 h1 {
-	margin-top: 75px;
+	position: absolute;
 	text-align: center;
 	font-size: 48px;
+	width: 100%;
 }
 
 h2, h3 {
@@ -178,7 +179,7 @@ input[type="number"] {
 
 var Scale = new Vector2(0,0);
 var SMag = 0;
-var orient = false;
+var topPos;
 var pg;
 var st;
 var test;
@@ -285,7 +286,7 @@ function loadStuff(){
 		}
 	});
 	screen.addEventListener("orientationchange", () => {
-		flipOrientation();
+		layout();
 	});
 
 	Music = new Audio("PungMus.mp3");
@@ -295,27 +296,26 @@ function loadStuff(){
 	window.requestAnimationFrame(update);
 }
 
-function flipOrientation() {
-	orient = (window.innerHeight > window.innerWidth && screen.orientation.type.includes("landscape"));
-}
-
 function layout(){
-	test.innerHTML=window.innerWidth;
-	if(orient) {
-		var w = window.innerHeight;
-		var h = window.innerWidth;
-	} else {
-		var w = window.innerWidth;
-		var h = window.innerHeight;
-	}
-	test.innerHTML += "<br>"+w/window.devicePixelRatio+", "+h/window.devicePixelRatio;
-	Scale.x = ((w > (h - 240) * 5/3 + 80) ? (h - 240) * 5/3 : w - 80);
-	Scale.y = ((w > (h - 240) * 5/3 + 80) ? h - 240 : (w - 80) * 3/5);
+	var w = window.innerWidth;
+	var h = window.innerHeight;
+	var hr = h/window.devicePixelRatio;
+
+	var bb = (hr > 500) ? 40 : (hr > 300) ? 20 : 10;
+	var bt = (hr > 500) ? 48 : 36;
+	topPos = (2*bb)+bt;
+	var viewHeight = h - bt - (3*bb);
+	var viewWidth = w - 80;
+
+	Scale.x = ((viewWidth > viewHeight * 5/3) ? viewHeight * 5/3 : viewWidth);
+	Scale.y = ((viewWidth > viewHeight * 5/3) ? viewHeight : viewWidth * 3/5);
 	
 	SMag = Scale.magnitude() / 1350;
 	gWidth = Scale.x;
 	gHeight = Scale.y;
 
+	document.getElementById("title").style.top = bb + "px";
+	document.getElementById("title").style.fontSize = bt + "px";
 	pg.setBox(0,0,1,1);
 	mn.setBox(0,0,1,1);
 	st.setBox(0,0,1,0.1);
@@ -704,7 +704,7 @@ function Box(e, l, t, w, h) {
 	};
 	this.setElement = function() {
 		this.element.style.left = (left * Scale.x) + ((window.innerWidth - 80 - Scale.x)/2) + 40 + "px";
-		this.element.style.top = (top * Scale.y) + 160 + "px";
+		this.element.style.top = (top * Scale.y) + topPos + "px";
 		if(this.element.nodeName == "CANVAS") {
 			this.element.width = (width * Scale.x);
 			this.element.height = (height * Scale.y);
@@ -1356,7 +1356,7 @@ function colorToRGB(string) {
 		</script>
 	</head>
 	<body onload="loadStuff()" onkeydown="kDown(event)" onkeyup="kUp(event)">
-		<h1>Pung</h1>
+		<h1 id="title">Pung</h1>
 		<canvas id="playground"></canvas>
 		<div id="status">
 			<div id="scorediv" style="margin-left: 1px">
