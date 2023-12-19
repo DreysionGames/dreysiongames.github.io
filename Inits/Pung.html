@@ -9,6 +9,7 @@ My coding practices have improved since I started working on this, so some updat
 	<head>
 		<title>Pung</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<link href="../favicon.ico" rel="icon" type="image/ico">
 		<style>
 * {
 	margin: 0;
@@ -525,6 +526,12 @@ function checkVis() {
 	}
 }
 
+function disablePlayer2() {
+	document.getElementById("player-human").disabled = true;
+	document.getElementById("player-ai").selected = true;
+	document.getElementById("name-p2").value = "Not available for touch";
+}
+
 function playBump(time) {
 	if(!sfxBump.paused) {
 		if(playPromise !== undefined) {
@@ -857,6 +864,8 @@ function kUp(event) {
 
 function touchHandle(event) {
 	event.preventDefault();
+
+	disablePlayer2();
 
 	touch.x = event.touches[0].clientX - pgPos.x
 	touch.y = event.touches[0].clientY - pgPos.y;
@@ -1217,7 +1226,7 @@ function guessHit(project, index) {
 ///////////////////////////////////////////////////////////////////////////
 //                                Drawing                                //
 ///////////////////////////////////////////////////////////////////////////
-
+		//TODO: Safari or Apple or something doesn't draw stuff on canvas. Why?
 function drawStuff() {
 	ctx.strokeStyle = "#FFFFFF";
 	ctx.lineWidth = 1;
@@ -1352,7 +1361,7 @@ function colorToRGB(string) {
 	var pixel = ctx.getImageData(0,0,1,1).data;
 	return [pixel[0],pixel[1],pixel[2]];
 }
-
+		//TODO: Include a button to switch to full zoom mode, esp. for phones
 //-----------------------------------------------------------------------//
 		</script>
 	</head>
