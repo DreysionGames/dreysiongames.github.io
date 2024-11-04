@@ -146,7 +146,7 @@ function newGame(){
         players[i].skills = [];
         players[i].active = [];
         players[i].actions = [];
-        players[i].reacions = [];
+        players[i].reactions = [];
         players[i].artifacts = [];
         players[i].targets = [];
     }
