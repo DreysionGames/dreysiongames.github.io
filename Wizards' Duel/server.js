@@ -107,6 +107,10 @@ io.on('connection', (socket) => {
     });
 });
 
+function loadStuff(){
+    
+}
+
 function startGame(){
     console.log("A game has started");
     players = everyone.filter(p => p.queued);
