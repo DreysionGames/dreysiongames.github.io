@@ -1,3 +1,8 @@
+function serverError() {
+    body.innerHTML = "<h1>Server Error</h1> <br><br> Yeah, sorry, this won't work here. This is hosted on Github Pages, which doesn't allow for servers and such. " +
+        "You'll have to download the project and try it on your own computer. Unfortunately, I can't guarantee it'll work even then, since it's not a completed project.";
+}
+
 let socket = io.connect('http://192.168.1.65:3000');
 
 socket.on('connect', () => {
