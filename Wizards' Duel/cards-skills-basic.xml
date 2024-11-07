@@ -64,7 +64,7 @@
     </card>
     <card>
         <name>Earth Wall</name>
-        <description></description>
+        <description>We're practicing trench warfare today!</description>
         <elementTokens>
             <earth>1</earth>
         </elementTokens>
@@ -83,7 +83,7 @@
     </card>
     <card>
         <name>Personal Bubble</name>
-        <description></description>
+        <description>Not touching!</description>
         <elementTokens>
             <water>1</water>
         </elementTokens>
@@ -102,7 +102,7 @@
     </card>
     <card>
         <name>Defending Gale</name>
-        <description></description>
+        <description>Sweep the magic away!</description>
         <elementTokens>
             <wind>1</wind>
         </elementTokens>
