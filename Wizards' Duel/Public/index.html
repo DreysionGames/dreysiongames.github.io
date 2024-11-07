@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script defer>
-            function serverError() {
-                document.body.innerHTML = "<h1>Server Error</h1> <br><br> Yeah, sorry, this won't work here. This is hosted on Github Pages, which doesn't allow for servers and such. " +
-                "You'll have to download the project and try it on your own computer. Unfortunately, I can't guarantee it'll work even then, since it's not a completed project.";
-            }
-        </script>
         <script src="/socket.io/socket.io.js" onerror="serverError()"></script>
         <script src="app.js" defer></script>
         <script src="layout.js" defer></script>
@@ -44,5 +38,11 @@
             <div id="readyin"></div>
         </div>
         <!--<button onclick="socket.emit('test')">Test</button>-->
+        <script defer>
+            function serverError() {
+                document.body.innerHTML = "<h1>Server Error</h1> <br><br> Yeah, sorry, this won't work here. This is hosted on Github Pages, which doesn't allow for servers and such. " +
+                "You'll have to download the project and try it on your own computer. Unfortunately, I can't guarantee it'll work even then, since it's not a completed project.";
+            }
+        </script>
     </body>
 </html>
