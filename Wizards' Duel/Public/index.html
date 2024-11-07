@@ -1,13 +1,22 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script src="/socket.io/socket.io.js" onerror="serverError()"></script>
+        <script>
+            var serverError = false;
+
+            function unloadPage() {
+                if(!serverError) return;
+                document.body.innerHTML = "<h1>Server Error</h1> <br><br> Yeah, sorry, this won't work here. This is hosted on Github Pages, which doesn't allow for servers and such. " +
+                "You'll have to download the project and try it on your own computer. Unfortunately, I can't guarantee it'll work even then, since it's not a completed project.";
+            }
+        </script>
+        <script src="/socket.io/socket.io.js" onerror="serverError = true"></script>
         <script src="app.js" defer></script>
         <script src="layout.js" defer></script>
         <link href="style.css" rel="stylesheet" type="text/css" />
         <link href="favicon.ico" rel="icon" type="image/ico">
     </head>
-    <body>
+    <body onload = "unloadPage()">
         <h2 id="title">Wizards' Duel</h2>
         <div id="profiles">Profiles</div>
         <div id="hand">Hand</div>
@@ -38,11 +47,5 @@
             <div id="readyin"></div>
         </div>
         <!--<button onclick="socket.emit('test')">Test</button>-->
-        <script defer>
-            function serverError() {
-                document.body.innerHTML = "<h1>Server Error</h1> <br><br> Yeah, sorry, this won't work here. This is hosted on Github Pages, which doesn't allow for servers and such. " +
-                "You'll have to download the project and try it on your own computer. Unfortunately, I can't guarantee it'll work even then, since it's not a completed project.";
-            }
-        </script>
     </body>
 </html>
