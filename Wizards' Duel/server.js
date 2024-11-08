@@ -82,6 +82,7 @@ io.on('connection', (socket) => {
         findPlayer(socket.id, everyone).reset();
         remPlayer(socket.id,players,false);
         addPlayer(socket.id,spectators,false);
+        if(players.length == 0) newGame();
     });
     socket.on('pickCards', (data) => {
         var p = findPlayer(socket.id, players);
@@ -147,7 +148,9 @@ function startGame(){
 }
 
 function newGame(){
+    console.log("------------");
     console.log("Game reset");
+    console.log("------------");
     clearInterval(autoReady);
     gameState=states.JOINING;
     for(i=0;i<players.length;i++){
