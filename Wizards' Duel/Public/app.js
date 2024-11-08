@@ -33,6 +33,13 @@ document.getElementById("queue").addEventListener('click', () => {
 });
 document.getElementById("Start").addEventListener('click', () => {
     socket.emit('startGame');
+    document.getElementById("Start").style.display="none";
+    document.getElementById("Leave").style.display="inline-block";
+});
+document.getElementById("Leave").addEventListener('click', () => {
+    socket.emit('leaveGame');
+    document.getElementById("Start").style.display="inline-block";
+    document.getElementById("Leave").style.display="none";
 });
 
 

@@ -31,6 +31,7 @@ var currentPlayer=0;
 
 server.listen(port, "192.168.1.65", () => {
     console.log(`Listening on port ${port}`);
+    console.log(`Type in "http://192.168.1.65:3000" to your browser's address bar to connect`);
 });
 process.on('exit', () => {
     io.emit('reset');
@@ -75,6 +76,12 @@ io.on('connection', (socket) => {
         if(Ready()){
             startGame();
         }
+    });
+    socket.on('leaveGame', () => {
+        console.log(`${findPlayer(socket.id, everyone).name} left the game.`);
+        findPlayer(socket.id, everyone).ready=0;
+        remPlayer(socket.id,players,false);
+        addPlayer(socket.id,spectators,false);
     });
     socket.on('pickCards', (data) => {
         var p = findPlayer(socket.id, players);
