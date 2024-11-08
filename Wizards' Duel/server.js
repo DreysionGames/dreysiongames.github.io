@@ -114,6 +114,10 @@ io.on('connection', (socket) => {
     });
 });
 
+function loadStuff(){
+    
+}
+
 function startGame(){
     console.log("A game has started");
     players = everyone.filter(p => p.queued);
@@ -153,7 +157,7 @@ function newGame(){
         players[i].skills = [];
         players[i].active = [];
         players[i].actions = [];
-        players[i].reacions = [];
+        players[i].reactions = [];
         players[i].artifacts = [];
         players[i].targets = [];
     }

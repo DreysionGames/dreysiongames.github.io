@@ -1,0 +1,74 @@
+<cards>
+    <card>
+        <name>Lava Ball</name>
+        <description>An upgraded fireball? But not fire.</description>
+        <elementTokens>
+            <fire>1</fire>
+            <earth>1</earth>
+        </elementTokens>
+        <action>
+            <element>lava</element>
+            <damage>10</damage>
+        </action>
+    </card>
+    <card>
+        <name>Acid Shot</name>
+        <description>It burns! It burns!</description>
+        <elementTokens>
+            <fire>1</fire>
+            <water>1</water>
+        </elementTokens>
+        <action>
+            <element>poison</element>
+            <damage>10</damage>
+        </action>
+    </card>
+    <card>
+        <name>Ball Lightning</name>
+        <description>It's a thing, look it up!</description>
+        <elementTokens>
+            <fire>1</fire>
+            <wind>1</wind>
+        </elementTokens>
+        <action>
+            <element>lightning</element>
+            <damage>10</damage>
+        </action>
+    </card>
+    <card>
+        <name>Weedball</name>
+        <description>If fire doesn't work, how would you like... dandelions?</description>
+        <elementTokens>
+            <earth>1</earth>
+            <water>1</water>
+        </elementTokens>
+        <action>
+            <element>plant</element>
+            <damage>10</damage>
+        </action>
+    </card>
+    <card>
+        <name>Sand Toss</name>
+        <description>Better hope your eyes are closed when this hits!</description>
+        <elementTokens>
+            <earth>1</earth>
+            <wind>1</wind>
+        </elementTokens>
+        <action>
+            <element>sand</element>
+            <damage>10</damage>
+        </action>
+    </card>
+    <card>
+        <name>Ice Cube</name>
+        <description>Look, it's not a ball this time!</description>
+        <elementTokens>
+            <water>1</water>
+            <wind>1</wind>
+        </elementTokens>
+        <action>
+            <element>ice</element>
+            <damage>10</damage>
+        </action>
+    </card>
+</cards>

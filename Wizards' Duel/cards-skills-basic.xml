@@ -1,0 +1,121 @@
+<cards>
+    <card>
+        <name>Fireball</name>
+        <description>The most basic of basic magics. What do you want? It's a fireball.</description>
+        <elementTokens>
+            <fire>1</fire>
+        </elementTokens>
+        <action>
+            <element>fire</element>
+            <damage>5</damage>
+        </action>
+    </card>
+    <card>
+        <name>Rock</name>
+        <description>Rock</description>
+        <elementTokens>
+            <earth>1</earth>
+        </elementTokens>
+        <action>
+            <element>earth</element>
+            <damage>5</damage>
+        </action>
+    </card>
+    <card>
+        <name>Water Ball</name>
+        <description>Prepare to get splashed in the face!</description>
+        <elementTokens>
+            <water>1</water>
+        </elementTokens>
+        <action>
+            <element>water</element>
+            <damage>5</damage>
+        </action>
+    </card>
+    <card>
+        <name>Wind Burst</name>
+        <description>[INSERT DESCRIPTION HERE]</description>
+        <elementTokens>
+            <wind>1</wind>
+        </elementTokens>
+        <action>
+            <element>wind</element>
+            <damage>5</damage>
+        </action>
+    </card>
+    <card>
+        <name>Firewall</name>
+        <description>Ain't no bugs or... magic getting through here!</description>
+        <elementTokens>
+            <fire>1</fire>
+        </elementTokens>
+        <effect>
+            <cost>
+                <fire>1</fire>
+            </cost>
+            <element>fire</element>
+            <damageModifiers>
+                <fire>0</fire>
+                <water>1</water>
+                <physical>1</physical>
+                <default>.8</default>
+            </damageModifiers>
+        </effect>
+    </card>
+    <card>
+        <name>Earth Wall</name>
+        <description>We're practicing trench warfare today!</description>
+        <elementTokens>
+            <earth>1</earth>
+        </elementTokens>
+        <effect>
+            <cost>
+                <earth>1</earth>
+            </cost>
+            <element>earth</element>
+            <damageModifiers>
+                <earth>0</earth>
+                <energy>1</energy>
+                <physical>0</physical>
+                <default>.8</default>
+            </damageModifiers>
+        </effect>
+    </card>
+    <card>
+        <name>Personal Bubble</name>
+        <description>Not touching!</description>
+        <elementTokens>
+            <water>1</water>
+        </elementTokens>
+        <effect>
+            <cost>
+                <water>1</water>
+            </cost>
+            <element>water</element>
+            <damageModifiers>
+                <water>0</water>
+                <energy>0</energy>
+                <physical>1</physical>
+                <default>.8</default>
+            </damageModifiers>
+        </effect>
+    </card>
+    <card>
+        <name>Defending Gale</name>
+        <description>Sweep the magic away!</description>
+        <elementTokens>
+            <wind>1</wind>
+        </elementTokens>
+        <effect>
+            <cost>
+                <wind>1</wind>
+            </cost>
+            <element>wind</element>
+            <damageModifiers>
+                <wind>0</wind>
+                <earth>1</earth>
+                <default>.8</default>
+            </damageModifiers>
+        </effect>
+    </card>
+</cards>
