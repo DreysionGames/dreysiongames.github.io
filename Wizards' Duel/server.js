@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
     });
     socket.on('leaveGame', () => {
         console.log(`${findPlayer(socket.id, everyone).name} left the game.`);
-        findPlayer(socket.id, everyone).ready=0;
+        findPlayer(socket.id, everyone).reset();
         remPlayer(socket.id,players,false);
         addPlayer(socket.id,spectators,false);
     });
@@ -126,7 +126,7 @@ function startGame(){
     console.log(`Spectators: ${spectators.map(s => s.name)}`);
 
     if(autoready) clearInterval(autoready);
-    autoReady = setInterval(function(){
+    autoready = setInterval(function(){
         for(i=0;i<players.length;i++){
             if(players[i].autoReady > 0){
                 players[i].autoReady--;
@@ -151,15 +151,7 @@ function newGame(){
     clearInterval(autoReady);
     gameState=states.JOINING;
     for(i=0;i<players.length;i++){
-        players[i].ready=0;
-        players[i].health=25;
-        players[i].energy = new Energy(0, 0, 0, 0);
-        players[i].skills = [];
-        players[i].active = [];
-        players[i].actions = [];
-        players[i].reactions = [];
-        players[i].artifacts = [];
-        players[i].targets = [];
+        players[i].reset();
     }
     for(i=0;i<spectators.length;i++){
         spectators[i].ready=0;
@@ -346,6 +338,21 @@ class Player {
         this.skills = [];
         this.active = [];
         this.actions = [];
+        this.reactions = [];
+        this.artifacts = [];
+        this.targets = [];
+    }
+
+    reset() {
+        this.queued = false;
+        this.ready = 0;
+        this.autoReady = 0;
+        this.selecting = [];
+
+        this.health = 25;
+        this.energy = new Energy(0, 0, 0, 0);
+        this.skills = [];
+        this.active = [];
         this.reactions = [];
         this.artifacts = [];
         this.targets = [];

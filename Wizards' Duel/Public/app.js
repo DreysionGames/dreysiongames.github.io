@@ -40,6 +40,7 @@ document.getElementById("Leave").addEventListener('click', () => {
     socket.emit('leaveGame');
     document.getElementById("Start").style.display="inline-block";
     document.getElementById("Leave").style.display="none";
+    Reset();
 });
 
 
