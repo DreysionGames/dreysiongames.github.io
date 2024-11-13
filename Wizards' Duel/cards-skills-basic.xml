@@ -2,6 +2,7 @@
     <card>
         <name>Fireball</name>
         <description>The most basic of basic magics. What do you want? It's a fireball.</description>
+	<count>5</count>
         <elementTokens>
             <fire>1</fire>
         </elementTokens>
@@ -13,6 +14,7 @@
     <card>
         <name>Rock</name>
         <description>Rock</description>
+	<count>5</count>
         <elementTokens>
             <earth>1</earth>
         </elementTokens>
@@ -24,6 +26,7 @@
     <card>
         <name>Water Ball</name>
         <description>Prepare to get splashed in the face!</description>
+	<count>5</count>
         <elementTokens>
             <water>1</water>
         </elementTokens>
@@ -35,6 +38,7 @@
     <card>
         <name>Wind Burst</name>
         <description>[INSERT DESCRIPTION HERE]</description>
+	<count>5</count>
         <elementTokens>
             <wind>1</wind>
         </elementTokens>
@@ -46,6 +50,7 @@
     <card>
         <name>Firewall</name>
         <description>Ain't no bugs or... magic getting through here!</description>
+	<count>2</count>
         <elementTokens>
             <fire>1</fire>
         </elementTokens>
@@ -65,6 +70,7 @@
     <card>
         <name>Earth Wall</name>
         <description>We're practicing trench warfare today!</description>
+	<count>2</count>
         <elementTokens>
             <earth>1</earth>
         </elementTokens>
@@ -84,6 +90,7 @@
     <card>
         <name>Personal Bubble</name>
         <description>Not touching!</description>
+	<count>2</count>
         <elementTokens>
             <water>1</water>
         </elementTokens>
@@ -103,6 +110,7 @@
     <card>
         <name>Defending Gale</name>
         <description>Sweep the magic away!</description>
+	<count>2</count>
         <elementTokens>
             <wind>1</wind>
         </elementTokens>

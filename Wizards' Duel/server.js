@@ -1,4 +1,6 @@
+const fs = require('fs');
 const path = require('path');
+const xml2js = require('xml2js');
 const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
@@ -8,6 +10,7 @@ let io = socketIO(server);
 
 const publicPath    = path.join(__dirname, '/public');
 const port = process.env.PORT || 3000;
+const parser = xml2js.Parser({explicitArray:false});
 
 app.use(express.static(publicPath));
 
@@ -28,6 +31,13 @@ var everyone = [];
 var players = [];
 var spectators = [];
 var currentPlayer=0;
+
+var playAdvanced = false;
+var cardsBasic = [];
+var cardsAdvanced = [];
+var deck = [];
+
+
 
 server.listen(port, "192.168.1.65", () => {
     console.log(`Listening on port ${port}`);
@@ -116,11 +126,15 @@ io.on('connection', (socket) => {
 });
 
 function loadStuff(){
-    
+    XMLDict("cards-skills-basic.xml", cardsBasic);
+    if(playAdvanced) XMLDict("cards-skills-advanced.xml", cardsAdvanced);
+    //console.log(cardsBasic);
 }
+loadStuff();
 
 function startGame(){
     console.log("A game has started");
+    console.log(cardsBasic);
     players = everyone.filter(p => p.queued);
     spectators = everyone.filter(s => !s.queued);
     console.log(`Players: ${players.map(p => p.name)}`);
@@ -151,7 +165,7 @@ function newGame(){
     console.log("------------");
     console.log("Game reset");
     console.log("------------");
-    clearInterval(autoReady);
+    clearInterval(autoready);
     gameState=states.JOINING;
     for(i=0;i<players.length;i++){
         players[i].reset();
@@ -217,9 +231,9 @@ function Next(val){
                         type: "skill",
                         draw: 5,
                         pick: 2,
-                        list: player.selecting
+                        cards: player.selecting
                     });
-                    player.autoReady = 20;
+                    player.autoReady = 200;
                 });
                 break;
             case 1: //Everyone draws 3 cards, then picks 1 and discards 2
@@ -233,7 +247,7 @@ function Next(val){
                         type: "artifact",
                         draw: 3,
                         pick: 1,
-                        list: player.selecting
+                        cards: player.selecting
                     });
                     player.autoReady = 10;
                 });
@@ -392,6 +406,23 @@ class Energy {
         this.add = function (Energy2) {
             return new Energy(this.fire + Energy2.fire, this.water + Energy2.water, this.earth + Energy2.earth, this.air + Energy2.air);
         };
+        this.element = function () {
+            if(this.air && this.earth && this.fire && this.water) return "ultimate";
+            else if (this.air && this.earth && this.fire) return "metal";
+            else if (this.air && this.earth && this.water) return "crystal";
+            else if (this.air && this.fire && this.water) return "miasma";
+            else if (this.earth && this.fire && this.water) return "slime";
+            else if (this.air && this.earth) return "sand";
+            else if (this.air && this.fire) return "lightning";
+            else if (this.air && this.water) return "ice";
+            else if (this.earth && this.fire) return "lava";
+            else if (this.earth && this.water) return "plant";
+            else if (this.fire && this.water) return "poison";
+            else if (this.air) return "air";
+            else if (this.earth) return "earth";
+            else if (this.fire) return "fire";
+            else if (this.water) return "water";
+        }
     }
 }
 
@@ -478,3 +509,35 @@ const tokenPool = [
 const enemyPool = [
 
 ];
+
+function parseXMLFileToDictionary(xmlFilePath) {
+    return new Promise((resolve, reject) => {
+        // Read the XML file
+        fs.readFile(xmlFilePath, 'utf-8', (err, xmlData) => {
+            if (err) {
+                return reject('Error reading XML file:', err);
+            }
+
+            // Parse XML to a JavaScript object (dictionary)
+            parser.parseString(xmlData, (err, result) => {
+                if (err) {
+                    return reject('Error parsing XML:', err);
+                }
+                // Result is now a JavaScript object representing the XML
+                resolve(result);
+            });
+        });
+    });
+}
+
+function XMLDict(path, dict) {
+    parseXMLFileToDictionary(path)
+    .then(dictionary => {
+        for(i=0;i<dictionary.cards.card.length;i++){
+            dict[i] = dictionary.cards.card[i];
+        }
+    })
+    .catch(error => {
+        console.error(error);
+    });
+}

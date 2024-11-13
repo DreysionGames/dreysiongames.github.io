@@ -17,6 +17,7 @@ socket.on('disconnect', () => {
 
 var profiles = [];
 var pName;
+var cardsVis = [];
 var selected = [];
 var picking=0;
 var rolling=[];
@@ -91,6 +92,7 @@ socket.on('reset', () => {
 
 socket.on('pickCards', (data) => {
     console.log(`drawing ${data.draw} cards from the ${data.type} pile, pick ${data.pick}`);
+    console.log(data.cards);
     picking = data.pick;
     popup(
         "Pick Cards",
@@ -193,16 +195,42 @@ function popup(title,description,type,draw,pick){
 
     if(type!="token"){
         for(i=0;i<draw;i++){
-            c=document.createElement("img");
-            cc=document.createAttribute("class");
-            cc.value="card";
+            let c=document.createElement("img");
+            c.classList.add("card","back");
+            c.id = i;
             cs=document.createAttribute("src");
             cs.value="Images/back1.png"; //Change image based on card type when other images are available
-            c.setAttributeNode(cc);
             c.setAttributeNode(cs);
             v.appendChild(c);
             let cIndex = i;
             c.addEventListener('click',function() {selectCard(cIndex)});
+            time = 0
+            
+
+            function animate() {
+                time++;
+                mod = 0;
+                if(c.classList.contains("selected")) mod = 6;
+
+                if(c.classList.contains("back") && time>=100*c.id) {
+                    w = c.getBoundingClientRect().width;
+                    c.style.width = w-5-mod + "px";
+                    if(w-10 <= 0) {
+                        c.classList.remove("back");
+                        c.classList.add("front");
+                        c.src = "Images/earth.png";
+                    }
+                }else if(c.classList.contains("front")) {
+                    w = c.getBoundingClientRect().width;
+                    c.style.width = w+5-mod + "px";
+                    if(w+10 >= 250) {
+                        c.classList.remove("front");
+                        return;
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
         }
     }
 
@@ -294,6 +322,29 @@ function Reset(){
         });
     }
     layoutReset();
+}
+
+function animCard(card){
+    console.log(card.classList);
+    if(card.getBoundingClientRect().width > 0) {
+        card.classList.add("back");
+    }else if(card.classList.contains("back")) {
+        w = card.getBoundingClientRect().width;
+        card.style.width = w-10 + "px";
+        if(w-10 <= 0) {
+            card.classList.remove("back");
+            card.classList.add("front");
+            card.innerHTML = "hi";
+        }
+    }else if(card.classList.contains("front")) {
+        w = card.getBoundingClientRect().width;
+        card.style.width = w+10 + "px";
+        if(w+10 >= 250) {
+            card.classList.remove("front");
+            return;
+        }
+    }
+    window.requestAnimationFrame(animCard(card));
 }
 
 function removeElementWithListeners(element){
