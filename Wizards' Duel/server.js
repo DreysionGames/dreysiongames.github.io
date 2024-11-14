@@ -33,9 +33,16 @@ var spectators = [];
 var currentPlayer=0;
 
 var playAdvanced = false;
-var cardsBasic = [];
-var cardsAdvanced = [];
-var deck = [];
+var spellsBasic = [];
+var spellsAdvanced = [];
+var deckSpells = [];
+var deckArtifacts = [];
+var deckMonsters = [];
+var deckEvents = [];
+var shuffledSpells = [];
+var shuffledArtifacts = [];
+var shuffledMonsters = [];
+var shuffledEvents = [];
 
 
 
@@ -126,15 +133,14 @@ io.on('connection', (socket) => {
 });
 
 function loadStuff(){
-    XMLDict("cards-skills-basic.xml", cardsBasic);
-    if(playAdvanced) XMLDict("cards-skills-advanced.xml", cardsAdvanced);
-    //console.log(cardsBasic);
+    XMLDict("cards-skills-basic.xml", spellsBasic);
+    if(playAdvanced) XMLDict("cards-skills-advanced.xml", spellsAdvanced);
 }
 loadStuff();
 
 function startGame(){
     console.log("A game has started");
-    console.log(cardsBasic);
+    //console.log(cardsBasic);
     players = everyone.filter(p => p.queued);
     spectators = everyone.filter(s => !s.queued);
     console.log(`Players: ${players.map(p => p.name)}`);
@@ -154,6 +160,14 @@ function startGame(){
 
     next=0;
     gameState=states.STARTING;
+
+    deckSpells = [...spellsBasic, ...spellsAdvanced];
+    shuffledSpells = Shuffle(deckSpells);
+    shuffledArtifacts = Shuffle(deckArtifacts);
+    shuffledMonsters = Shuffle(deckMonsters);
+    shuffledEvents = Shuffle(deckEvents);
+    console.log(shuffledSpells);
+
     io.emit('profiles', {
         players: players
     });
@@ -349,6 +363,7 @@ class Player {
         this.ready = 0;
         this.autoReady = 0;
         this.selecting = [];
+        this.tokenRoll = [];
 
         this.health = 25;
         this.energy = new Energy(0, 0, 0, 0);
@@ -365,6 +380,7 @@ class Player {
         this.ready = 0;
         this.autoReady = 0;
         this.selecting = [];
+        this.tokenRoll = [];
 
         this.health = 25;
         this.energy = new Energy(0, 0, 0, 0);
@@ -394,34 +410,68 @@ class Card {
 }
 
 class Energy {
-    constructor(fire, water, earth, air) {
+    constructor(fire, water, earth, air, any = 0) {
         this.fire = fire;
         this.water = water;
         this.earth = earth;
         this.air = air;
+        this.any = any;
 
-        this.subtract = function (Energy2) {
-            return new Energy(this.fire - Energy2.fire, this.water - Energy2.water, this.earth - Energy2.earth, this.air - Energy2.air);
+        this.subtract = function (Energy2, lockAny = false, player = players[currentPlayer]) {
+            var en = new Energy(
+                Math.min(this.fire - Energy2.fire,0), 
+                Math.min(this.water - Energy2.water,0), 
+                Math.min(this.earth - Energy2.earth,0), 
+                Math.min(this.air - Energy2.air,0), 
+                Math.min(this.any - Energy2.any,0)
+            );
+            if(!lockAny) {
+                for(i=0;i<en.any;i++){
+                    player.tokenRoll[player.tokenRoll.length] = ["air","fire","earth","water"][Math.floor(Math.random()*4)]
+                    en[player.tokenRoll[player.tokenRoll.length-1]]++
+                    en.any--;
+                }
+            }
+            return en;
         };
-        this.add = function (Energy2) {
-            return new Energy(this.fire + Energy2.fire, this.water + Energy2.water, this.earth + Energy2.earth, this.air + Energy2.air);
+        this.add = function (Energy2, lockAny = false, player = players[currentPlayer]) {
+            var en = new Energy(
+                Math.min(this.fire + Energy2.fire,0), 
+                Math.min(this.water + Energy2.water,0), 
+                Math.min(this.earth + Energy2.earth,0), 
+                Math.min(this.air + Energy2.air,0),
+                Math.min(this.any + Energy2.any,0)
+            );
+            if(!lockAny) {
+                for(i=0;i<en.any;i++){
+                    player.tokenRoll[player.tokenRoll.length] = ["air","fire","earth","water"][Math.floor(Math.random()*4)]
+                    en[player.tokenRoll[player.tokenRoll.length-1]]++
+                    en.any--;
+                }
+            }
+            return en;
         };
         this.element = function () {
-            if(this.air && this.earth && this.fire && this.water) return "ultimate";
-            else if (this.air && this.earth && this.fire) return "metal";
-            else if (this.air && this.earth && this.water) return "crystal";
-            else if (this.air && this.fire && this.water) return "miasma";
-            else if (this.earth && this.fire && this.water) return "slime";
-            else if (this.air && this.earth) return "sand";
-            else if (this.air && this.fire) return "lightning";
-            else if (this.air && this.water) return "ice";
-            else if (this.earth && this.fire) return "lava";
-            else if (this.earth && this.water) return "plant";
-            else if (this.fire && this.water) return "poison";
-            else if (this.air) return "air";
-            else if (this.earth) return "earth";
-            else if (this.fire) return "fire";
-            else if (this.water) return "water";
+            const elements = {
+                1: "air",
+                2: "earth",
+                4: "fire",
+                8: "water",
+                3: "sand", //air, earth
+                5: "lightning", //air, fire
+                6: "lava",  //fire, earth
+                9: "ice", //air, ice
+                10: "plant", //earth, water
+                12: "poison", //fire, water
+                7: "metal", //air, earth, fire
+                11: "crystal", //air, earth, water
+                13: "miasma", //air, fire, water
+                14: "slime", //earth, fire, water
+                15: "ultimate" //air, earth, fire, water
+            };
+
+            const score = (this.air ? 1 : 0) | (this.earth ? 2 : 0) | (this.fire ? 4 : 0) | (this.water ? 8 : 0);
+            return elements[score] || "none";
         }
     }
 }
@@ -438,6 +488,20 @@ function drawEnergy(num){
         options[Math.floor(Math.random()*4)]++;
     }
     return draw;
+}
+
+function Shuffle(deck) {
+    var working = [];
+    deck.forEach(card => {
+        for(i=0; i<card.count; i++){
+            working.push(card.name);
+        }
+    });
+    for(i=working.length-1;i>0;i--){
+        j = Math.floor(Math.random() * (i + 1));
+        [working[i],working[j]] = [working[j],working[i]];
+    }
+    return working;
 }
 
 function findPlayer(id, list){
