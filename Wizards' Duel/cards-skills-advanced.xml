@@ -28,7 +28,7 @@
         <description>It's a thing, look it up!</description>
         <elementTokens>
             <fire>1</fire>
-            <wind>1</wind>
+            <air>1</air>
         </elementTokens>
         <action>
             <element>lightning</element>
@@ -52,7 +52,7 @@
         <description>Better hope your eyes are closed when this hits!</description>
         <elementTokens>
             <earth>1</earth>
-            <wind>1</wind>
+            <air>1</air>
         </elementTokens>
         <action>
             <element>sand</element>
@@ -64,7 +64,7 @@
         <description>Look, it's not a ball this time!</description>
         <elementTokens>
             <water>1</water>
-            <wind>1</wind>
+            <air>1</air>
         </elementTokens>
         <action>
             <element>ice</element>

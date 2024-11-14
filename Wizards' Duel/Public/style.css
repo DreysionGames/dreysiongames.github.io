@@ -22,6 +22,7 @@ body div div {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    background-color: #FFFFFF;
 }
 
 #visual {
@@ -52,9 +53,29 @@ body div div {
     display: inline-block;
 }
 
+.card-container {
+    position: relative;
+}
+
 .card {
     height:350px;
     margin: 10px;
+}
+
+.card-title {
+    position: absolute;
+    top:30px;
+    width:100%;
+    text-align: center;
+    font-weight: bold;
+}
+
+.card-description {
+    position: absolute;
+    top: 200px;
+    left: 15%;
+    width:70%;
+    height: 135px;
 }
 
 .selected {

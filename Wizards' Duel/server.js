@@ -233,22 +233,25 @@ function Next(val){
     if(gameState==states.STARTING){
         switch(next){
             case 0: //Everyone draws 5 cards, then picks 2 and discards 3
-                players.forEach(function(player) {
-                    player.selecting = [
-                        skillPool[Math.floor(Math.random()*skillPool.length)].name,
-                        skillPool[Math.floor(Math.random()*skillPool.length)].name,
-                        skillPool[Math.floor(Math.random()*skillPool.length)].name,
-                        skillPool[Math.floor(Math.random()*skillPool.length)].name,
-                        skillPool[Math.floor(Math.random()*skillPool.length)].name
-                    ];
-                    connectedSockets[player.id].emit('pickCards', {
-                        type: "skill",
-                        draw: 5,
-                        pick: 2,
-                        cards: player.selecting
+                let dict = {};
+                for(i=0;i<5;i++) {
+                    players.forEach(function(player) {
+                        var spellName = shuffledSpells.pop();
+                        dict[spellName] = deckSpells.find(card => card.name == spellName);
+                        player.selecting[player.selecting.length] = spellName;
+                        if(i==4) {
+                            console.log("Player "+player.name+": "+player.selecting);
+                            connectedSockets[player.id].emit('pickCards', {
+                                type: "skill",
+                                draw: 5,
+                                pick: 2,
+                                cards: player.selecting
+                            });
+                            player.autoReady = 200;
+                        }
                     });
-                    player.autoReady = 200;
-                });
+                }
+                io.emit("updateSpells",{dictItems: dict});
                 break;
             case 1: //Everyone draws 3 cards, then picks 1 and discards 2
                 players.forEach(function(player) {

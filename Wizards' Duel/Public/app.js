@@ -23,6 +23,8 @@ var picking=0;
 var rolling=[];
 var sType;
 
+var SpellDict = {};
+
 document.getElementById("rename").addEventListener('click', () => {
     pName = document.getElementById("newname").value;
     socket.emit('rename', {
@@ -94,6 +96,7 @@ socket.on('pickCards', (data) => {
     console.log(`drawing ${data.draw} cards from the ${data.type} pile, pick ${data.pick}`);
     console.log(data.cards);
     picking = data.pick;
+    cardsVis = data.cards;
     popup(
         "Pick Cards",
         "You draw " + data.draw + " cards, pick " + data.pick + " to keep:",
@@ -169,6 +172,12 @@ socket.on('continueOption', (data) => {
     console.log(`Your ${data.skill} is activated and consuming energy. Do you want to keep it going?`);
 });
 
+socket.on('updateSpells', (data => {
+    for(const key in data.dictItems) {
+        SpellDict[key] = data.dictItems[key];
+    }
+}));
+
 function popup(title,description,type,draw,pick){
     p=document.getElementById("popup");
     t=document.getElementById("title");
@@ -195,36 +204,60 @@ function popup(title,description,type,draw,pick){
 
     if(type!="token"){
         for(i=0;i<draw;i++){
-            let c=document.createElement("img");
-            c.classList.add("card","back");
-            c.id = i;
-            cs=document.createAttribute("src");
-            cs.value="Images/back1.png"; //Change image based on card type when other images are available
-            c.setAttributeNode(cs);
+            //card
+            let c=document.createElement("div");
+            c.dataset.spellName = cardsVis[i];
+            c.className = "card-container";
+            //background
+            let bg = document.createElement("img");
+            bg.classList.add("card","back");
+            bg.id = i;
+            bgs=document.createAttribute("src");
+            bgs.value="Images/back1.png";
+            bg.setAttributeNode(bgs);
+            c.appendChild(bg);
+            //title
+            let ct = document.createElement("div");
+            ct.className = "card-title";
+            c.appendChild(ct);
+            //description
+            let cd = document.createElement("div");
+            cd.className = "card-description";
+            c.appendChild(cd);
+
             v.appendChild(c);
             let cIndex = i;
             c.addEventListener('click',function() {selectCard(cIndex)});
-            time = 0
+            let time = 0;
             
 
             function animate() {
                 time++;
                 mod = 0;
-                if(c.classList.contains("selected")) mod = 6;
+                if(bg.classList.contains("selected")) mod = 6;
 
-                if(c.classList.contains("back") && time>=100*c.id) {
-                    w = c.getBoundingClientRect().width;
-                    c.style.width = w-5-mod + "px";
+                if(bg.classList.contains("back") && time>=100*c.id) {
+                    w = bg.getBoundingClientRect().width;
+                    bg.style.width = w-5-mod + "px";
                     if(w-10 <= 0) {
-                        c.classList.remove("back");
-                        c.classList.add("front");
-                        c.src = "Images/earth.png";
+                        bg.classList.remove("back");
+                        bg.classList.add("front");
+                        ct.innerHTML = c.dataset.spellName;
+                        cd.innerHTML = SpellDict[c.dataset.spellName].description;
+                        var dictentry = SpellDict[c.dataset.spellName].elementTokens;
+                        var el = getElement(
+                            dictentry.air?dictentry.air:0,
+                            dictentry.earth?dictentry.earth:0,
+                            dictentry.fire?dictentry.fire:0,
+                            dictentry.water?dictentry.water:0
+                        );
+                        bg.src = "Images/"+el+".png";
                     }
-                }else if(c.classList.contains("front")) {
-                    w = c.getBoundingClientRect().width;
-                    c.style.width = w+5-mod + "px";
+                }else if(bg.classList.contains("front")) {
+                    w = bg.getBoundingClientRect().width;
+                    bg.style.width = w+5-mod + "px";
                     if(w+10 >= 250) {
-                        c.classList.remove("front");
+                        bg.classList.remove("front");
                         return;
                     }
                 }
@@ -345,6 +378,29 @@ function animCard(card){
         }
     }
     window.requestAnimationFrame(animCard(card));
+}
+
+function getElement(air, earth, fire, water){
+    const elements = {
+        1: "air",
+        2: "earth",
+        4: "fire",
+        8: "water",
+        3: "sand", //air, earth
+        5: "lightning", //air, fire
+        6: "lava",  //fire, earth
+        9: "ice", //air, ice
+        10: "plant", //earth, water
+        12: "poison", //fire, water
+        7: "metal", //air, earth, fire
+        11: "crystal", //air, earth, water
+        13: "miasma", //air, fire, water
+        14: "slime", //earth, fire, water
+        15: "ultimate" //air, earth, fire, water
+    };
+
+    const score = (air ? 1 : 0) | (earth ? 2 : 0) | (fire ? 4 : 0) | (water ? 8 : 0);
+    return elements[score] || "none";
 }
 
 function removeElementWithListeners(element){
