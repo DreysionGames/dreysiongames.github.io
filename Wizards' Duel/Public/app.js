@@ -236,7 +236,7 @@ function popup(title,description,type,draw,pick){
                 mod = 0;
                 if(bg.classList.contains("selected")) mod = 6;
 
-                if(bg.classList.contains("back") && time>=100*c.id) {
+                if(bg.classList.contains("back") && time>=10*(bg.id+1)) {
                     w = bg.getBoundingClientRect().width;
                     bg.style.width = w-5-mod + "px";
                     if(w-10 <= 0) {

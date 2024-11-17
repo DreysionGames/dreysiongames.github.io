@@ -1,13 +1,13 @@
 <cards>
     <card>
-        <name>Fireball</name>
-        <description>The most basic of basic magics. What do you want? It's a fireball.</description>
+        <name>Wind Burst</name>
+        <description>[INSERT DESCRIPTION HERE]</description>
 	    <count>5</count>
         <elementTokens>
-            <fire>1</fire>
+            <air>1</air>
         </elementTokens>
         <action>
-            <element>fire</element>
+            <element>air</element>
             <damage>5</damage>
         </action>
     </card>
@@ -24,6 +24,18 @@
         </action>
     </card>
     <card>
+        <name>Fireball</name>
+        <description>The most basic of basic magics. What do you want? It's a fireball.</description>
+	    <count>5</count>
+        <elementTokens>
+            <fire>1</fire>
+        </elementTokens>
+        <action>
+            <element>fire</element>
+            <damage>5</damage>
+        </action>
+    </card>
+    <card>
         <name>Water Ball</name>
         <description>Prepare to get splashed in the face!</description>
 	    <count>5</count>
@@ -36,35 +48,34 @@
         </action>
     </card>
     <card>
-        <name>Wind Burst</name>
-        <description>[INSERT DESCRIPTION HERE]</description>
-	    <count>5</count>
+        <name>Heart Strike</name>
+        <description>If magic fails, your life force will pay the price</description>
+	    <count>2</count>
         <elementTokens>
-            <air>1</air>
+            <health>2</health>
         </elementTokens>
         <action>
-            <element>air</element>
+            <element>none</element>
             <damage>5</damage>
         </action>
     </card>
     <card>
-        <name>Firewall</name>
-        <description>Ain't no bugs or... magic getting through here!</description>
+        <name>Defending Gale</name>
+        <description>Sweep the magic away!</description>
 	    <count>2</count>
         <elementTokens>
-            <fire>1</fire>
+            <air>1</air>
         </elementTokens>
         <effect>
             <cost>
-                <fire>1</fire>
+                <air>1</air>
             </cost>
-            <element>fire</element>
-            <damageModifiers>
-                <fire>0</fire>
-                <water>1</water>
-                <physical>1</physical>
+            <element>air</element>
+            <incomingDamageMultipliers>
+                <air>0</air>
+                <earth>1</earth>
                 <default>.8</default>
-            </damageModifiers>
+            </incomingDamageMultipliers>
         </effect>
     </card>
     <card>
@@ -79,12 +90,32 @@
                 <earth>1</earth>
             </cost>
             <element>earth</element>
-            <damageModifiers>
+            <incomingDamageMultipliers>
                 <earth>0</earth>
                 <energy>1</energy>
                 <physical>0</physical>
                 <default>.8</default>
-            </damageModifiers>
+            </incomingDamageMultipliers>
+        </effect>
+    </card>
+    <card>
+        <name>Firewall</name>
+        <description>Ain't no bugs or... magic getting through here!</description>
+	    <count>2</count>
+        <elementTokens>
+            <fire>1</fire>
+        </elementTokens>
+        <effect>
+            <cost>
+                <fire>1</fire>
+            </cost>
+            <element>fire</element>
+            <incomingDamageMultipliers>
+                <fire>0</fire>
+                <water>1</water>
+                <physical>1</physical>
+                <default>.8</default>
+            </incomingDamageMultipliers>
         </effect>
     </card>
     <card>
@@ -99,17 +130,17 @@
                 <water>1</water>
             </cost>
             <element>water</element>
-            <damageModifiers>
+            <incomingDamageMultipliers>
                 <water>0</water>
                 <energy>0</energy>
                 <physical>1</physical>
                 <default>.8</default>
-            </damageModifiers>
+            </incomingDamageMultipliers>
         </effect>
     </card>
     <card>
-        <name>Defending Gale</name>
-        <description>Sweep the magic away!</description>
+        <name>Zephyr</name>
+        <description>You've got the wind at your back</description>
 	    <count>2</count>
         <elementTokens>
             <air>1</air>
@@ -119,11 +150,89 @@
                 <air>1</air>
             </cost>
             <element>air</element>
-            <damageModifiers>
-                <air>0</air>
+            <elementModifiers>
+                <air>
+                    <damage>+1</damage>
+                    <effect>Accuracy D6-2</effect> <!--If accuracy was 100%, now roll D6 and get anything 4 or under. If it was 5 or under, now it's 3.-->
+                </air>
+            </elementModifiers>
+        </effect>
+    </card>
+    <card>
+        <name>Mud Coat</name>
+        <description>Might not be pretty, but there's a reason! I promise!</description>
+	    <count>2</count>
+        <elementTokens>
+            <earth>1</earth>
+        </elementTokens>
+        <effect>
+            <cost>
                 <earth>1</earth>
-                <default>.8</default>
-            </damageModifiers>
+            </cost>
+            <element>earth</element>
+            <elementModifiers>
+                <earth>
+                    <damage>+1</damage>
+                    <effect>damage -1</effect>
+                </earth>
+            </elementModifiers>
+        </effect>
+    </card>
+    <card>
+        <name>Blaze</name>
+        <description>Time to get fired up!</description>
+	    <count>2</count>
+        <elementTokens>
+            <fire>1</fire>
+        </elementTokens>
+        <effect>
+            <cost>
+                <fire>1</fire>
+            </cost>
+            <element>fire</element>
+            <elementModifiers>
+                <fire>
+                    <damage>+1</damage>
+                    <effect>burn</effect>
+                </fire>
+            </elementModifiers>
+        </effect>
+    </card>
+    <card>
+        <name>Mist</name>
+        <description>Feeling fresh!</description>
+	    <count>2</count>
+        <elementTokens>
+            <water>1</water>
+        </elementTokens>
+        <effect>
+            <cost>
+                <water>1</water>
+            </cost>
+            <element>water</element>
+            <elementModifiers>
+                <water>
+                    <damage>+1</damage>
+                    <effect>Cost +any</effect>
+                </water>
+            </elementModifiers>
+        </effect>
+    </card>
+    <card>
+        <name>Magic+</name>
+        <description>A boost for any magic spell</description>
+	    <count>3</count>
+        <elementTokens>
+            <any>1</any>
+        </elementTokens>
+        <effect>
+            <cost>
+                <any>1</any>
+            </cost>
+            <element>none</element>
+            <actionModifiers>
+                <damage>+1</damage>
+            </actionModifiers>
         </effect>
     </card>
 </cards>
