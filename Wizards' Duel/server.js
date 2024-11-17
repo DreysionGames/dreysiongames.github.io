@@ -166,7 +166,7 @@ function startGame(){
     shuffledArtifacts = Shuffle(deckArtifacts);
     shuffledMonsters = Shuffle(deckMonsters);
     shuffledEvents = Shuffle(deckEvents);
-    console.log(shuffledSpells);
+    //console.log(shuffledSpells);
 
     io.emit('profiles', {
         players: players
@@ -216,9 +216,16 @@ function Ready(){
         readyList: ready
     });
     for(i=0;i<ready.length;i++){
-        if(ready[i]==0 || ready[i]==undefined){return false;}
+        if(ready[i]==0 || ready[i]==undefined){
+            console.log("Waiting on someone still...");
+            return false;
+        }
     }
-    if(ready.length==0) return false;
+    if(ready.length==0) {
+        console.log("No one is here!");
+        return false;
+    }
+    console.log("Everyone is ready!");
     return true;
 }
 
@@ -242,7 +249,7 @@ function Next(val){
                         if(i==4) {
                             console.log("Player "+player.name+": "+player.selecting);
                             connectedSockets[player.id].emit('pickCards', {
-                                type: "skill",
+                                type: "spell",
                                 draw: 5,
                                 pick: 2,
                                 cards: player.selecting
@@ -379,7 +386,6 @@ class Player {
     }
 
     reset() {
-        this.queued = false;
         this.ready = 0;
         this.autoReady = 0;
         this.selecting = [];

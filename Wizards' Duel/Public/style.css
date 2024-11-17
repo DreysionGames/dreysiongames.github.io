@@ -55,6 +55,7 @@ body div div {
 
 .card-container {
     position: relative;
+    border: 3px solid #FFFFFF;
 }
 
 .card {

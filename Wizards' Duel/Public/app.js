@@ -234,24 +234,28 @@ function popup(title,description,type,draw,pick){
             function animate() {
                 time++;
                 mod = 0;
-                if(bg.classList.contains("selected")) mod = 6;
+                //if(bg.classList.contains("selected")) mod = 6;
 
-                if(bg.classList.contains("back") && time>=10*(bg.id+1)) {
+                if(bg.classList.contains("back") && time>=6*(bg.id+1)) {
                     w = bg.getBoundingClientRect().width;
                     bg.style.width = w-5-mod + "px";
                     if(w-10 <= 0) {
                         bg.classList.remove("back");
                         bg.classList.add("front");
-                        ct.innerHTML = c.dataset.spellName;
-                        cd.innerHTML = SpellDict[c.dataset.spellName].description;
-                        var dictentry = SpellDict[c.dataset.spellName].elementTokens;
-                        var el = getElement(
-                            dictentry.air?dictentry.air:0,
-                            dictentry.earth?dictentry.earth:0,
-                            dictentry.fire?dictentry.fire:0,
-                            dictentry.water?dictentry.water:0
-                        );
-                        bg.src = "Images/"+el+".png";
+                        if(type=="spell"){
+                            ct.innerHTML = c.dataset.spellName;
+                            cd.innerHTML = SpellDict[c.dataset.spellName].description;
+                            var dictentry = SpellDict[c.dataset.spellName].elementTokens;
+                            var el = getElement(
+                                dictentry.air?1:0,
+                                dictentry.earth?1:0,
+                                dictentry.fire?1:0,
+                                dictentry.water?1:0
+                            );
+                            bg.src = "Images/"+el+".png";
+                        } else {
+                            bg.src = "Images/default.png";
+                        }
                     }
                 }else if(bg.classList.contains("front")) {
                     w = bg.getBoundingClientRect().width;
@@ -349,6 +353,7 @@ function selectCard(card){
 
 function Reset(){
     document.getElementById("popup").style.display="none";
+    document.getElementById("profiles").innerHTML="";
     if(document.getElementById("visual").innerHTML!=""){
         [...document.getElementById("visual").children].forEach(element => {
             removeElementWithListeners(element);
