@@ -1,0 +1,113 @@
+
+# Joined server:
+
+Start a lobby
+Find a lobby to join
+
+
+# Start a lobby
+
+Options:
+- Open spectating (Y/N)
+- Open join (Y/R/I)   //player level Range, on Invite only
+- Invite player
+- Global chat (spectators too)
+- Chat filters
+- Game Rules:
+- - Starting spells to draw
+- - Starting artifacts to draw
+- - Starting energy
+- - Losses to elimination (base 1)
+- - Turns for training (base 20)
+
+Kick player from game
+Kick player from lobby
+
+
+# Find a lobby
+
+Join as a spectator
+If there is no active game, can join as player (assuming requirements to join are met)
+View other players' profiles
+Chat
+Spectator & Player emotes
+
+
+# View a profile
+
+Friend request
+Send invite if hosting
+Join request if they're in a lobby
+
+
+
+#------------------------------------------#
+#                  Game                    #
+#------------------------------------------#
+
+# Setup
+
+Draw 5 spell cards, select 2 and discard the rest
+Draw 5 random energy tokens
+
+Establish tournament tree
+
+
+# Training
+
+setup by selecting 3 action spells and 2 reaction spells and 1 artifact
+
+If no HP, don't do anything
+
+Roll die, draw event card on roll of 1
+(Two event piles? Mostly negative pile on 1, mostly positive on 6?)
+
+In fight: 
+- continue continuous spell?
+- choose active spell
+- enemy attacks
+- reaction spell
+- apply artifact and status effects when applicable
+- if no HP, turn ends. Enemy goes to another random player, and all fighting players draw negative event card
+- if enemy is defeated, each player or killing player collect reward on enemy card as directed
+- draw 1 energy
+
+Out of fight:
+- apply artifact if applicable
+- draw 1 energy
+- join an existing fight
+
+Training goes for number of turns or until all players are down
+
+
+# Tournament
+
+Two players fight at a time and watch the fights when it's not their turn. One level of the bracket at a time, then training for the next fight
+
+Setup by selecting 3 action spells and 2 reaction spells and 1 artifact
+Setup also allows using one action spell that does not affect the opponent.
+
+Coninue continuous spell?
+both players choose active spell
+both players choose reaction spell if the opponent's active spell affects them
+both players apply artifacts and status effects when applicable
+
+winner draws 3 artifact cards and selects 1, discarding the other 2
+
+
+
+#------------------------------------------#
+#                 Spells                   #
+#------------------------------------------#
+
+Instance spells are applied once. They have a cost and an effect.
+Continuous spells are initiated once with a cost, then they have an additional lighter cost to keep up each turn.
+
+Attack spells affect the opponent, especially targeting HP.
+Support spells may affect the opponent, or they may not.
+Defense spells have an effect that activates when the castor is attacked.
+- Even if they affect the opponent's HP, they don't count as an affecting attack. You can't use a reaction against a defense.
+
+A spell's cost is energy discarded to activate the card.
+A spell may have a potential requirement, energy the player needs to still have after discarding cost.
+A spell can also have output energy, which is a variable amount of energy to modify damage or other effects. This energy is also discarded

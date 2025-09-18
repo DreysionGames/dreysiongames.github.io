@@ -1,83 +1,262 @@
-const fs = require('fs');
-const path = require('path');
-const xml2js = require('xml2js');
-const http = require('http');
-const express = require('express');
-const socketIO = require('socket.io');
-let app = express();
-let server = http.createServer(app);
-let io = socketIO(server);
+const os = require("os");                      //for finding ip address
+const fs = require('fs');                      //for xml
+const path = require('path');                  //for xml
+const xml2js = require('xml2js');              //for xml
+const http = require('http');                  //for server
+const express = require('express');            //for server
+const socketIO = require('socket.io');         //for signals
+const qr = require('qrcode-terminal');
+let app = express();                           //for server
+let server = http.createServer(app);           //for server
+let io = socketIO(server);                     //for signals
+
 
 const publicPath    = path.join(__dirname, '/public');
-const port = process.env.PORT || 3000;
+const SERVER_PORT = process.env.PORT || 3000;
 const parser = xml2js.Parser({explicitArray:false});
 
 app.use(express.static(publicPath));
 
-var connectedSockets =[];
+
+// CLI Commands
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", (data) => {
+    const input = data.trim();
+    const [command, ...args] = input.split(" ");
+
+    switch (command) {
+        case "say":
+            if(args.length === 0) {
+                console.log("Usage: say <message>");
+                break;
+            }
+            const message = args.join(" ");
+            broadcastToAll(message);
+            break;
+        case "clients":
+            if (args.length == 0) {
+                const clientNames = Object.values(clients).map(c => c.id + " (" + (c.name || "(Unnamed client)")+")");
+                console.log("Current clients:",clientNames);
+                break;
+            }
+            possibleTargets = [];
+            Object.keys(clients).forEach(function(client){
+                if(client == args[0] || clients[client].name == args[0]){
+                    possibleTargets.push(client);
+                }
+            });
+            if (possibleTargets.length > 1) {
+                const targetNames = Object.values(possibleTargets).map(t => t + " (" + clients[t].name + ")");
+                console.log("Error: Multiple players with the same name",targetNames);
+                break;
+            }
+
+            if (!clients[possibleTargets[0]]) {
+                console.log(`Error finding Client ${args[0]}`);
+                break;
+            }
+            
+            console.log(`Client ${clients[possibleTargets[0]].name} (${clients[possibleTargets[0]].id})`);
+            if (clients[possibleTargets[0]].lobby == null) {
+                console.log("Lobby: none");
+            } else {
+                console.log(`Lobby: ${lobbies[clients[possibleTargets[0]].lobby].name} (${clients[possibleTargets[0]].lobby})`);
+            }
+            break;
+        case "lobbies":
+            if (args.length == 0) {
+                const lobbyNames = Object.values(lobbies).map(l => l.id + "(" +(l.name || "(Unnamed lobby)")+")");
+                console.log("Active lobbies:", lobbyNames);
+                break;
+            }
+            possibleTargets = [];
+            Object.keys(lobbies).forEach(function(lobb){
+                if(lobb == args[0] || lobbies[lobb].name == args[0]){
+                    possibleTargets.push(lobb);
+                }
+            });
+            if (possibleTargets.length > 1) {
+                const targetNames = Object.values(possibleTargets).map(t => t + " (" + lobbies[t].name + ")");
+                console.log("Error: Multiple lobbies with the same name",targetNames);
+                break;
+            }
+
+            if (!lobbies[possibleTargets[0]]) {
+                console.log(`Error finding Lobby ${args[0]}`);
+                break;
+            }
+
+            console.log(`Lobby: ${lobbies[possibleTargets[0]].name} (${lobbies[possibleTargets[0]].id})`);
+            console.log(`Host: ${clients[lobbies[possibleTargets[0]].host].name} (${lobbies[possibleTargets[0]].host})`);
+            console.log("Members:");
+            console.table(lobbies[possibleTargets[0]].lobbyMembers);
+            break;
+        case "kick":
+            possibleTargets = [];
+            Object.keys(clients).forEach(function(client){
+                if(client == args[0] || clients[client].name == args[0]){
+                    possibleTargets.push(client);
+                }
+            });
+            if(possibleTargets.length < 1) {
+                console.log("Error: Player not found");
+            }
+            else if(possibleTargets.length == 1) {
+                const message = args.slice(1).join(" ");
+                console.log("Kicking ", possibleTargets[0], "("+clients[possibleTargets[0]].name+")");
+                clients[possibleTargets[0]].socket.emit('kicked',message);
+                clients[possibleTargets[0]].socket.disconnect(true);
+                delete clients[possibleTargets[0]];
+            }
+            else if(possibleTargets.length > 1) {
+                const targetNames = Object.values(possibleTargets).map(t => t + " (" + clients[t].name + ")");
+                console.log("Error: Multiple players with the same name",targetNames);
+            }
+
+            break;
+        case "help":
+            const comm = args[0];
+            if(!comm){
+                console.log("Current commands: say, clients, lobbies, kick, help, exit");
+            } else if (comm == "say") {
+                console.log("say <message>");
+            } else if (comm == "clients") {
+                console.log("Use 'clients' with no arguments for a list of clients.");
+                console.log("clients (client id | client name) for details on a particular client.");
+            } else if (comm == "lobbies") {
+                console.log("Use 'lobbies' with no arguments for a list of lobbies.");
+                console.log("lobbies (lobby id | lobby name) for details on a particular lobby.");
+            } else if (comm == "kick") {
+                console.log("kick (client id | client name) <message>");
+            } else if (comm == "help") {
+                console.log("help (command) for more information on command usage");
+            } else if (comm == "exit") {
+                console.log("Exits the server, does not currently support any arguments.");
+            } else {
+                console.log(`${args[0]} is not a valid command, use 'help' to get a list of commands.`);
+            }
+            break;
+        case "exit":
+            console.log("Shutting down the server...");
+            process.exit(0);
+        default:
+            console.log("Unkown command, try 'help' to get a list of functions");
+    }
+});
+
+
+const clients = {};
+const lobbies = {};
 
 const states = {
-    JOINING: 0,
-    STARTING: 1,
-    TRAINING: 2,
-    COMPETING: 3
+    STARTING: 0,
+    TRAINING: 1,
+    COMPETING: 2
 }
-var gameState = states.JOINING;
-
-var next;
-var autoready;
-
-var everyone = [];
-var players = [];
-var spectators = [];
-var currentPlayer=0;
-
-var playAdvanced = false;
-var spellsBasic = [];
-var spellsAdvanced = [];
-var deckSpells = [];
-var deckArtifacts = [];
-var deckMonsters = [];
-var deckEvents = [];
-var shuffledSpells = [];
-var shuffledArtifacts = [];
-var shuffledMonsters = [];
-var shuffledEvents = [];
 
 
 
-server.listen(port, "192.168.1.65", () => {
-    console.log(`Listening on port ${port}`);
-    console.log(`Type in "http://192.168.1.65:3000" to your browser's address bar to connect`);
+function getLocalIP() {
+    const interfaces = os.networkInterfaces();
+    for (const name in interfaces) {
+        for (const iface of interfaces[name]) {
+            // Filter out internal (127.0.0.1) and non-IPv4 addresses
+            if (iface.family === 'IPv4' && !iface.internal) {
+                return iface.address;
+            }
+        }
+    }
+    return 'localhost'; // Fallback
+}
+
+server.listen(SERVER_PORT, "0.0.0.0", () => {
+    ipaddress = getLocalIP();
+
+    console.log(`Listening on port ${SERVER_PORT}`);
+    console.log(`Type in "http://${ipaddress}:${SERVER_PORT}" to your browser's address bar to connect`);
+    qr.generate(`http://${ipaddress}:${SERVER_PORT}`,{small:true});
 });
 process.on('exit', () => {
     io.emit('reset');
 });
 
+
 io.on('connection', (socket) => {
-    connectedSockets[socket.id]=socket;
-    addPlayer(socket.id,everyone,true);
-    if(gameState!=states.JOINING){
-        addPlayer(socket.id,spectators,false);
-        console.log(`${spectators[spectators.length-1].name} is spectating.`);
-    }else{
-        console.log(`${everyone[everyone.length-1].name} has just joined.`)
+    clients[socket.id] = {
+        socket: socket,
+        id: socket.id,
+        name: "Player " + Math.floor(Math.random() * 10000),
+        lobby: null
     }
+    console.log(`${clients[socket.id].name} joined the server with id ${socket.id}`);
 
     socket.on('disconnect', () => {
-        connectedSockets.splice(socket.id,1);
-        if(players){
-            remPlayer(socket.id,players,true);
-            if(players.length == 0) newGame();
+        if(clients[socket.id].lobby) {
+            lobbies[clients[socket.id].lobby].playerLeave(socket.id);
         }
-        remPlayer(socket.id,spectators,false);
-        remPlayer(socket.id,everyone,false);
-        Names();
+        console.log(`${clients[socket.id].name} disconnected`);
+        delete clients[socket.id];
     });
+
+    /* ChatGPT:
+socket.on('disconnect', () => {
+    for (const [lobbyId, lobby] of Object.entries(lobbies)) {
+      const i = lobby.players.indexOf(socket.id);
+      if (i !== -1) {
+        lobby.players.splice(i, 1);
+        io.to(lobbyId).emit('playerLeft', socket.id);
+
+        if (lobby.players.length === 0) {
+          delete lobbies[lobbyId];
+        } else if (socket.id === lobby.host) {
+          lobby.host = lobby.players[0]; // promote someone else
+          io.to(lobbyId).emit('hostChanged', lobby.host);
+        }
+      }
+    }
+  });
+    */
+
+
+    socket.on('createLobby', (data, callback) => {
+        if(clients[socket.id].lobby) {
+            lobbies[clients[socket.id].lobby].playerLeave(socket.id);
+        }
+
+        const newlobbyId = generateLobbyID(); // e.g., random 6-letter code
+        lobbies[newlobbyId] = new Lobby(newlobbyId, data.name, socket.id, data);
+        clients[socket.id].lobby = newlobbyId;
+        //lobbies[newlobbyId].lobbyMembers[socket.id] = clients[socket.id]};
+        socket.join(newlobbyId);
+        
+        callback({ success: true, lobbyID: newlobbyId });
+    });
+
+    // JOIN LOBBY
+    socket.on('joinLobby', (lobbyId, callback) => {
+        if (!lobbies[lobbyId]) return callback({ success: false, error: 'Lobby not found' });
+
+        lobbies[lobbyId].lobbyMembers[socket.id] = {name: clients[socket.id].name, joining: false, nominated: false};
+        clients[socket.id].lobby = lobbyId;
+        socket.join(lobbyId);
+        callback({ success: true });
+
+        // Notify others
+        socket.to(lobbyId).emit('playerJoined', socket.id);
+    });
+
+    socket.on('sendMessage', ({ lobbyId, message }) => {
+        socket.to(lobbyId).emit('message', { sender: socket.id, message });
+    });
+
+
+
     socket.on('rename', (data) => {
-        console.log(`${findPlayer(socket.id, everyone).name} is now named ${data.newName}.`);
-        findPlayer(socket.id, everyone).name = data.newName;
-        Names();
+        clients[socket.id].name = data.newName;
+        if(clients[socket.id].lobby) {
+            lobbies[clients[socket.id].lobby].updateNames(socket.id, data.newName);
+        }
+        console.log(`Player with id ${socket.id} is now named ${clients[socket.id].name}`);
     });
     socket.on('queue',(data) => {
         findPlayer(socket.id, everyone).queued = data.queued;
@@ -85,6 +264,9 @@ io.on('connection', (socket) => {
     });
     socket.on('layout', (data) => {
         console.log(`Screen dimensions: ${data.W}x${data.H}`)
+    });
+    socket.on('requestLobbies', () => {
+        socket.emit('lobbiesList', lobbies);
     });
     socket.on('startGame', () => {
         if(gameState != states.JOINING) return;
@@ -132,11 +314,10 @@ io.on('connection', (socket) => {
     });
 });
 
-function loadStuff(){
-    XMLDict("cards-skills-basic.xml", spellsBasic);
-    if(playAdvanced) XMLDict("cards-skills-advanced.xml", spellsAdvanced);
+function broadcastToAll(message) {
+    io.emit('message', message);
 }
-loadStuff();
+
 
 function startGame(){
     console.log("A game has started");
@@ -258,7 +439,7 @@ function Next(val){
                         }
                     });
                 }
-                io.emit("updateSpells",{dictItems: dict});
+                io.emit('updateSpells',{dictItems: dict});
                 break;
             case 1: //Everyone draws 3 cards, then picks 1 and discards 2
                 players.forEach(function(player) {
@@ -364,25 +545,190 @@ function Next(val){
     next++;
 }
 
-class Player {
-    constructor(id) {
-        this.id = id;
-        this.profileID = genID();
-        this.name = "Player " + this.profileID;
-        this.queued = true;
-        this.ready = 0;
-        this.autoReady = 0;
-        this.selecting = [];
-        this.tokenRoll = [];
 
-        this.health = 25;
-        this.energy = new Energy(0, 0, 0, 0);
-        this.skills = [];
-        this.active = [];
-        this.actions = [];
-        this.reactions = [];
-        this.artifacts = [];
-        this.targets = [];
+
+function generateLobbyID() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let result = '';
+    for (let i = 0; i < 12; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    return result;
+}
+
+class Lobby {
+    constructor(id, name, host, settings) {
+        this.id = id;
+        this.name = name ?? "(Unnamed Lobby)";
+        this.host = host;
+        this.lobbyMembers = {};
+        this.lobbyMembers[host] = {name: clients[host].name, joining: false, nominated: true};
+        this.activePlayers = [];
+        this.spectators = [];
+
+        this.setSettings(settings);
+        this.engine = null;
+    }
+
+    setSettings(newSettings = {}) {
+        const current = this.settings ?? {};
+
+        this.settings = {
+            openJoin: newSettings.openJoin ?? current.openJoin ?? true, //join next game, not lobby
+            playersCanChat: newSettings.playersCanChat ?? current.playersCanChat ?? true,
+            playersCanEmote: newSettings.playersCanEmote ?? current.playersCanEmote ?? true,
+            openSpectate: newSettings.openSpectate ?? current.openSpectate ?? true,
+            spectatorsCanChat: newSettings.spectatorsCanChat ?? current.spectatorsCanChat ?? false,
+            spectatorsCanEmote: newSettings.spectatorsCanEmote ?? current.spectatorsCanEmote ?? true,
+            openInvite: newSettings.openInvite ?? current.openInvite ?? false,
+            enableTier1Magic: newSettings.enableTier1Magic ?? current.enableTier1Magic ?? true,
+            enableTier2Magic: newSettings.enableTier2Magic ?? current.enableTier2Magic ?? true,
+            enableTier3Magic: newSettings.enableTier3Magic ?? current.enableTier3Magic ?? true,
+            enableCustomMagic: newSettings.enableCustomMagic ?? current.enableCustomMagic ?? false,
+            enableCustomArtifacts: newSettings.enableCustomArtifacts ?? current.enableCustomArtifacts ?? false,
+            enableCustomEvents: newSettings.enableCustomEvents ?? current.enableCustomEvents ?? false,
+            enableCustomEncounters: newSettings.enableCustomEncounters ?? current.enableCustomEncounters ?? false,
+            trainingPhaseParallel: newSettings.trainingPhaseParallel ?? current.trainingPhaseParallel ?? false,
+            trainingPhaseRounds: newSettings.trainingPhaseRounds ?? current.trainingPhaseRounds ?? 20,
+            tournamentPhaseParallel: newSettings.tournamentPhaseParallel ?? current.tournamentPhaseParallel ?? false,
+            tournamentPhaseRounds: newSettings.tournamentPhaseRounds ?? current.tournamentPhaseRounds ?? 15,
+            startingHealth: newSettings.startingHealth ?? current.startingHealth ?? 25,
+            startingSpells: newSettings.startingSpells ?? current.startingSpells ?? 2,
+            startingArtifacts: newSettings.startingArtifacts ?? current.startingArtifacts ?? 1,
+            startingEnergy: newSettings.startingEnergy ?? current.startingEnergy ?? 5,
+            newPhaseEnergy: newSettings.newPhaseEnergy ?? current.newPhaseEnergy ?? 2,
+            allowedActionSpells: newSettings.allowedActionSpells ?? current.allowedActionSpells ?? 3,
+            allowedReactionSpells: newSettings.allowedReactionSpells ?? current.allowedReactionSpells ?? 2,
+            allowedArtifacts: newSettings.allowedArtifacts ?? current.allowedArtifacts ?? 1,
+            trainingPhaseFullHealth: newSettings.trainingPhaseFullHealth ?? current.trainingPhaseFullHealth ?? true,
+            trainingPhaseRemoveDebuffs: newSettings.trainingPhaseRemoveDebuffs ?? current.trainingPhaseRemoveDebuffs ?? true,
+            tournamentPhaseFullHealth: newSettings.tournamentPhaseFullHealth ?? current.tournamentPhaseFullHealth ?? true,
+            tournamentPhaseRemoveDebuffs: newSettings.tournamentPhaseRemoveDebuffs ?? current.tournamentPhaseRemoveDebuffs ?? true,
+        }
+    }
+
+    playerJoin(player) {
+        this.lobbyMembers[player] = {
+            name: "Player " + generatePlayerID(), 
+            joining: false, 
+            nominated: this.settings.openJoin
+        };
+        this.broadcastServerMessage(`${this.lobbyMembers[player].name} has joined the lobby`);
+    }
+
+    playerLeave(player) {
+        this.broadcastServerMessage(`${this.lobbyMembers[player].name} has left the lobby`);
+        
+        delete this.lobbyMembers[player];
+        delete this.activePlayers[player];
+        delete this.spectators[player];
+
+        if(Object.keys(this.lobbyMembers).length < 1) {
+            delete lobbies[this.id];
+            return;
+        }
+        if(this.engine && Object.keys(this.activePlayers).length < 1) {
+            this.gameEnd();
+        }
+        
+        if(player == this.host) {
+            this.host = Object.keys(this.lobbyMembers)[0];
+            this.broadcastServerMessage(`${this.lobbyMembers[this.host].name} is now the host`);
+        }
+    }
+
+    playerRequestJoinNextGame(player) {
+        if(this.lobbyMembers[player].nominated) this.lobbyMembers[player].joining = true;
+    }
+
+    gameStart() {
+        this.broadcastServerMessage("A game is starting");
+        //Start countdown?
+
+        this.lobbyMembers.forEach(member => {
+            if(member.joining) this.activePlayers[this.activePlayers.length] = new Player(member, this.settings.startingHealth);
+            else this.spectators[this.spectators.length] = member;
+        });
+
+        this.engine = new GameEngine(this.activePlayers, this.settings);
+    }
+
+    gameEnd() {
+        this.activePlayers = [];
+        this.spectators = [];
+        this.engine = null;
+    }
+
+    updateNames(id, name) {
+        console.log(id);
+        this.lobbyMembers[id].name = name;
+        //send update to other clients with clients[socket.id].to(room).emit
+    }
+    updatePlayerStatus(player) {
+
+    }
+    broadcastServerMessage(message) {
+        console.log("Broadcast: "+message);
+        //Client commands?
+    }
+    broadcastChatMessage(player, message) {
+
+    }
+    broadCastEmote(player, emote) {
+
+    }
+}
+
+class GameEngine {
+    constructor(players, settings) {
+        this.players = players;
+        this.settings = settings;
+        this.state = states.STARTING;
+
+        this.currentPlayer = 0;
+        this.round = 0;
+
+        if(this.settings.enableTier1Magic) {
+            //this.deckSpells.push(tier1);
+        }
+        if(this.settings.enableTier2Magic) {
+            //this.deckSpells.push(tier2);
+        }
+        if(this.settings.enableTier3Magic) {
+            //this.deckSpells.push(tier3);
+        }
+        if(this.settings.enableCustomMagic) {
+            //this.deckSpells.push(custom);
+        }
+        //this.deckArtifacts = artifacts;
+        if(this.settings.enableCustomArtifacts) {
+            //this.deckArtifacts.push(custom);
+        }
+        //this.deckEvents = events;
+        if(this.settings.enableCustomEvents) {
+            //this.deckEvents.push(custom);
+        }
+        //this.deckEncounters = encounters;
+        if(this.settings.enableCustomEncounters) {
+            //this.deckEncounters.push(custom);
+        }
+
+        this.deckSpells = Shuffle(this.deckSpells);
+        this.deckArtifacts = Shuffle(this.deckArtifacts);
+        this.deckEvents = Shuffle(this.deckEvents);
+        this.deckEncounters = Shuffle(this.deckEncounters);
+    }
+}
+
+
+
+class Player {
+    constructor(member, startingHealth) {
+        this.id = member.id;
+        this.name = member.name;
+        
+        this.reset();
     }
 
     reset() {
@@ -392,8 +738,13 @@ class Player {
         this.tokenRoll = [];
 
         this.health = 25;
-        this.energy = new Energy(0, 0, 0, 0);
-        this.skills = [];
+        this.manaPool = {
+            air: 0,
+            earth: 0,
+            fire: 0,
+            water: 0,
+        };
+        this.spells = [];
         this.active = [];
         this.reactions = [];
         this.artifacts = [];
@@ -401,14 +752,6 @@ class Player {
     }
 }
 
-function genID() {
-    var id = Math.floor(Math.random() * 10000);
-    var curIDs = everyone.map(p => p.profileID);
-    for(i=0;i<curIDs.length;i++){
-        if(id == curIDs[i]) return genID();
-    }
-    return id;
-}
 
 class Card {
     constructor(name,type,deck){
@@ -469,7 +812,7 @@ class Energy {
                 3: "sand", //air, earth
                 5: "lightning", //air, fire
                 6: "lava",  //fire, earth
-                9: "ice", //air, ice
+                9: "ice", //air, water
                 10: "plant", //earth, water
                 12: "poison", //fire, water
                 7: "metal", //air, earth, fire
@@ -513,11 +856,7 @@ function Shuffle(deck) {
     return working;
 }
 
-function findPlayer(id, list){
-    for(i=0;i<list.length;i++){
-        if(list[i].id==id) return list[i];
-    }
-}
+
 
 function addPlayer(id,list,newcomer){
     for(i=0;i<list.length;i++){

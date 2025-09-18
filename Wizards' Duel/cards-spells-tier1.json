@@ -1,0 +1,72 @@
+{
+    "Wind Burst": {
+        "element": "Air",
+        "description": "Huff, puff, and blow them all down!",
+        "count": 5,
+        "action": {
+            "description": "",
+            "cost": {
+                "Air": 1
+            },
+            "target": {
+                "health": -5
+            }
+        } 
+    },
+    "Rock": {
+        "element": "Earth",
+        "description": "Rock",
+        "count": 5,
+        "action": {
+            "description": "",
+            "cost": {
+                "Earth": 1
+            },
+            "target": {
+                "health": -5
+            }
+        } 
+    },
+    "Fireball": {
+        "element": "Fire",
+        "description": "The most basic magic imaginable",
+        "count": 5,
+        "action": {
+            "description": "",
+            "cost": {
+                "Fire": 1
+            },
+            "target": {
+                "health": -5
+            }
+        } 
+    },
+    "Splash": {
+        "element": "Water",
+        "description": "Prepare to get splashed! In the face!",
+        "count": 5,
+        "action": {
+            "description": "",
+            "cost": {
+                "Water": 1
+            },
+            "target": {
+                "health": -5
+            }
+        } 
+    },
+    "Heart Strike": {
+        "element": "None",
+        "description": "If all magic fails, try this instead!",
+        "count": 2,
+        "action": {
+            "description": "",
+            "cost": {
+                "Health": 1
+            },
+            "target": {
+                "health": -5
+            }
+        } 
+    }
+}

@@ -100,7 +100,7 @@
     </card>
     <card>
         <name>Firewall</name>
-        <description>Ain't no bugs or... magic getting through here!</description>
+        <description>Ain't no bugs getting through here! Magic neither!</description>
 	    <count>2</count>
         <elementTokens>
             <fire>1</fire>

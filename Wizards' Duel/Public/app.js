@@ -1,22 +1,11 @@
-let socket = io.connect('http://192.168.1.65:3000');
+let socket = io.connect();
 
-socket.on('connect', () => {
-    if(pName) {
-        socket.emit('rename', {newName: pName});
-    }
-    socket.emit('queue', {queued: document.getElementById("queue").checked});
-    socket.emit('layout', {W: window.innerWidth, H: window.innerHeight});
-});
-socket.on('connect_error', (err) => {
-    console.log(`connect_error due to ${err.message}`);
-});
-socket.on('disconnect', () => {
-    console.log("Connection interrupted");
-    Reset();
-});
+
+const DEVCLIENT = true;
 
 var profiles = [];
 var pName;
+var pIcon;
 var cardsVis = [];
 var selected = [];
 var picking=0;
@@ -25,26 +14,110 @@ var sType;
 
 var SpellDict = {};
 
-document.getElementById("rename").addEventListener('click', () => {
-    pName = document.getElementById("newname").value;
-    socket.emit('rename', {
-        newName: document.getElementById("newname").value
-    });
+
+socket.on('connect', () => {
+    console.log("Successful connection");
+    if(pName) {
+        socket.emit('rename', {newName: pName});
+    }
+    if(DEVCLIENT) {
+        document.querySelectorAll(".devmode").forEach(el => el.classList.remove("hidden"));
+    }
 });
-document.getElementById("queue").addEventListener('click', () => {
-    socket.emit('queue', {queued: document.getElementById("queue").checked});
+socket.on('connect_error', (err) => {
+    console.log(`connect_error: ${err.message}`);
 });
-document.getElementById("Start").addEventListener('click', () => {
-    socket.emit('startGame');
-    document.getElementById("Start").style.display="none";
-    document.getElementById("Leave").style.display="inline-block";
-});
-document.getElementById("Leave").addEventListener('click', () => {
-    socket.emit('leaveGame');
-    document.getElementById("Start").style.display="inline-block";
-    document.getElementById("Leave").style.display="none";
+socket.on('disconnect', () => {
+    console.log("Connection interrupted");
     Reset();
 });
+
+
+function menu(which) {
+    document.querySelectorAll('.menu').forEach(el => el.classList.add('hidden'));
+    document.getElementById(which).classList.remove('hidden');
+
+    if (which=="EditProfile") {
+        document.getElementById("nameSelect").focus();
+    } else if (which == "CreateLobby") {
+        document.getElementById("lobbyName").focus();
+    } else if (which == "JoinLobby") {
+        socket.emit('requestLobbies');
+    }
+}
+
+function updateProfile(bool) {
+    if(bool){
+        if(document.getElementById("nameSelect").value != pName) {
+            pName = document.getElementById("nameSelect").value;
+            document.getElementById("playerName").innerHTML = pName;
+            socket.emit('rename', {
+                newName: pName
+            });
+        }
+        if(document.getElementById("iconSelectImage").src != pIcon) {
+            pIcon = document.getElementById("iconSelectImage").src;
+        }
+    }
+
+    document.getElementById("nameSelect").blur();
+    document.getElementById("EditProfile").classList.add("hidden");
+}
+
+function iconsMenu() {
+
+}
+
+function startLobby(bool) {
+    if(bool) {
+        socket.emit('createLobby', {
+            name: document.getElementById("lobbyName").value,
+            openjoin: document.getElementById("s-openjoin").checked,
+            playersCanChat: document.getElementById("s-playerscanchat").checked,
+            playersCanEmote: document.getElementById("s-playerscanemote").checked,
+            openSpectate: document.getElementById("s-openspectate").checked,
+            spectatorsCanChat: document.getElementById("s-spectatorscanchat").checked,
+            spectatorsCanEmote: document.getElementById("s-spectatorscanemote").checked,
+            openInvite: document.getElementById("s-openinvite").checked,
+            enableTier1Magic: document.getElementById("s-enabletier1magic").checked,
+            enableTier2Magic: document.getElementById("s-enabletier2magic").checked,
+            enableTier3Magic: document.getElementById("s-enabletier3magic").checked,
+            enableCustomMagic: document.getElementById("s-enablecustommagic").checked,
+            enableCustomArtifacts: document.getElementById("s-enablecustomartifacts").checked,
+            enableCustomEvents: document.getElementById("s-enablecustomevents").checked,
+            enableCustomEncounters: document.getElementById("s-enablecustomencounters").checked,
+            trainingPhaseParallel: document.getElementById("s-trainingphaseparallel").checked,
+            trainingPhaseRounds: document.getElementById("s-trainingphaserounds").value,
+            tournamentPhaseParallel: document.getElementById("s-tournamentphaseparallel").checked,
+            tournamentPhaseRounds: document.getElementById("s-tournamentphaserounds").value,
+            startingHealth: document.getElementById("s-startinghealth").value,
+            startingSpells: document.getElementById("s-startingspells").value,
+            startingArtifacts: document.getElementById("s-startingartifacts").value,
+            startingEnergy: document.getElementById("s-startingenergy").value,
+            newPhaseEnergy: document.getElementById("s-newphaseenergy").value,
+            allowedActionSpells: document.getElementById("s-allowedactionspells").value,
+            allowedReactionSpells: document.getElementById("s-allowedreactionspells").value,
+            allowedArtifacts: document.getElementById("s-allowedartifacts").value,
+            trainingPhaseFullHealth: document.getElementById("s-trainingphasefullhealth").checked,
+            trainingPhaseRemoveDebuffs: document.getElementById("s-trainingphaseremovedebuffs").checked,
+            tournamentPhaseFullHealth: document.getElementById("s-tournamentphasefullhealth").checked,
+            tournamentPhaseRemoveDebuffs: document.getElementById("s-tournamentphaseremovedebuffs").checked,
+        }, response => {
+            console.log(response.success);
+            console.log(response.lobbyID);
+        });
+    }
+
+    document.getElementById("lobbyName").blur();
+    document.getElementById("CreateLobby").classList.add("hidden");
+}
+
+function joinLobby(e) {
+    socket.emit('joinLobby', e.target.dataset.id, response => {
+        console.log(response.success);
+    });
+    console.log(e.target.dataset.id);
+}
 
 
 socket.on('names', (data) => {
@@ -83,6 +156,34 @@ socket.on('changeProfile', (data) => {
         data.player.actions,
         data.player.reactions,
         data.player.artifacts);
+});
+socket.on('lobbiesList',(data) => {
+    document.getElementById("Overlay").textContent = JSON.stringify(data);
+
+    const template = document.getElementById("template-lobbyentry");
+    const container = document.getElementById("lobbies-list");
+
+    container.innerHTML = "";
+
+    Object.keys(data).forEach(lobby => {
+        const clone = template.content.cloneNode(true);
+
+        clone.querySelector(".t-lobbyname").textContent = "Lobby name: "+data[lobby].name;
+        clone.querySelector(".t-hostname").textContent = "Host name: "+data[lobby].lobbyMembers[data[lobby].host].name;
+        clone.querySelector(".t-playercount").textContent = "Player count: "+Object.keys(data[lobby].lobbyMembers).length;
+        clone.querySelector(".t-active").textContent = "Active game: "+ data[lobby].engine == true;
+        clone.querySelector(".button").dataset.id = data[lobby].id;
+
+        container.appendChild(clone);
+    });
+});
+socket.on('message', message => {
+    console.log("Server message:");
+    console.log(message);
+});
+socket.on('kicked', message => {
+    console.log("You were kicked!");
+    console.log(message);
 });
 socket.on('startGame', () => {
     console.log('game Started');
@@ -412,4 +513,13 @@ function removeElementWithListeners(element){
     const clone = element.cloneNode(true);
     element.parentNode.replaceChild(clone, element);
     clone.parentNode.removeChild(clone);
+}
+
+function keyPress(e) {
+    switch(e.key) {
+        case "o":
+            console.log("o");
+            document.getElementById("Overlay").classList.toggle("hidden");
+            break;
+    }
 }

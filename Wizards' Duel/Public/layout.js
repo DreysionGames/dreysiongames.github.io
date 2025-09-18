@@ -13,6 +13,8 @@ layoutGameStarted = false;
 
 setLayout();
 
+//NEEDED: Home Screen, Create Lobby Menu; InGame Screen, Profile View
+
 function setLayout(){
     W = window.innerWidth;
     H = window.innerHeight;

@@ -9,46 +9,195 @@
                 document.body.innerHTML = "<h1>Server Error</h1> <br><br> Yeah, sorry, this won't work here. This is hosted on Github Pages, which doesn't allow for servers and such. " +
                 "You'll have to download the project and try it on your own computer. Unfortunately, I can't guarantee it'll work even then, since it's not a completed project. <br><br>" +
                 "I use VSCode to run this. Check that you have npm/node.js installed, use VSCode's terminal to cd to the file with server.js, then `npm start`. When it's loaded properly, " +
-                "use your browser to go to the address provided in the terminal.";
+                "use your browser to go to the address provided in the terminal. <br><br><br> Either that, or something else is just wrong with the server.";
             }
         </script>
         <script src="/socket.io/socket.io.js" onerror="serverError = true"></script>
         <script src="app.js" defer></script>
-        <script src="layout.js" defer></script>
+        <!--<script src="layout.js" defer></script>-->
         <link href="style.css" rel="stylesheet" type="text/css" />
         <link href="favicon.ico" rel="icon" type="image/ico">
     </head>
-    <body onload = "unloadPage()">
-        <h2 id="title">Wizards' Duel</h2>
-        <div id="profiles">Profiles</div>
-        <div id="hand">Hand</div>
-        <div id="roomsettings">Room</div>
-        <div id="phoneutil">
-            <button onclick="phoneActivate('setup')">Waiting Room</button>
-            <button onclick="phoneActivate('bracket')">Bracket</button>
-            <button onclick="phoneActivate('hand')">Hand</button>
-            <button onclick="phoneActivate('roomsettings')">Room</button>
-        </div>
-        <div id="bracket">Bracket</div>
-        <div id="setup">
-            Name: <input id="newname" /><button id="rename">Submit</button>
-            <br />
-            Queue up: <input id="queue" type="checkbox" checked />
-            <br />
-            <button id="Start">Start</button>
-            <button id="Leave" style="display:none">Leave</button>
-            <div id="waiting">
-                <div id="names" class="horiz"></div>
-                <div id="ready" class="horiz"></div>
+    <body onload = "unloadPage()" onkeypress="keyPress(event)">
+        <div id="MainMenu">
+            <h2 class="title">Wizards' Duel</h2>
+            <div id="Profile" class="profile">
+                <div id="playerIcon" class="profileIcon" onclick="iconsMenu()"><img id="profileIcon" /></div>
+                <div id="playerName" class="profileName">Player</div>
+            </div>
+            <div class="play">
+                <div id="JoinLobbyButton" class="button" onclick="menu('JoinLobby')">Join Lobby</div> <br>
+                <div id="CreateLobbyButton" class="button" onclick="menu('CreateLobby')">Create Lobby</div>
+            </div>
+            <div class="options">
+                <div id="EditProfileButton" class="button" onclick="menu('EditProfile')">Profile</div>
+            </div>
+            <div id="JoinLobby" class="menu center hidden">
+                <h3>Join a Lobby</h3>
+                <div id="lobbies-list"></div>
+            </div>
+            <div id="CreateLobby" class="menu center hidden">
+                <h3>Create a Lobby</h3> <br>
+                <hr>
+                <label for="lobby-name">Lobby's name: </label><input id="lobbyName" name="lobby-name" />
+                <hr>
+                <details>
+                    <summary>Settings Presets</summary>
+                    <div class="options-content">
+
+                    </div>
+                </details>
+                <hr>
+                <details>
+                    <summary>Lobby Member Settings</summary>
+                    <div class="options-content">
+                        <div class="form-row">
+                            <label><input id="s-openjoin" type="checkbox"> <span>Anyone can join the next game</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-playerscanchat" type="checkbox"> <span>Players can chat</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-playerscanemote" type="checkbox"> <span>Players can emote</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-openspectate" type="checkbox"> <span>Anyone can join the lobby</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-spectatorscanchat" type="checkbox"> <span>Spectators can chat</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-spectatorscanemote" type="checkbox"> <span>Spectators can emote</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-openinvite" type="checkbox"> <span>Lobby joiners can invite other players</span></label>
+                        </div>
+                    </div>
+                </details>
+                <details>
+                    <summary>Game Content Settings</summary>
+                    <div class="options-content">
+                        <div class="form-row">
+                            <label><input id="s-enabletier1magic" type="checkbox"> <span>Enable tier 1 magic</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-enabletier2magic" type="checkbox"> <span>Enable tier 2 magic</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-enabletier3magic" type="checkbox"> <span>Enable tier 3 magic</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-enablecustommagic" type="checkbox"> <span>Enable custom magic</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-enablecustomartifacts" type="checkbox"> <span>Enable custom artifacts</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-enablecustomevents" type="checkbox"> <span>Enable custom events</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-enablecustomencounters" type="checkbox"> <span>Enable custom encounters</span></label>
+                        </div>
+                    </div>
+                </details>
+                <details>
+                    <summary>Game Start Settings</summary>
+                    <div class="options-content">
+                        <div class="form-row">
+                            <label><input id="s-startinghealth" type="number" min="1" max="100" step="1"> <span>Starting health</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-startingspells" type="number" min="1" max="10" step="1"> <span>Starting spells</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-startingartifacts" type="number" min="1" max="10" step="1"> <span>Starting artifacts</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-startingenergy" type="number" min="1" max="20" step="1"> <span>Starting energy</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-newphaseenergy" type="number" min="0" max="10" step="1"> <span>Energy between phases</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-allowedactionspells" type="number" min="1" max="5" step="1"> <span>Allowed action spells</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-allowedreactionspells" type="number" min="0" max="5" step="1"> <span>Allowed reaction spells</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-allowedartifacts" type="number" min="0" max="5" step="1"> <span>Allowed artifacts</span></label>
+                        </div>
+                    </div>
+                </details>
+                <details>
+                    <summary>Game Rounds Settings</summary>
+                    <div class="options-content">
+                        <div class="form-row">
+                            <label><input id="s-trainingphaseparallel" type="checkbox"> <span>Training phase: everyone takes turn at the same time</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-trainingphaserounds" type="number"> <span>Training phase: number of rounds</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-trainingphasefullhealth" type="checkbox"> <span>Training phase: start with full health</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-trainingphaseremovedebuffs" type="checkbox"> <span>Training phase: start with debuffs removed</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-tournamentphaseparallel" type="checkbox"> <span>Tournament phase: each match happens at the same time</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-tournamentphaserounds" type="number"> <span>Tournament phase: max rounds for each match</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-tournamentphasefullhealth" type="checkbox"> <span>Tournament phase: start with full health</span></label>
+                        </div>
+                        <div class="form-row">
+                            <label><input id="s-tournamentphaseremovedebuffs" type="checkbox"> <span>Tournament phase: start with debuffs removed</span></label>
+                        </div>
+                    </div>
+                </details>
+                <hr>
+                <div class="button" onclick="startLobby(true)">Create Lobby</div>
+                <div class="button" onclick="startLobby(false)">Cancel</div>
+            </div>
+            <div id="EditProfile" class="menu center hidden">
+                <h3>Your Profile</h3> <br>
+                Name: <input id="nameSelect" type="text"> <br>
+                Icon: <div id="iconSelect" style="display:inline-block"><img id="iconSelectImage" /></div> <br>
+                <br><br>
+                <div class="button" onclick="updateProfile(true)">Update</div>
+                <div class="button" onclick="updateProfile(false)">Cancel</div>
             </div>
         </div>
-        <div id="popup">
-            <h3 id="title"></h3>
-            <p id="description"></p>
-            <div id="visual"></div>
-            <button id="accept" onclick="accept()">Accept</button>
-            <div id="readyin"></div>
+        <div id="LobbyHome" class="screen hidden">
+            <h2 id="LobbyName"></h2>
         </div>
-        <!--<button onclick="socket.emit('test')">Test</button>-->
+        <div id="InGame" class="screen hidden">
+            <div id="Player" class="hidden">
+                <div id="Hand" class="hidden"></div>
+                <div id="DrawCards" class="popup hidden"></div>
+                <div id="RollDice" class="popup hidden"></div>
+                <div id="PlayerProfile" class="menu hidden"></div>
+                <div id="HostSettings" class="menu hidden"></div>
+                <div id="devsignal" class="devmode hidden"></div>
+            </div>
+            <div id="Spectator" class="hidden">
+
+            </div>
+        </div>
+        <div id="Overlay" class="screen hidden" style="pointer-events: none;"></div>
+        <div id="templates">
+            <template id="template-lobbyentry">
+                <div class="t-lobbyentry">
+                    <span class="t-lobbyname"></span>
+                    <span class="t-hostname"></span>
+                    <span class="t-playercount"></span>
+                    <span class="t-active"></span>
+                    <div class="button" onclick="joinLobby(event)">Join Lobby</div>
+                </div>
+            </template>
+        </div>
     </body>
 </html>
