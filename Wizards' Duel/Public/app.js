@@ -4,6 +4,7 @@ let socket = io.connect();
 const DEVCLIENT = true;
 
 var profiles = [];
+var pID;
 var pName;
 var pIcon;
 var cardsVis = [];
@@ -29,7 +30,10 @@ socket.on('connect_error', (err) => {
 });
 socket.on('disconnect', () => {
     console.log("Connection interrupted");
-    Reset();
+    //Reset();
+});
+socket.on('yourId', (id) => {
+    pID = id;
 });
 
 
@@ -125,12 +129,35 @@ function joinLobby(e) {
     console.log(e.target.dataset.id);
 }
 
+socket.on('updateMembers', (data) => {
+    prof = document.getElementById("template-profile-card");
+    container = document.getElementsByClassName("opponents");
+
+    for(i=0;i<container.length;i++) {
+        container[i].innerHTML = "";
+
+        Object.keys(data).forEach(prf => {
+            if(prf != pID) {
+                clone = prof.content.cloneNode(true);
+                clone.querySelector(".profileName").textContent = data[prf].name;
+
+                container[i].appendChild(clone);
+            }
+        });
+    }
+});
+
 function lobbyScreen(name, host = false) {
     document.getElementById("LobbyName").textContent = "Lobby: "+name;
 
     document.getElementById("MainMenu").classList.add("hidden");
     document.getElementById("LobbyHome").classList.remove("hidden");
-    if(host) document.getElementsByClassName("admin").classList.remove("hidden");
+    if(host) {
+        adminpanels = document.getElementsByClassName("admin");
+        for(i=0;i<adminpanels.length; i++) {
+            adminpanels[i].classList.remove("hidden")
+        }
+    }
 }
 
 
@@ -192,8 +219,14 @@ socket.on('lobbiesList',(data) => {
     });
 });
 socket.on('message', message => {
-    console.log("Server message:");
-    console.log(message);
+    msg = "Server: " + message;
+    chat = document.getElementsByClassName("chat");
+    console.log(msg);
+    for(i=0;i<chat.length;i++) {
+        p = document.createElement("p");
+        p.textContent = msg;
+        chat[i].appendChild(p);
+    }
 });
 socket.on('kicked', message => {
     console.log("You were kicked!");
@@ -203,9 +236,9 @@ socket.on('startGame', () => {
     console.log('game Started');
     layoutStart();
 });
-socket.on('reset', () => {
+/*socket.on('reset', () => {
     Reset();
-});
+});*/
 
 socket.on('pickCards', (data) => {
     console.log(`drawing ${data.draw} cards from the ${data.type} pile, pick ${data.pick}`);

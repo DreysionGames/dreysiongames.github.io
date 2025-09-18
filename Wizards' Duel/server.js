@@ -65,7 +65,7 @@ process.stdin.on("data", (data) => {
             break;
         case "lobbies":
             if (args.length == 0) {
-                const lobbyNames = Object.values(lobbies).map(l => l.id + "(" +(l.name || "(Unnamed lobby)")+")");
+                const lobbyNames = Object.values(lobbies).map(l => l.id + " (" +(l.name || "(Unnamed lobby)")+")");
                 console.log("Active lobbies:", lobbyNames);
                 break;
             }
@@ -177,7 +177,7 @@ server.listen(SERVER_PORT, "0.0.0.0", () => {
     qr.generate(`http://${ipaddress}:${SERVER_PORT}`,{small:true});
 });
 process.on('exit', () => {
-    io.emit('reset');
+    //io.emit('reset');
 });
 
 
@@ -189,6 +189,7 @@ io.on('connection', (socket) => {
         lobby: null
     }
     console.log(`${clients[socket.id].name} joined the server with id ${socket.id}`);
+    socket.emit('yourId',socket.id);
 
     socket.on('disconnect', () => {
         if(clients[socket.id].lobby) {
@@ -222,12 +223,11 @@ socket.on('disconnect', () => {
         if(clients[socket.id].lobby) {
             lobbies[clients[socket.id].lobby].playerLeave(socket.id);
         }
-
         const newlobbyId = generateLobbyID(); // e.g., random 6-letter code
+
+        socket.join(newlobbyId);
         lobbies[newlobbyId] = new Lobby(newlobbyId, data.name, socket.id, data);
         clients[socket.id].lobby = newlobbyId;
-        //lobbies[newlobbyId].lobbyMembers[socket.id] = clients[socket.id]};
-        socket.join(newlobbyId);
         
         callback({ success: true, lobbyID: newlobbyId });
     });
@@ -236,13 +236,11 @@ socket.on('disconnect', () => {
     socket.on('joinLobby', (lobbyId, callback) => {
         if (!lobbies[lobbyId]) return callback({ success: false, error: 'Lobby not found' });
 
-        lobbies[lobbyId].lobbyMembers[socket.id] = {name: clients[socket.id].name, joining: false, nominated: false};
-        clients[socket.id].lobby = lobbyId;
         socket.join(lobbyId);
-        callback({ success: true, name: lobbies[lobbyId].name });
-
-        // Notify others
-        socket.to(lobbyId).emit('playerJoined', socket.id);
+        lobbies[lobbyId].playerJoin(socket.id);
+        clients[socket.id].lobby = lobbyId;
+        
+        callback({ success: true, name: lobbies[lobbyId].name, lobbyID: lobbyId });
     });
 
     socket.on('sendMessage', ({ lobbyId, message }) => {
@@ -356,7 +354,7 @@ function startGame(){
     Next(true);
 }
 
-function newGame(){
+/*function newGame(){
     console.log("------------");
     console.log("Game reset");
     console.log("------------");
@@ -371,7 +369,7 @@ function newGame(){
     players=[];
     spectators=[];
     io.emit('reset');
-}
+}*/
 
 function Names(){
     if(players && players.length) var names = players.map(p => p.name);
@@ -610,11 +608,12 @@ class Lobby {
 
     playerJoin(player) {
         this.lobbyMembers[player] = {
-            name: "Player " + generatePlayerID(), 
+            name: clients[player].name, 
             joining: false, 
             nominated: this.settings.openJoin
         };
         this.broadcastServerMessage(`${this.lobbyMembers[player].name} has joined the lobby`);
+        io.to(this.id).emit('updateMembers', this.lobbyMembers);
     }
 
     playerLeave(player) {
@@ -670,6 +669,7 @@ class Lobby {
     }
     broadcastServerMessage(message) {
         console.log("Broadcast: "+message);
+        io.to(this.id).emit('message', message);
         //Client commands?
     }
     broadcastChatMessage(player, message) {
@@ -728,7 +728,7 @@ class Player {
         this.id = member.id;
         this.name = member.name;
         
-        this.reset();
+        //this.reset();
     }
 
     reset() {

@@ -177,9 +177,9 @@
                 <div class="profileName client">Player</div>
             </div>
             <div class="opponents"></div>
-            <div class="chat"></div>
+            <div class="chat area"></div>
             <div class="visual"></div>
-            <div class="admin hidden"></div>
+            <div class="admin area hidden"></div>
             <div class="options"></div>
         </div>
         <div id="InGame" class="hidden">
@@ -204,6 +204,12 @@
                     <span class="t-playercount"></span>
                     <span class="t-active"></span>
                     <div class="button" onclick="joinLobby(event)">Join Lobby</div>
+                </div>
+            </template>
+            <template id="template-profile-card">
+                <div class="profile">
+                    <div class="profileIconContainer"><img class="profileIcon" /></div>
+                    <div class="profileName">Player</div>
                 </div>
             </template>
         </div>

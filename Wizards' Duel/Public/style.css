@@ -25,8 +25,8 @@ html, body {
         "opponents opponents opponents opponents"
         "chat visual visual admin"
         "options options options options";
-    grid-template-rows: 1fr 1fr 2fr 1fr;
-    grid-template-columns: 1fr 2fr 2fr 1fr;
+    grid-template-rows: 1fr 1fr 2.5fr 1fr;
+    grid-template-columns: 1fr 1.5fr 1.5fr 1fr;
     justify-items: center;
     align-items: center;
     height: 100vh;
@@ -38,6 +38,15 @@ html, body {
     grid-area: profile;
     justify-self: end;
     margin: 10px;
+
+    display: inline-block;
+    padding: 0.5em;
+    height: 9em;
+    width: 6.5em;
+    border: 1px solid #000000;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
 }
 .play {
     grid-area: play;
@@ -45,9 +54,36 @@ html, body {
 }
 .options {grid-area: options;}
 .opponents {grid-area: opponents;}
-.chat {grid-area: chat;}
+.chat {
+    justify-self: left;
+    grid-area: chat;
+}
 .visual {grid-area: visual;}
-.admin {grid-area: admin;}
+.admin {
+    justify-self: end;
+    grid-area: admin;
+}
+
+.profile.client {
+    height: 11em;
+    width: 8em;
+}
+
+.profileIconContainer {
+    height: 50%;
+    width: 100%;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profileIcon {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    margin-bottom: 1em;
+    border-radius: 3px;
+}
 
 
 
@@ -111,6 +147,13 @@ summary {
     margin-bottom: 0.5em;
 }
 
+.area {
+    height: 100%;
+    width: 100%;
+    border: 1px solid #000000;
+    margin: 10px;
+}
+
 /*.screen {
     position: absolute;
     top: 0px;
@@ -133,25 +176,6 @@ summary {
     border: 1px solid #000000;
     border-radius: 2px;
     background-color: #ACACAC;
-}
-
-/*DUPE*/
-.profile {
-    display: inline-block;
-    padding: 0.5em;
-    height: 11em;
-    width: 8em;
-    border: 1px solid #000000;
-    border-radius: 5px;
-    text-align: center;
-    font-weight: bold;
-}
-
-.profileIcon {
-    height: 6em;
-    width: 8em;
-    margin-bottom: 1em;
-    border-radius: 3px;
 }
 
 #phoneutil {
