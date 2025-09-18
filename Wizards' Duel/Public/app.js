@@ -50,7 +50,10 @@ function updateProfile(bool) {
     if(bool){
         if(document.getElementById("nameSelect").value != pName) {
             pName = document.getElementById("nameSelect").value;
-            document.getElementById("playerName").innerHTML = pName;
+            playername = document.getElementsByClassName("profileName client");
+            for (i=0;i<playername.length; i++) {
+                playername[i].textContent = pName;
+            }
             socket.emit('rename', {
                 newName: pName
             });
@@ -110,13 +113,24 @@ function startLobby(bool) {
 
     document.getElementById("lobbyName").blur();
     document.getElementById("CreateLobby").classList.add("hidden");
+
+    lobbyScreen(document.getElementById("lobbyName").value, true);
 }
 
 function joinLobby(e) {
     socket.emit('joinLobby', e.target.dataset.id, response => {
         console.log(response.success);
+        lobbyScreen(response.name);
     });
     console.log(e.target.dataset.id);
+}
+
+function lobbyScreen(name, host = false) {
+    document.getElementById("LobbyName").textContent = "Lobby: "+name;
+
+    document.getElementById("MainMenu").classList.add("hidden");
+    document.getElementById("LobbyHome").classList.remove("hidden");
+    if(host) document.getElementsByClassName("admin").classList.remove("hidden");
 }
 
 
@@ -518,7 +532,6 @@ function removeElementWithListeners(element){
 function keyPress(e) {
     switch(e.key) {
         case "o":
-            console.log("o");
             document.getElementById("Overlay").classList.toggle("hidden");
             break;
     }

@@ -18,6 +18,21 @@ html, body {
     width: 100vw;
 }
 
+#LobbyHome {
+    display: grid;
+    grid-template-areas: 
+        ". title title profile"
+        "opponents opponents opponents opponents"
+        "chat visual visual admin"
+        "options options options options";
+    grid-template-rows: 1fr 1fr 2fr 1fr;
+    grid-template-columns: 1fr 2fr 2fr 1fr;
+    justify-items: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
+
 .title {grid-area: title;}
 .profile {
     grid-area: profile;
@@ -29,9 +44,15 @@ html, body {
     text-align: center;
 }
 .options {grid-area: options;}
+.opponents {grid-area: opponents;}
+.chat {grid-area: chat;}
+.visual {grid-area: visual;}
+.admin {grid-area: admin;}
+
+
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 .center {
@@ -126,7 +147,7 @@ summary {
     font-weight: bold;
 }
 
-.profileIcon img {
+.profileIcon {
     height: 6em;
     width: 8em;
     margin-bottom: 1em;

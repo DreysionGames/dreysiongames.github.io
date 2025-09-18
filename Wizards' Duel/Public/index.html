@@ -14,16 +14,15 @@
         </script>
         <script src="/socket.io/socket.io.js" onerror="serverError = true"></script>
         <script src="app.js" defer></script>
-        <!--<script src="layout.js" defer></script>-->
         <link href="style.css" rel="stylesheet" type="text/css" />
         <link href="favicon.ico" rel="icon" type="image/ico">
     </head>
     <body onload = "unloadPage()" onkeypress="keyPress(event)">
         <div id="MainMenu">
             <h2 class="title">Wizards' Duel</h2>
-            <div id="Profile" class="profile">
-                <div id="playerIcon" class="profileIcon" onclick="iconsMenu()"><img id="profileIcon" /></div>
-                <div id="playerName" class="profileName">Player</div>
+            <div class="profile client">
+                <div class="profileIconContainer"><img class="profileIcon client" /></div>
+                <div class="profileName client">Player</div>
             </div>
             <div class="play">
                 <div id="JoinLobbyButton" class="button" onclick="menu('JoinLobby')">Join Lobby</div> <br>
@@ -171,10 +170,19 @@
                 <div class="button" onclick="updateProfile(false)">Cancel</div>
             </div>
         </div>
-        <div id="LobbyHome" class="screen hidden">
-            <h2 id="LobbyName"></h2>
+        <div id="LobbyHome" class="hidden">
+            <h2 id="LobbyName" class="title"></h2>
+            <div class="profile client">
+                <div class="profileIconContainer"><img class="profileIcon client" /></div>
+                <div class="profileName client">Player</div>
+            </div>
+            <div class="opponents"></div>
+            <div class="chat"></div>
+            <div class="visual"></div>
+            <div class="admin hidden"></div>
+            <div class="options"></div>
         </div>
-        <div id="InGame" class="screen hidden">
+        <div id="InGame" class="hidden">
             <div id="Player" class="hidden">
                 <div id="Hand" class="hidden"></div>
                 <div id="DrawCards" class="popup hidden"></div>
@@ -187,7 +195,7 @@
 
             </div>
         </div>
-        <div id="Overlay" class="screen hidden" style="pointer-events: none;"></div>
+        <div id="Overlay" class="hidden" style="pointer-events: none;"></div>
         <div id="templates">
             <template id="template-lobbyentry">
                 <div class="t-lobbyentry">

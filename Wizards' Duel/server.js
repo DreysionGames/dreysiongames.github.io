@@ -239,7 +239,7 @@ socket.on('disconnect', () => {
         lobbies[lobbyId].lobbyMembers[socket.id] = {name: clients[socket.id].name, joining: false, nominated: false};
         clients[socket.id].lobby = lobbyId;
         socket.join(lobbyId);
-        callback({ success: true });
+        callback({ success: true, name: lobbies[lobbyId].name });
 
         // Notify others
         socket.to(lobbyId).emit('playerJoined', socket.id);
