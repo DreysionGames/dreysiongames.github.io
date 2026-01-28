@@ -102,12 +102,109 @@ winner draws 3 artifact cards and selects 1, discarding the other 2
 
 Instance spells are applied once. They have a cost and an effect.
 Continuous spells are initiated once with a cost, then they have an additional lighter cost to keep up each turn.
+Investment spells can be given energy over time, then are initiated with the built up energy, or do not need to be initiated.
 
-Attack spells affect the opponent, especially targeting HP.
-Support spells may affect the opponent, or they may not.
-Defense spells have an effect that activates when the castor is attacked.
-- Even if they affect the opponent's HP, they don't count as an affecting attack. You can't use a reaction against a defense.
+Each spell can be placed as either an action or a reaction.
+Generally a player gets one action on their turn
+Reactions can be activated only when targeted (not a reaction)
+A reaction affecting the opponent's spell affects either the direct effect or the indirect effect, not both.
+A continuous spell cannot be activated if it is already active.
 
-A spell's cost is energy discarded to activate the card.
-A spell may have a potential requirement, energy the player needs to still have after discarding cost.
-A spell can also have output energy, which is a variable amount of energy to modify damage or other effects. This energy is also discarded
+A spell's cost is energy discarded from the mana reservoir to activate the card.
+A spell's investment is energy added before activation, which may or may not be discarded during activation
+
+Card layout:
+- Name
+- Mode (instance, continuous, investment)
+- Cost
+- Description
+- Investment
+- Direct effect
+    Target (opponent, self, all)
+    Affected system (mana reservoir, investment, health, next attack, artifact)
+- Indirect effect
+    Target (opponent, self, all)
+    Affected system (mana reservoir, investment, health, next attack, artifact)
+
+
+
+#------------------------------------------#
+#                 Elements                 #
+#------------------------------------------#
+
+There are four basic elements, which can be combined into more advanced elements. 
+Each element has its own playstyle if a player chooses to specialize rather than diversifying
+Advanced tiers build on the basic components, but they also have their own individual playstyles too
+The advanced tiers of element combination may or may not be unlocked for a particular game session
+
+Tier 1
+- Air:
+    Style: Disruptive rhythms, interruptions, incessant attacks, chains, no commitment, free actions, burst
+    Axis: fast and flexible
+    Weakness: hates added cost, hates working against defenses
+    Tokens: Accuracy check
+- Fire:
+    Style: Damage over time, indirect damage, burst, boosted attacks, triggers
+    Axis: fast and locked
+    Weakness: no defense, requires fire mana
+    Tokens: Damage over Time
+- Earth:
+    Style: Unstoppable attacks, impenetrable defense, built defense, built strength, gains strength from opponent's mana
+    Axis: slow and locked
+    Weakness: needs to be prepared
+    Tokens: Added earth mana cost
+- Water:
+    Style: Mana control, flow of battle, erosion, diluting, creating inefficiencies
+    Axis: slow and flexible
+    Weakness: hates pressure
+    Tokens: mana dilution
+
+Tier 2
+- Lava (Earth, Fire):
+    Style: Damage built when not in check
+    Axis: locked
+    Weakness: interruptions, immunities
+- Poison (Fire, Water):
+    Style: Negating options
+    Axis: neutral
+    Weakness: too many options to negate
+- Lightning (Air, Fire):
+    Style: Critical strikes
+    Axis: fast
+    Weakness: defenses
+- Plant (Earth, Water):
+    Style: Investment
+    Axis: slow
+    Weakness: investment breaching
+- Sand (Air, Earth):
+    Style: Attacking despite defenses
+    Axis: neutral
+    Weakness: counter reactions
+- Ice (Air, Water): 
+    Style: Weakens subsequent attacks
+    Axis: flexible
+    Weakness: persistence, not relying on damage
+
+Tier 3
+- Metal (Air, Earth, Fire):
+    Style: Inflexibility, forcing opponents to play metal's style
+    Axis: Fast and locked
+    Weakness: Metal's style works for them
+- Crystal (Air, Earth, Water):
+    Style: Turning opponents' attacks against them
+    Axis: slow and flexible
+    Weakness: not relying on direct damage
+- Miasma (Air, Fire, Water):
+    Style: Removes preparations
+    Axis: fast and flexible
+    Weakness: direct damage
+- Slime (Earth, Fire, Water):
+    Style: Stalls, minimizes damage and effects
+    Axis: slow and locked
+    Weakness: persistence, indirect damage
+
+Tier 4
+- Ultimate:
+    Style: chaos
+    Axis: neutral
+    Weakness: chaos, itself

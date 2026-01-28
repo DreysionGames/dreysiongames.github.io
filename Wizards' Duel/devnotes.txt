@@ -1,0 +1,32 @@
+-----Current Project-----
+Chat features
+Profiles
+Creating spells
+
+-----TODO-----
+Switch XML to JSON for easier integration
+Animations
+    Card flip
+    Card shuffle
+    Coin/dice toss
+    Emotes
+    Firing: tokens, spells, etc for clarity
+ID permanence for recognition & remembering settings
+Snappy layout between desktop and mobile
+Kicking players should kick from lobby, not server
+    Maybe add adminblock to get people off server?
+CLI lobbies [lobbyName] crashes the server if the lobby doesn't exist anymore
+:::ART:::
+general game design
+icons
+card art
+spell art
+spell descriptions
+monsters & events
+
+
+-----History-----
+Added basic chat features (not accessible to clients yet)
+Distinguishing between title screen and lobby screen
+Added command line interface commands
+Decided to rewrite everything

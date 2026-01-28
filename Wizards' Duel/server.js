@@ -1,21 +1,59 @@
 const os = require("os");                      //for finding ip address
-const fs = require('fs');                      //for xml
-const path = require('path');                  //for xml
-const xml2js = require('xml2js');              //for xml
+//const fs = require('fs');                      //for xml
+const path = require('path');                  //for express
+//const xml2js = require('xml2js');              //for xml
 const http = require('http');                  //for server
 const express = require('express');            //for server
 const socketIO = require('socket.io');         //for signals
-const qr = require('qrcode-terminal');
+const qr = require('qrcode-terminal');         //for qr code
+const cookieParser = require('cookie-parser'); //for cookies
+const cookie = require('cookie');              //for cookies
 let app = express();                           //for server
 let server = http.createServer(app);           //for server
 let io = socketIO(server);                     //for signals
 
 
+
 const publicPath    = path.join(__dirname, '/public');
 const SERVER_PORT = process.env.PORT || 3000;
-const parser = xml2js.Parser({explicitArray:false});
+//const parser = xml2js.Parser({explicitArray:false});
+
+app.use(cookieParser());
+
+app.use((req, res, next) => {
+    if (!req.cookies.sessionId) {
+        const newSession = crypto.randomUUID();
+        res.cookie("sessionId", newSession, {
+            httpOnly: true,
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 60 // 1 hour
+        });
+        console.log("Created new session:", newSession);
+    } else {
+        //console.log("Existing session:", req.cookies.sessionId);
+    }
+    next();
+});
 
 app.use(express.static(publicPath));
+app.use(express.json());
+
+// Example route to read the cookie explicitly
+app.get("/whoami", (req, res) => {
+    console.log(res);
+    res.json({ sessionId: req.cookies.sessionId || null });
+});
+
+app.post("/set-lobby", (req, res) => {
+    console.log(req.body);
+    res.cookie("lobbyId", req.body.lobbyId, { httpOnly: true });
+    res.send({ ok: true });
+});
+
+app.post("/set-name", (req, res) => {
+    res.cookie("userName", req.body.userName, { httpOnly: true });
+    res.send({ ok: true });
+});
 
 
 // CLI Commands
@@ -56,11 +94,13 @@ process.stdin.on("data", (data) => {
                 break;
             }
             
-            console.log(`Client ${clients[possibleTargets[0]].name} (${clients[possibleTargets[0]].id})`);
+            console.log(`Client: ${clients[possibleTargets[0]].name} (${clients[possibleTargets[0]].id})`);
+            console.log(`Session ID: ${clients[possibleTargets[0]].sessionId}`);
+            console.log(`Connected: ${clients[possibleTargets[0]].connected}`);
             if (clients[possibleTargets[0]].lobby == null) {
                 console.log("Lobby: none");
             } else {
-                console.log(`Lobby: ${lobbies[clients[possibleTargets[0]].lobby].name} (${clients[possibleTargets[0]].lobby})`);
+                console.log(`Lobby: ${(lobbies[clients[possibleTargets[0]].lobby].name ?? "(Unnamed lobby)")} (${clients[possibleTargets[0]].lobby})`);
             }
             break;
         case "lobbies":
@@ -86,7 +126,7 @@ process.stdin.on("data", (data) => {
                 break;
             }
 
-            console.log(`Lobby: ${lobbies[possibleTargets[0]].name} (${lobbies[possibleTargets[0]].id})`);
+            console.log(`Lobby: ${(lobbies[possibleTargets[0]].name ?? "(Unnamed lobby)")} (${lobbies[possibleTargets[0]].id})`);
             console.log(`Host: ${clients[lobbies[possibleTargets[0]].host].name} (${lobbies[possibleTargets[0]].host})`);
             console.log("Members:");
             console.table(lobbies[possibleTargets[0]].lobbyMembers);
@@ -182,21 +222,39 @@ process.on('exit', () => {
 
 
 io.on('connection', (socket) => {
-    clients[socket.id] = {
+    const cookies = cookie.parse(socket.handshake.headers.cookie || "");
+    const sid = cookies.sessionId;
+    const lid = cookies.lobbyId;
+    const nid = cookies.userName;
+    console.log("lid: "+lid);
+//check through list of clients, if session id already exists, move info from that client object to this new one
+    clients[socket.id] = {   //OOF -- I need to start using clients[sessionid]? Or ^
         socket: socket,
         id: socket.id,
-        name: "Player " + Math.floor(Math.random() * 10000),
+        sessionId: sid ?? null,
+        connected: true,
+        name: nid ?? "Player " + Math.floor(Math.random() * 10000),
         lobby: null
     }
+
+    Object.keys(lobbies).forEach(lob => {
+        console.log("lob: "+lob+"; lid: "+lid);
+        if(lob == lid) clients[socket.id].lobby = lid;
+        socket.join(lid);
+        lobbies[lid].playerReconnect(socket.id);
+    });
+    
     console.log(`${clients[socket.id].name} joined the server with id ${socket.id}`);
-    socket.emit('yourId',socket.id);
+    socket.emit('yourId',clients[socket.id].sessionId);
 
     socket.on('disconnect', () => {
+        clients[socket.id].connected = false;
         if(clients[socket.id].lobby) {
-            lobbies[clients[socket.id].lobby].playerLeave(socket.id);
+            //lobbies[clients[socket.id].lobby].playerLeave(socket.id);
+            lobbies[clients[socket.id].lobby].playerDisconnect(socket.id);
         }
         console.log(`${clients[socket.id].name} disconnected`);
-        delete clients[socket.id];
+        //delete clients[socket.id];
     });
 
     /* ChatGPT:
@@ -223,7 +281,7 @@ socket.on('disconnect', () => {
         if(clients[socket.id].lobby) {
             lobbies[clients[socket.id].lobby].playerLeave(socket.id);
         }
-        const newlobbyId = generateLobbyID(); // e.g., random 6-letter code
+        const newlobbyId = crypto.randomUUID(); //generateID(); // e.g., random 6-letter code
 
         socket.join(newlobbyId);
         lobbies[newlobbyId] = new Lobby(newlobbyId, data.name, socket.id, data);
@@ -545,7 +603,7 @@ function Next(val){
 
 
 
-function generateLobbyID() {
+/*function generateID() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let result = '';
     for (let i = 0; i < 12; i++) {
@@ -553,7 +611,7 @@ function generateLobbyID() {
     }
 
     return result;
-}
+}*/
 
 class Lobby {
     constructor(id, name, host, settings) {
@@ -561,12 +619,14 @@ class Lobby {
         this.name = name ?? "(Unnamed Lobby)";
         this.host = host;
         this.lobbyMembers = {};
-        this.lobbyMembers[host] = {name: clients[host].name, joining: false, nominated: true};
+        this.lobbyMembers[host] = {name: clients[host].name, connected: true, joining: false, nominated: true};
         this.activePlayers = [];
         this.spectators = [];
 
         this.setSettings(settings);
         this.engine = null;
+
+        console.log(`${clients[host].name} has created the lobby ${this.name}`);
     }
 
     setSettings(newSettings = {}) {
@@ -608,12 +668,23 @@ class Lobby {
 
     playerJoin(player) {
         this.lobbyMembers[player] = {
-            name: clients[player].name, 
+            name: clients[player].name,
+            connected: true, 
             joining: false, 
             nominated: this.settings.openJoin
         };
         this.broadcastServerMessage(`${this.lobbyMembers[player].name} has joined the lobby`);
         io.to(this.id).emit('updateMembers', this.lobbyMembers);
+    }
+
+    playerDisconnect(player) {
+        this.lobbyMembers[player].connected = false;
+        this.broadcastServerMessage(`${this.lobbyMembers[player].name} disconnected!`);
+    }
+
+    playerReconnect(player) {
+        this.lobbyMembers[player].connected = true;
+        this.broadcastServerMessage(`${this.lobbyMembers[playre].name} has reconnected!`);
     }
 
     playerLeave(player) {
@@ -922,7 +993,7 @@ const enemyPool = [
 
 ];
 
-function parseXMLFileToDictionary(xmlFilePath) {
+/*function parseXMLFileToDictionary(xmlFilePath) {
     return new Promise((resolve, reject) => {
         // Read the XML file
         fs.readFile(xmlFilePath, 'utf-8', (err, xmlData) => {
@@ -952,4 +1023,4 @@ function XMLDict(path, dict) {
     .catch(error => {
         console.error(error);
     });
-}
+}*/

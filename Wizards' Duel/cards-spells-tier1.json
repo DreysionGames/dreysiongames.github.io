@@ -1,72 +1,174 @@
 {
-    "Wind Burst": {
-        "element": "Air",
-        "description": "Huff, puff, and blow them all down!",
-        "count": 5,
-        "action": {
-            "description": "",
-            "cost": {
-                "Air": 1
-            },
-            "target": {
-                "health": -5
-            }
-        } 
-    },
-    "Rock": {
-        "element": "Earth",
-        "description": "Rock",
-        "count": 5,
-        "action": {
-            "description": "",
-            "cost": {
-                "Earth": 1
-            },
-            "target": {
-                "health": -5
-            }
-        } 
-    },
     "Fireball": {
-        "element": "Fire",
-        "description": "The most basic magic imaginable",
         "count": 5,
-        "action": {
-            "description": "",
-            "cost": {
-                "Fire": 1
-            },
-            "target": {
-                "health": -5
-            }
-        } 
+        "description": "The most basic of all wizards' spells",
+        "mode": "instance",
+        "cost": {
+            "fire": 2
+        },
+        "direct effect": {
+            "target": "opponent",
+            "system": "health",
+            "modifier": -2
+        },
+        "indirect effect": {
+            "target": "opponent",
+            "system": "debuffs",
+            "element": "fire",
+            "modifier": 1,
+            "max": 3
+        }
     },
-    "Splash": {
-        "element": "Water",
-        "description": "Prepare to get splashed! In the face!",
-        "count": 5,
-        "action": {
-            "description": "",
-            "cost": {
-                "Water": 1
-            },
-            "target": {
-                "health": -5
-            }
-        } 
-    },
-    "Heart Strike": {
-        "element": "None",
-        "description": "If all magic fails, try this instead!",
+    "Overheat": {
         "count": 2,
-        "action": {
-            "description": "",
-            "cost": {
-                "Health": 1
-            },
-            "target": {
-                "health": -5
-            }
-        } 
+        "description": "Let it burn brighter and hotter!",
+        "mode": "investment",
+        "cost": {
+            "fire": "charge"
+        },
+        "charge": {
+            "element": "fire",
+            "max": 4
+        },
+        "indirect effect": {
+            "target": "self",
+            "system": "next attack",
+            "modifier": "cost"
+        }
+    },
+    "Heat Wave": {
+        "count": 2,
+        "description": "Let's take it up a notch",
+        "mode": "instance",
+        "cost": {
+            "fire": 3,
+            "mana": 1
+        },
+        "indirect effect": {
+            "target": "all opponents",
+            "system": "health",
+            "modifier": -3
+        }
+    },
+    "Scorched Supplies": {
+        "count": 2,
+        "description": "They've got defenses? Then hit 'em where it hurts!",
+        "mode": "instance",
+        "cost": {
+            "fire": 3
+        },
+        "direct effect": {
+            "target": "opponent",
+            "system": "investment",
+            "modifier": "-max"
+        }
+    },
+    "Hot Handle": {
+        "count": 2,
+        "description": "Can't use it if you can't hold it",
+        "mode": "continuous",
+        "cost": {
+            "fire": 1
+        },
+        "maintain": {
+            "mana": 1
+        },
+        "indirect effect": {
+            "trigger": "artifact activation",
+            "target": "opponent",
+            "system": "health",
+            "modifier": 1
+        }
+    },
+    "Return Burn": {
+        "count": 2,
+        "description": "Why should only one of us suffer?",
+        "mode": "continuous",
+        "cost": {
+            "fire": 1
+        },
+        "maintain": {
+            "fire": 1
+        },
+        "indirect effect": {
+            "trigger": "indirect target",
+            "target": "opponent",
+            "system": "debuffs",
+            "element": "fire",
+            "modifier": 1
+        }
+    },
+    "Explosion": {
+        "count": 1,
+        "description": "EXPLOSION!",
+        "mode": "instance",
+        "cost": {
+            "fire": 5
+        },
+        "direct effect": {
+            "target": "opponent",
+            "system": "health",
+            "modifier": -5
+        },
+        "indirect effect": {
+            "target": "opponent",
+            "system": "health",
+            "modifier": -2
+        }
+    },
+    "Forest Fire": {
+        "count": 1,
+        "description": "Burn everything indiscriminately",
+        "mode": "continuous",
+        "cost": {
+            "fire": 4
+        },
+        "direct effect": {
+            "target": "all opponents",
+            "system": "health",
+            "modifier": -2
+        },
+        "indirect effect": {
+            "target": "all",
+            "system": "debuffs",
+            "element": "fire",
+            "modifier": 2,
+            "max": 5
+        }
+    },
+    "Thermal Charge": {
+        "count": 1,
+        "description": "Fire isn't hot",
+        "mode": "instance",
+        "cost": {
+            "mana": 1
+        },
+        "direct effect": {
+            "target": "self",
+            "system": "debuffs",
+            "element": "fire",
+            "modifier": -2
+        },
+        "indirect effect": {
+            "target": "self",
+            "system": "mana pool",
+            "element": "fire",
+            "modifier": "-direct effect"
+        }
+    },
+    "Subtle Sear": {
+        "count": 2,
+        "description": "You're actually burning already--you just don't know it yet",
+        "mode": "instance",
+        "cost": {
+            "fire": 2
+        },
+        "direct effect": {
+            "target": "opponent",
+            "system": "debuffs",
+            "element": "fire",
+            "modifier": 2,
+            "max": 3
+        }
     }
 }

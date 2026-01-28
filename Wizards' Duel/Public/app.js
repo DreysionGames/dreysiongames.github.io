@@ -1,3 +1,5 @@
+//const { response } = require("express");
+
 let socket = io.connect();
 
 
@@ -33,6 +35,7 @@ socket.on('disconnect', () => {
     //Reset();
 });
 socket.on('yourId', (id) => {
+    console.log("ID: "+id);
     pID = id;
 });
 
@@ -111,20 +114,22 @@ function startLobby(bool) {
             tournamentPhaseRemoveDebuffs: document.getElementById("s-tournamentphaseremovedebuffs").checked,
         }, response => {
             console.log(response.success);
+            if(!response.success) return;
             console.log(response.lobbyID);
+
+            document.getElementById("lobbyName").blur();
+            document.getElementById("CreateLobby").classList.add("hidden");
+
+            lobbyScreen(document.getElementById("lobbyName").value, response.lobbyID, true);
         });
     }
-
-    document.getElementById("lobbyName").blur();
-    document.getElementById("CreateLobby").classList.add("hidden");
-
-    lobbyScreen(document.getElementById("lobbyName").value, true);
 }
 
 function joinLobby(e) {
     socket.emit('joinLobby', e.target.dataset.id, response => {
         console.log(response.success);
-        lobbyScreen(response.name);
+        if(!response.success) return;
+        lobbyScreen(response.name, response.lobbyID);
     });
     console.log(e.target.dataset.id);
 }
@@ -147,7 +152,14 @@ socket.on('updateMembers', (data) => {
     }
 });
 
-function lobbyScreen(name, host = false) {
+function lobbyScreen(name, id, host = false) {
+    console.log("Lobby id: "+id);
+    fetch("/set-lobby", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lobbyId: id })
+    });
+
     document.getElementById("LobbyName").textContent = "Lobby: "+name;
 
     document.getElementById("MainMenu").classList.add("hidden");
