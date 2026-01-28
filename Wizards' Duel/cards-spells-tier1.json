@@ -1,4 +1,119 @@
 {
+    "Double Attack": {
+        "count": 2,
+        "description": "Hit 'em with everything we got!",
+        "mode": "continuous",
+        "cost": {
+            "air": 1
+        },
+        "maintain": {
+            "mana": 1
+        },
+        "trigger": "self action",
+        "direct_effect": {
+            "target": "opponent",
+            "system": "status",
+            "health": -1
+        }
+    },
+    "Air Strike": {
+        "count": 2,
+        "description": "A tactical strike",
+        "mode": "instance",
+        "cost": {
+            "air": 3
+        },
+        "direct_effect": {
+            "target": "opponent",
+            "system": "investment",
+            "charge": "-target.system.charged"
+        },
+        "reaction": {
+            "target": "opponent",
+            "system": "reservoir",
+            "mana": -2
+        }
+    },
+
+
+    "Rock": {
+        "count": 5,
+        "description": "ROCK",
+        "mode": "instance",
+        "cost": {
+            "earth": 2
+        },
+        "direct_effect": {
+            "target": "opponent",
+            "system": "status",
+            "health": -3
+        }
+    },
+    "Rock Spikes": {
+        "count": 3,
+        "description": "I'm not poking you!",
+        "mode": "instance",
+        "cost": {
+            "earth": "charge.charged"
+        },
+        "charge": {
+            "mana": ["earth"],
+            "max": 3,
+            "charged": 0
+        },
+        "direct_effect": {
+            "target": "opponent",
+            "system": "status",
+            "health": "-cost.earth"
+        },
+        "reaction": {
+            "target": "opponent",
+            "system": "status",
+            "health": "-cost.earth",
+            "earth": 2
+        }
+    },
+    "Earthen Wall": {
+        "count": 2,
+        "description": "Let's put a stop to that",
+        "mode": "continuous",
+        "cost": {
+            "earth": 2
+        },
+        "maintain": {
+            "mana": 1
+        },
+        "charge": {
+            "mana": [],
+            "max": 6,
+            "charged": 0
+        },
+        "trigger": "indirect target",
+        "direct_effect": {
+            "target": "attack",
+            "system": "indirect_effect",
+            "condition": "charged",
+            "status.element": "-2"
+        },
+        "indirect_effect": {
+            "charge.mana": "-direct_effect.status.element"
+        }
+    },
+    "Burden": {
+        "count": 3,
+        "description": "Feeling like Sisyphus yet?",
+        "mode": "instance",
+        "cost": {
+            "earth": 1
+        },
+        "direct_effect": {
+            "target": "opponent",
+            "system": "status",
+            "earth": 2
+        }
+    },
+
+
     "Fireball": {
         "count": 5,
         "description": "The most basic of all wizards' spells",
@@ -6,34 +121,34 @@
         "cost": {
             "fire": 2
         },
-        "direct effect": {
+        "direct_effect": {
             "target": "opponent",
-            "system": "health",
-            "modifier": -2
+            "system": "status",
+            "health": -2
         },
-        "indirect effect": {
+        "indirect_effect": {
             "target": "opponent",
-            "system": "debuffs",
-            "element": "fire",
-            "modifier": 1,
+            "system": "status",
+            "fire": 1,
             "max": 3
         }
     },
     "Overheat": {
         "count": 2,
         "description": "Let it burn brighter and hotter!",
-        "mode": "investment",
+        "mode": "instance",
         "cost": {
-            "fire": "charge"
+            "fire": "charge.charged"
         },
         "charge": {
-            "element": "fire",
-            "max": 4
+            "mana": ["fire"],
+            "max": 4,
+            "charged": 0
         },
-        "indirect effect": {
+        "indirect_effect": {
             "target": "self",
             "system": "next attack",
-            "modifier": "cost"
+            "health": "-cost.fire"
         }
     },
     "Heat Wave": {
@@ -44,10 +159,10 @@
             "fire": 3,
             "mana": 1
         },
-        "indirect effect": {
+        "indirect_effect": {
             "target": "all opponents",
-            "system": "health",
-            "modifier": -3
+            "system": "status",
+            "health": -3
         }
     },
     "Scorched Supplies": {
@@ -57,10 +172,10 @@
         "cost": {
             "fire": 3
         },
-        "direct effect": {
+        "direct_effect": {
             "target": "opponent",
             "system": "investment",
-            "modifier": "-max"
+            "charge": "-target.system.charged"
         }
     },
     "Hot Handle": {
@@ -73,11 +188,11 @@
         "maintain": {
             "mana": 1
         },
-        "indirect effect": {
-            "trigger": "artifact activation",
+        "trigger": "artifact activation",
+        "indirect_effect": {
             "target": "opponent",
-            "system": "health",
-            "modifier": 1
+            "system": "status",
+            "health": -1
         }
     },
     "Return Burn": {
@@ -90,12 +205,11 @@
         "maintain": {
             "fire": 1
         },
-        "indirect effect": {
-            "trigger": "indirect target",
+        "trigger": "indirect target",
+        "indirect_effect": {
             "target": "opponent",
-            "system": "debuffs",
-            "element": "fire",
-            "modifier": 1
+            "system": "status",
+            "fire": 1
         }
     },
     "Explosion": {
@@ -105,34 +219,33 @@
         "cost": {
             "fire": 5
         },
-        "direct effect": {
+        "direct_effect": {
             "target": "opponent",
-            "system": "health",
-            "modifier": -5
+            "system": "status",
+            "health": -5
         },
-        "indirect effect": {
+        "indirect_effect": {
             "target": "opponent",
-            "system": "health",
-            "modifier": -2
+            "system": "status",
+            "health": -2
         }
     },
     "Forest Fire": {
         "count": 1,
         "description": "Burn everything indiscriminately",
-        "mode": "continuous",
+        "mode": "instance",
         "cost": {
             "fire": 4
         },
-        "direct effect": {
+        "direct_effect": {
             "target": "all opponents",
-            "system": "health",
-            "modifier": -2
+            "system": "status",
+            "health": -2
         },
-        "indirect effect": {
+        "indirect_effect": {
             "target": "all",
-            "system": "debuffs",
-            "element": "fire",
-            "modifier": 2,
+            "system": "status",
+            "fire": 2,
             "max": 5
         }
     },
@@ -143,17 +256,20 @@
         "cost": {
             "mana": 1
         },
-        "direct effect": {
+        "direct_effect": {
             "target": "self",
-            "system": "debuffs",
-            "element": "fire",
-            "modifier": -2
+            "system": "status",
+            "fire": -2
         },
-        "indirect effect": {
+        "indirect_effect": {
             "target": "self",
-            "system": "mana pool",
-            "element": "fire",
-            "modifier": "-direct effect"
+            "system": "reservoir",
+            "fire": "-direct_effect"
+        },
+        "reaction": {
+            "target": "self",
+            "system": "reservoir",
+            "fire": "attack.cost"
         }
     },
     "Subtle Sear": {
@@ -163,12 +279,38 @@
         "cost": {
             "fire": 2
         },
-        "direct effect": {
+        "direct_effect": {
             "target": "opponent",
-            "system": "debuffs",
-            "element": "fire",
-            "modifier": 2,
+            "system": "status",
+            "fire": 2,
             "max": 3
+        }
+    },
+
+
+    "Reservoir": {
+        "count": 2,
+        "description": "We're not finished yet",
+        "mode": "continuous",
+        "cost": {
+            "water": 1
+        },
+        "maintain": {
+            "water": 1
+        },
+        "charge": {
+            "mana": [],
+            "max": 3,
+            "charged": 0
+        },
+        "trigger": "self invested direct effect",
+        "direct_effect": {
+            "target": "attack",
+            "system": "charge.mana",
+            "system.charge.mana": "charge.mana"
+        },
+        "indirect_effect": {
+            "charge.mana": "-charge.charged"
         }
     }
 }

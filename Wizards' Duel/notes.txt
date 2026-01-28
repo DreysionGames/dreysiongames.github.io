@@ -56,26 +56,35 @@ Establish tournament tree
 # Training
 
 setup by selecting 3 action spells and 2 reaction spells and 1 artifact
+If an investment card is carried over between phases, it keeps its charge.
+Review next matchup in tournament
 
-If no HP, don't do anything
+If no HP at any time, don't do anything
 
 Roll die, draw event card on roll of 1
 (Two event piles? Mostly negative pile on 1, mostly positive on 6?)
 
 In fight: 
-- continue continuous spell?
-- choose active spell
-- enemy attacks
+- water/fire debuffs on self and monsters
+- draw mana
+- maintain continuous spell?
+- place energy into investments?
+- choose active spell, apply earth/wind debuffs
+- enemy attacks, apply earth/wind debuffs
 - reaction spell
-- apply artifact and status effects when applicable
+- apply artifacts when applicable
 - if no HP, turn ends. Enemy goes to another random player, and all fighting players draw negative event card
 - if enemy is defeated, each player or killing player collect reward on enemy card as directed
-- draw 1 energy
 
 Out of fight:
-- apply artifact if applicable
-- draw 1 energy
-- join an existing fight
+- water/fire debuffs
+- draw mana
+- maintain coninuous spell?
+- place energy into investments?
+- join an existing fight?
+    - may choose action, apply earth/wind debuffs
+    - opponents may not react this turn
+- apply artifacts when applicable
 
 Training goes for number of turns or until all players are down
 
@@ -84,12 +93,15 @@ Training goes for number of turns or until all players are down
 
 Two players fight at a time and watch the fights when it's not their turn. One level of the bracket at a time, then training for the next fight
 
-Setup by selecting 3 action spells and 2 reaction spells and 1 artifact
-Setup also allows using one action spell that does not affect the opponent.
+Setup by selecting 3 action spells and 2 reaction spells and 1 artifact.
+If an investment card is carried over between phases, it keeps its charge.
 
-Coninue continuous spell?
-both players choose active spell
-both players choose reaction spell if the opponent's active spell affects them
+Water/Fire Debuffs
+Draw Mana
+Maintain continuous spell?
+Place energy into investments?
+both players choose active spell, applying Earth/Wind Debuffs
+both players choose reaction spell if the opponent's active spell affects them directly
 both players apply artifacts and status effects when applicable
 
 winner draws 3 artifact cards and selects 1, discarding the other 2
@@ -102,13 +114,17 @@ winner draws 3 artifact cards and selects 1, discarding the other 2
 
 Instance spells are applied once. They have a cost and an effect.
 Continuous spells are initiated once with a cost, then they have an additional lighter cost to keep up each turn.
-Investment spells can be given energy over time, then are initiated with the built up energy, or do not need to be initiated.
+Investment spells are instance spells that can be given energy over time.
+    They are activated with the built up energy, or do not need to be activated (they have a passive effect).
 
 Each spell can be placed as either an action or a reaction.
-Generally a player gets one action on their turn
-Reactions can be activated only when targeted (not a reaction)
-A reaction affecting the opponent's spell affects either the direct effect or the indirect effect, not both.
+Alayer gets one action on their turn
+One reaction can be activated only when targeted (not a reaction) by a direct effect (not indirect)
+Continuous spells may be activated as an action or reaction, but their affect doesn't take effect until afterwards
+    They cannot be activated as a reaction and simultaneously used to affect what it's reacting to.
 A continuous spell cannot be activated if it is already active.
+A continuous spell may affect opponent spells, in which case it may affect the direct or indirect effect--not both.
+More than one continuous spell may be active at the same time.
 
 A spell's cost is energy discarded from the mana reservoir to activate the card.
 A spell's investment is energy added before activation, which may or may not be discarded during activation
@@ -177,7 +193,7 @@ Tier 2
     Axis: slow
     Weakness: investment breaching
 - Sand (Air, Earth):
-    Style: Attacking despite defenses
+    Style: Attacking despite defenses, getting in everywhere
     Axis: neutral
     Weakness: counter reactions
 - Ice (Air, Water): 
@@ -206,5 +222,5 @@ Tier 3
 Tier 4
 - Ultimate:
     Style: chaos
-    Axis: neutral
+    Axis: neutral/extreme
     Weakness: chaos, itself
